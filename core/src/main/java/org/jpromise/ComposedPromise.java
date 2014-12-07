@@ -4,9 +4,12 @@ import org.jpromise.functions.OnCompleted;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> implements OnCompleted<V_IN> {
     private final Executor executor;
+    private Promise<V_OUT> composed;
+    private boolean cancelled;
 
     protected ComposedPromise(Executor executor) {
         this.executor = executor;
@@ -14,9 +17,15 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
 
     @Override
     public final void completed(final Promise<V_IN> promise, final V_IN result, final Throwable exception) throws Throwable {
+        if (cancelled) {
+            return;
+        }
         executor.execute(new Runnable() {
             @Override
             public void run() {
+                if (cancelled) {
+                    return;
+                }
                 try {
                     switch (promise.state()) {
                         case RESOLVED:
@@ -32,6 +41,15 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
                 }
             }
         });
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        if (super.cancel(mayInterruptIfRunning)) {
+            cancelled = true;
+            return composed == null || composed.cancel(mayInterruptIfRunning);
+        }
+        return false;
     }
 
     protected abstract void completeComposed(V_IN result) throws Throwable;
@@ -60,9 +78,13 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
             complete(null);
         }
         else {
+            composed = promise;
             promise.whenCompleted(new OnCompleted<V_OUT>() {
                 @Override
                 public void completed(Promise<V_OUT> promise, V_OUT result, Throwable exception) throws Throwable {
+                    if (cancelled) {
+                        return;
+                    }
                     switch (promise.state()) {
                         case RESOLVED:
                             complete(result);
