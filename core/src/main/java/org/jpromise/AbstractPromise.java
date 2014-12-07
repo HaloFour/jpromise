@@ -247,7 +247,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         return composedFuture;
     }
 
-    protected void registerCallback(final OnCompleted<V> callback) {
+    private void registerCallback(final OnCompleted<V> callback) {
         if (callback == null) {
             return;
         }
@@ -276,5 +276,4 @@ public abstract class AbstractPromise<V> extends Promise<V> {
             //TODO: Should do something with this here
         }
     }
-
 }
