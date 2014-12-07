@@ -5,28 +5,22 @@ import org.jpromise.Arg;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
+import rx.functions.Action1;
 
 public class ObservablePromise<V> extends AbstractPromise<V> {
     private final Subscription subscription;
 
     public ObservablePromise(Observable<V> observable) {
         Arg.ensureNotNull(observable, "observable");
-        this.subscription = observable.single().subscribe(new Subscriber<V>() {
-            private V result;
-
+        this.subscription = observable.single().subscribe(new Action1<V>() {
             @Override
-            public synchronized void onCompleted() {
-                complete(this.result);
+            public void call(V result) {
+                complete(result);
             }
-
+        }, new Action1<Throwable>() {
             @Override
-            public synchronized void onError(Throwable exception) {
-                completeWithException(exception);
-            }
-
-            @Override
-            public synchronized void onNext(V result) {
-                this.result = result;
+            public void call(Throwable error) {
+                completeWithException(error);
             }
         });
     }
