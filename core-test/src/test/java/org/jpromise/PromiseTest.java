@@ -511,10 +511,83 @@ public class PromiseTest {
     }
 
     @Test
+    public void cancelChained() throws Throwable {
+        Deferred<String> deferred = Promise.defer();
+        Promise<String> promise1 = deferred.promise();
+
+        @SuppressWarnings("unchecked")
+        OnResolved<String> callback = mock(OnResolved.class);
+
+        Promise<String> promise2 = promise1.then(callback);
+
+        promise2.cancel(true);
+        deferred.resolve(SUCCESS1);
+
+        assertRejects(CancellationException.class, promise2);
+        assertResolves(SUCCESS1, promise1);
+        verify(callback, never()).resolved(anyString());
+    }
+
+    @Test
+    public void cancelComposed() throws Throwable {
+        Deferred<String> deferred = Promise.defer();
+        Promise<String> promise1 = deferred.promise();
+
+        @SuppressWarnings("unchecked")
+        OnResolvedFunction<String, Future<String>> callback = mock(OnResolvedFunction.class);
+        @SuppressWarnings("unchecked")
+        Promise<String> future = mock(Promise.class);
+
+        when(callback.resolved(anyString())).thenReturn(future);
+        OnCompleted<String> anyCompleted = any();
+        when(future.whenCompleted(anyCompleted)).thenReturn(null);
+        when(future.cancel(anyBoolean())).thenReturn(true);
+
+        Promise<String> promise2 = promise1.thenCompose(callback);
+
+        deferred.resolve(SUCCESS1);
+        promise2.cancel(true);
+
+        assertRejects(CancellationException.class, promise2);
+        assertResolves(SUCCESS1, promise1);
+        verify(future, times(1)).cancel(anyBoolean());
+    }
+
+    @Test
     public void get() throws Throwable {
         Promise<String> promise = resolveAfter(SUCCESS1, 10);
         String result = promise.get();
         assertEquals(SUCCESS1, result);
+    }
+
+    @Test
+    public void getNow() throws Throwable {
+        Promise<String> promise = Promise.resolved(SUCCESS1);
+        String result = promise.getNow(SUCCESS2);
+        assertEquals(SUCCESS1, result);
+    }
+
+    @Test
+    public void getNowDefaultValue() throws Throwable {
+        Deferred<String> deferred = Promise.defer();
+        Promise<String> promise = deferred.promise();
+        String result = promise.getNow(SUCCESS2);
+        assertEquals(SUCCESS2, result);
+    }
+
+    @Test(expected = ExecutionException.class)
+    public void getNowRejected() throws Throwable {
+        Throwable exception = new Throwable();
+        Promise<String> promise = Promise.rejected(exception);
+        String ignored = promise.getNow(SUCCESS2);
+    }
+
+    @Test(expected = CancellationException.class)
+    public void getNowCancelled() throws Throwable {
+        Deferred<String> deferred = Promise.defer();
+        Promise<String> promise = deferred.promise();
+        promise.cancel(true);
+        String ignored = promise.getNow(SUCCESS2);
     }
 
     @Test(expected = ExecutionException.class)
