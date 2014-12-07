@@ -22,13 +22,6 @@ public class PromiseManagerTest {
     private static final String SUCCESS1 = "SUCCESS1";
 
     @Test
-    public void defer() throws Throwable {
-        Deferred<String> deferred = PromiseManager.defer();
-        Promise<String> promise = deferred.promise();
-        assertFalse(promise.isDone());
-    }
-
-    @Test
     public void create() throws Throwable {
         Executor executor = mock(Executor.class);
         doNothing().when(executor).execute(any(Runnable.class));

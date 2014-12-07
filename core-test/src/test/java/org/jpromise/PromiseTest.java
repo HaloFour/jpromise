@@ -20,6 +20,13 @@ public class PromiseTest {
     private static final String FAIL1 = "FAIL1";
 
     @Test
+    public void defer() throws Throwable {
+        Deferred<String> deferred = Promise.defer();
+        Promise<String> promise = deferred.promise();
+        assertFalse(promise.isDone());
+    }
+
+    @Test
     public void pending() {
         Deferred<String> deferred = new DeferredPromise<>();
         Promise<String> promise = deferred.promise();

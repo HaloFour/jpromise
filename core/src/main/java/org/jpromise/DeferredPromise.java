@@ -1,18 +1,20 @@
 package org.jpromise;
 
-public class DeferredPromise<V> extends AbstractPromise<V> implements Deferred<V> {
+class DeferredPromise<V> implements Deferred<V> {
+    private final AbstractPromise<V> promise = new AbstractPromise<V>() { };
+
     @Override
     public boolean resolve(V result) {
-        return complete(result);
+        return promise.complete(result);
     }
 
     @Override
     public boolean reject(Throwable exception) {
-        return completeWithException(exception);
+        return promise.completeWithException(exception);
     }
 
     @Override
     public Promise<V> promise() {
-        return this;
+        return promise;
     }
 }

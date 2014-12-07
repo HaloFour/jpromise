@@ -96,15 +96,27 @@ public abstract class Promise<V> implements Future<V> {
     public abstract <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, Executor executor, OnRejectedHandler<? super E, ? extends Future<V>> fallback);
     public abstract Promise<V> whenCompleted(Executor executor, OnCompleted<V> action);
 
+    public static <V> Deferred<V> defer() {
+        return new DeferredPromise<>();
+    }
+
+    public static Promise<Void> resolved() {
+        return resolved(null);
+    }
+
     public static <V> Promise<V> resolved(V result) {
-        DeferredPromise<V> promise = new DeferredPromise<>();
-        promise.resolve(result);
-        return promise;
+        Deferred<V> deferred = defer();
+        deferred.resolve(result);
+        return deferred.promise();
+    }
+
+    public static <V> Promise<V> rejected(Class<V> resultClass, Throwable exception) {
+        return rejected(exception);
     }
 
     public static <V> Promise<V> rejected(Throwable exception) {
-        DeferredPromise<V> promise = new DeferredPromise<>();
-        promise.reject(exception);
-        return promise;
+        Deferred<V> deferred = defer();
+        deferred.reject(exception);
+        return deferred.promise();
     }
 }
