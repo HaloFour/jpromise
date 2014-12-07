@@ -3,9 +3,19 @@ package org.jpromise.patterns;
 public class Pattern3<V1, V2, V3> extends Pattern2<V1, V2> {
     public final V3 item3;
 
-    public Pattern3(V1 item1, V2 item2, V3 item3) {
+    Pattern3(V1 item1, V2 item2, V3 item3) {
         super(item1, item2);
         this.item3 = item3;
+    }
+
+    @Override
+    public Object get(int index) {
+        switch (index) {
+            case 2:
+                return item3;
+            default:
+                return super.get(index);
+        }
     }
 
     @Override

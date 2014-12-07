@@ -20,6 +20,22 @@ import java.util.concurrent.Future;
 public class Pattern {
     private Pattern() { }
 
+    public static <V1, V2> Pattern2<V1, V2> of(V1 first, V2 second) {
+        return new Pattern2<>(first, second);
+    }
+
+    public static <V1, V2, V3> Pattern3<V1, V2, V3> of(V1 first, V2 second, V3 third) {
+        return new Pattern3<>(first, second, third);
+    }
+
+    public static <V1, V2, V3, V4> Pattern4<V1, V2, V3, V4> of(V1 first, V2 second, V3 third, V4 fourth) {
+        return new Pattern4<>(first, second, third, fourth);
+    }
+
+    public static <V1, V2, V3, V4, V5> Pattern5<V1, V2, V3, V4, V5> of(V1 first, V2 second, V3 third, V4 fourth, V5 fifth) {
+        return new Pattern5<>(first, second, third, fourth, fifth);
+    }
+
     public static <V1, V2> Promise<Pattern2<V1, V2>> join(final Promise<V1> first, final Promise<V2> second) {
         return PromiseManager.whenAllResolved(first, second)
                 .thenApply(new OnResolvedFunction<Void, Pattern2<V1, V2>>() {

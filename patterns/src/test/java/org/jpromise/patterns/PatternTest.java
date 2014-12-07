@@ -34,22 +34,22 @@ public class PatternTest {
 
     @Test
     public void join2() throws Throwable {
-        assertResolves(new Pattern2<>(SUCCESS1, SUCCESS2), get2());
+        assertResolves(Pattern.of(SUCCESS1, SUCCESS2), get2());
     }
 
     @Test
     public void join3() throws Throwable {
-        assertResolves(new Pattern3<>(SUCCESS1, SUCCESS2, SUCCESS3), get3());
+        assertResolves(Pattern.of(SUCCESS1, SUCCESS2, SUCCESS3), get3());
     }
 
     @Test
     public void join4() throws Throwable {
-        assertResolves(new Pattern4<>(SUCCESS1, SUCCESS2, SUCCESS3, SUCCESS4), get4());
+        assertResolves(Pattern.of(SUCCESS1, SUCCESS2, SUCCESS3, SUCCESS4), get4());
     }
 
     @Test
     public void join5() throws Throwable {
-        assertResolves(new Pattern5<>(SUCCESS1, SUCCESS2, SUCCESS3, SUCCESS4, SUCCESS5), get5());
+        assertResolves(Pattern.of(SUCCESS1, SUCCESS2, SUCCESS3, SUCCESS4, SUCCESS5), get5());
     }
 
     @Test

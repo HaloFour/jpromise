@@ -4,9 +4,20 @@ public class Pattern2<V1, V2> {
     public final V1 item1;
     public final V2 item2;
 
-    public Pattern2(V1 item1, V2 item2) {
+    Pattern2(V1 item1, V2 item2) {
         this.item1 = item1;
         this.item2 = item2;
+    }
+
+    public Object get(int index) {
+        switch (index) {
+            case 0:
+                return item1;
+            case 1:
+                return item2;
+            default:
+                throw new IndexOutOfBoundsException();
+        }
     }
 
     @Override
