@@ -11,18 +11,18 @@ abstract class RejectedPromise<E extends Throwable, V> extends ComposedPromise<V
     }
 
     @Override
-    protected void completed(V result) throws Throwable {
+    protected void completeComposed(V result) throws Throwable {
         complete(result);
     }
 
     @Override
-    protected void completed(Throwable exception) throws Throwable {
+    protected void completeComposedWithException(Throwable exception) throws Throwable {
         if (exceptionClass.isInstance(exception)) {
             E typed = exceptionClass.cast(exception);
             handle(typed);
         }
         else {
-            super.completed(exception);
+            super.completeComposedWithException(exception);
         }
     }
 

@@ -59,7 +59,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         }
         return registerCallback(new ComposedPromise<V, V>(executor) {
             @Override
-            protected void completed(V result) throws Throwable {
+            protected void completeComposed(V result) throws Throwable {
                 action.resolved(result);
                 complete(result);
             }
@@ -72,7 +72,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         Arg.ensureNotNull(function, "function");
         return registerCallback(new ComposedPromise<V, V_APPLIED>(executor) {
             @Override
-            protected void completed(V result) throws Throwable {
+            protected void completeComposed(V result) throws Throwable {
                 complete(function.resolved(result));
             }
         });
@@ -84,7 +84,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         Arg.ensureNotNull(function, "function");
         return registerCallback(new ComposedPromise<V, V_COMPOSED>(executor) {
             @Override
-            protected void completed(V result) throws Throwable {
+            protected void completeComposed(V result) throws Throwable {
                 completeWithFuture(function.resolved(result));
             }
         });
@@ -141,19 +141,19 @@ public abstract class AbstractPromise<V> extends Promise<V> {
 
     @Override
     public Promise<V> whenCompleted(Executor executor, final OnCompleted<V> action) {
-        Arg.ensureNotNull(action, "completed");
+        Arg.ensureNotNull(action, "action");
         Arg.ensureNotNull(executor, "executor");
         return registerCallback(new ComposedPromise<V, V>(executor) {
             @Override
-            protected void completed(V result) throws Throwable {
+            protected void completeComposed(V result) throws Throwable {
                 action.completed(AbstractPromise.this, result, null);
                 complete(result);
             }
 
             @Override
-            protected void completed(Throwable exception) throws Throwable {
+            protected void completeComposedWithException(Throwable exception) throws Throwable {
                 action.completed(AbstractPromise.this, null, exception);
-                super.completed(exception);
+                super.completeComposedWithException(exception);
             }
         });
     }

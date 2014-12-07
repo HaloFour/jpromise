@@ -20,10 +20,10 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
                 try {
                     switch (promise.state()) {
                         case RESOLVED:
-                            completed(result);
+                            completeComposed(result);
                             break;
                         case REJECTED:
-                            completed(exception);
+                            completeComposedWithException(exception);
                             break;
                     }
                 }
@@ -34,9 +34,9 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
         });
     }
 
-    protected abstract void completed(V_IN result) throws Throwable;
+    protected abstract void completeComposed(V_IN result) throws Throwable;
 
-    protected void completed(Throwable exception) throws Throwable {
+    protected void completeComposedWithException(Throwable exception) throws Throwable {
         completeWithException(exception);
     }
 
