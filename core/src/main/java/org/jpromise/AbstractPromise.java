@@ -52,7 +52,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     }
 
     @Override
-    public Promise<V> then(final OnResolved<? super V> action, Executor executor) {
+    public Promise<V> then(Executor executor, final OnResolved<? super V> action) {
         Arg.ensureNotNull(executor, "executor");
         if (action == null) {
             return this;
@@ -61,37 +61,37 @@ public abstract class AbstractPromise<V> extends Promise<V> {
             @Override
             protected void completed(V result) throws Throwable {
                 action.resolved(result);
-                set(result);
+                complete(result);
             }
         });
     }
 
     @Override
-    public <V_APPLIED> Promise<V_APPLIED> thenApply(final OnResolvedFunction<? super V, ? extends V_APPLIED> function, Executor executor) {
+    public <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, final OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
         Arg.ensureNotNull(executor, "executor");
         Arg.ensureNotNull(function, "function");
         return registerCallback(new ComposedPromise<V, V_APPLIED>(executor) {
             @Override
             protected void completed(V result) throws Throwable {
-                set(function.resolved(result));
+                complete(function.resolved(result));
             }
         });
     }
 
     @Override
-    public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function, Executor executor) {
+    public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
         Arg.ensureNotNull(executor, "executor");
         Arg.ensureNotNull(function, "function");
         return registerCallback(new ComposedPromise<V, V_COMPOSED>(executor) {
             @Override
             protected void completed(V result) throws Throwable {
-                setFuture(function.resolved(result));
+                completeWithFuture(function.resolved(result));
             }
         });
     }
 
     @Override
-    public <E extends Throwable> Promise<V> rejected(Class<E> exceptionClass, final OnRejected<? super E> action, Executor executor) {
+    public <E extends Throwable> Promise<V> rejected(Class<E> exceptionClass, Executor executor, final OnRejected<? super E> action) {
         Arg.ensureNotNull(exceptionClass, "exceptionClass");
         Arg.ensureNotNull(executor, "executor");
         if (action == null) {
@@ -101,13 +101,13 @@ public abstract class AbstractPromise<V> extends Promise<V> {
             @Override
             protected void handle(E exception) throws Throwable {
                 action.rejected(exception);
-                setException(exception);
+                completeWithException(exception);
             }
         });
     }
 
     @Override
-    public <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, final OnRejectedHandler<? super E, ? extends V> handler, Executor executor) {
+    public <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, Executor executor, final OnRejectedHandler<? super E, ? extends V> handler) {
         Arg.ensureNotNull(exceptionClass, "exceptionClass");
         Arg.ensureNotNull(executor, "executor");
         Arg.ensureNotNull(handler, "handler");
@@ -115,13 +115,13 @@ public abstract class AbstractPromise<V> extends Promise<V> {
             @Override
             protected void handle(E exception) throws Throwable {
                 handler.handle(exception);
-                set(handler.handle(exception));
+                complete(handler.handle(exception));
             }
         });
     }
 
     @Override
-    public <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, final OnRejectedHandler<? super E, ? extends Future<V>> fallback, Executor executor) {
+    public <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, Executor executor, final OnRejectedHandler<? super E, ? extends Future<V>> fallback) {
         Arg.ensureNotNull(exceptionClass, "exceptionClass");
         Arg.ensureNotNull(executor, "executor");
         Arg.ensureNotNull(fallback, "fallback");
@@ -130,29 +130,29 @@ public abstract class AbstractPromise<V> extends Promise<V> {
             protected void handle(E exception) throws Throwable {
                 Future<V> future = fallback.handle(exception);
                 if (future != null) {
-                    setFuture(future);
+                    completeWithFuture(future);
                 }
                 else {
-                    setException(exception);
+                    completeWithException(exception);
                 }
             }
         });
     }
 
     @Override
-    public Promise<V> whenCompleted(final OnCompleted<V> completed, Executor executor) {
-        Arg.ensureNotNull(completed, "completed");
+    public Promise<V> whenCompleted(Executor executor, final OnCompleted<V> action) {
+        Arg.ensureNotNull(action, "completed");
         Arg.ensureNotNull(executor, "executor");
         return registerCallback(new ComposedPromise<V, V>(executor) {
             @Override
             protected void completed(V result) throws Throwable {
-                completed.completed(AbstractPromise.this, result, null);
-                set(result);
+                action.completed(AbstractPromise.this, result, null);
+                complete(result);
             }
 
             @Override
             protected void completed(Throwable exception) throws Throwable {
-                completed.completed(AbstractPromise.this, null, exception);
+                action.completed(AbstractPromise.this, null, exception);
                 super.completed(exception);
             }
         });
@@ -160,7 +160,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-        return setException(new CancellationException());
+        return completeWithException(new CancellationException());
     }
 
     @Override
@@ -199,7 +199,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         }
     }
 
-    protected boolean set(V result) {
+    protected boolean complete(V result) {
         if (state != PromiseState.PENDING) {
             return false;
         }
@@ -214,7 +214,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         return true;
     }
 
-    protected boolean setException(Throwable exception) {
+    protected boolean completeWithException(Throwable exception) {
         if (state != PromiseState.PENDING) {
             return false;
         }

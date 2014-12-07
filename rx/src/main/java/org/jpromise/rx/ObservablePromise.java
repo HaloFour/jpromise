@@ -16,12 +16,12 @@ public class ObservablePromise<V> extends AbstractPromise<V> {
 
             @Override
             public synchronized void onCompleted() {
-                set(this.result);
+                complete(this.result);
             }
 
             @Override
             public synchronized void onError(Throwable exception) {
-                setException(exception);
+                completeWithException(exception);
             }
 
             @Override

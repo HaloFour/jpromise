@@ -8,6 +8,7 @@ import rx.Observable;
 import rx.Subscriber;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 
 public class PromiseObservable<V> extends Observable<V> {
@@ -18,7 +19,7 @@ public class PromiseObservable<V> extends Observable<V> {
         this(promises != null ? Arrays.asList(promises) : null, false);
     }
 
-    public PromiseObservable(Iterable<Promise<V>> promises) {
+    public PromiseObservable(final Iterable<Promise<V>> promises) {
         this(promises, false);
     }
 
@@ -61,7 +62,7 @@ public class PromiseObservable<V> extends Observable<V> {
         this.promises = promises;
     }
 
-    public PromiseObservable<V> ignoringRejections() {
+    public PromiseObservable<V> ignoringRejected() {
         return new PromiseObservable<V>(promises, true) { };
     }
 

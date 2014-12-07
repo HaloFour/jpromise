@@ -28,7 +28,7 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
                     }
                 }
                 catch (Throwable thrown) {
-                    setException(thrown);
+                    completeWithException(thrown);
                 }
             }
         });
@@ -37,12 +37,12 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
     protected abstract void completed(V_IN result) throws Throwable;
 
     protected void completed(Throwable exception) throws Throwable {
-        setException(exception);
+        completeWithException(exception);
     }
 
-    protected void setFuture(Future<V_OUT> future) {
+    protected void completeWithFuture(Future<V_OUT> future) {
         if (future == null) {
-            setPromise(null);
+            completeWithPromise(null);
         }
         else {
             Promise<V_OUT> promise;
@@ -51,13 +51,13 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
             } else {
                 promise = new FuturePromise<>(future);
             }
-            setPromise(promise);
+            completeWithPromise(promise);
         }
     }
 
-    protected void setPromise(Promise<V_OUT> promise) {
+    protected void completeWithPromise(Promise<V_OUT> promise) {
         if (promise == null) {
-            set(null);
+            complete(null);
         }
         else {
             promise.whenCompleted(new OnCompleted<V_OUT>() {
@@ -65,10 +65,10 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
                 public void completed(Promise<V_OUT> promise, V_OUT result, Throwable exception) throws Throwable {
                     switch (promise.state()) {
                         case RESOLVED:
-                            set(result);
+                            complete(result);
                             break;
                         case REJECTED:
-                            setException(exception);
+                            completeWithException(exception);
                             break;
                     }
                 }

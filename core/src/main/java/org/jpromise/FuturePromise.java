@@ -19,19 +19,24 @@ class FuturePromise<V> extends AbstractPromise<V> implements Runnable {
     }
 
     @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        return future.cancel(mayInterruptIfRunning);
+    }
+
+    @Override
     public void run() {
         try {
-            set(future.get());
+            complete(future.get());
         }
         catch (ExecutionException exception) {
             Throwable cause = exception.getCause();
             if (cause == null) {
                 cause = exception;
             }
-            setException(cause);
+            completeWithException(cause);
         }
         catch (InterruptedException exception) {
-            setException(exception);
+            completeWithException(exception);
         }
     }
 }

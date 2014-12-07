@@ -12,7 +12,7 @@ abstract class RejectedPromise<E extends Throwable, V> extends ComposedPromise<V
 
     @Override
     protected void completed(V result) throws Throwable {
-        set(result);
+        complete(result);
     }
 
     @Override
