@@ -10,14 +10,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.jpromise.util.MessageUtil.mustNotBeNull;
+
 public class PromiseManager {
     private static final Executor FUTURE_EXECUTOR = PromiseExecutors.NEW;
 
     private PromiseManager() { }
 
     public static <V> Promise<V> create(final Callable<V> callable, Executor executor) {
-        Arg.ensureNotNull(callable, "callable");
-        Arg.ensureNotNull(executor, "executor");
+        if (callable == null) throw new IllegalArgumentException(mustNotBeNull("callable"));
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         final Deferred<V> deferred = Promise.defer();
         executor.execute(new Runnable() {
             @Override
@@ -38,8 +40,8 @@ public class PromiseManager {
     }
 
     public static <V> Promise<V> fromFuture(Executor executor, Future<V> future) {
-        Arg.ensureNotNull(executor, "executor");
-        Arg.ensureNotNull(future, "future");
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
         if (future instanceof Promise) {
             return (Promise<V>)future;
         }
@@ -51,9 +53,9 @@ public class PromiseManager {
     }
 
     public static <V> Promise<V> fromFuture(Executor executor, Future<V> future, long timeout, TimeUnit timeUnit) {
-        Arg.ensureNotNull(executor, "executor");
-        Arg.ensureNotNull(future, "future");
-        Arg.ensureNotNull(timeUnit, "timeUnit");
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
+        if (timeUnit == null) throw new IllegalArgumentException(mustNotBeNull("timeUnit"));
         if (future instanceof Promise) {
             return (Promise<V>)future;
         }
@@ -76,6 +78,7 @@ public class PromiseManager {
             return Promise.resolved(null);
         }
         return whenAllCompleted(Arrays.asList(promises));
+
     }
 
     public static Promise<Void> whenAllCompleted(Iterable<? extends Promise<?>> promises) {
