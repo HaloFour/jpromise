@@ -330,7 +330,7 @@ public class PromiseManagerTest {
         Promise<String> promise1 = Promise.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
 
-        Promise<String> promise = PromiseManager.whenAnyComplete(promise1, promise2);
+        Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
 
         assertResolves(SUCCESS1, promise1);
         assertResolves(SUCCESS2, promise2);
@@ -342,7 +342,7 @@ public class PromiseManagerTest {
         Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
 
-        Promise<String> promise = PromiseManager.whenAnyComplete(promise1, promise2);
+        Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
 
         assertResolves(SUCCESS1, promise1);
         assertResolves(SUCCESS2, promise2);
@@ -355,7 +355,7 @@ public class PromiseManagerTest {
         Promise<String> promise1 = Promise.rejected(exception);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
 
-        Promise<String> promise = PromiseManager.whenAnyComplete(promise1, promise2);
+        Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
 
         assertRejects(exception, promise1);
         assertResolves(SUCCESS2, promise2);
@@ -368,7 +368,7 @@ public class PromiseManagerTest {
         Promise<String> promise1 = rejectAfter(exception, 100);
         Promise<String> promise2 = Promise.resolved(SUCCESS2);
 
-        Promise<String> promise = PromiseManager.whenAnyComplete(promise1, promise2);
+        Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
 
         assertRejects(exception, promise1);
         assertResolves(SUCCESS2, promise2);
@@ -378,7 +378,7 @@ public class PromiseManagerTest {
     @Test
     public void whenAnyCompleteNullList() throws Throwable {
         List<Promise<String>> list = null;
-        Promise<String> promise = PromiseManager.whenAnyComplete(list);
+        Promise<String> promise = PromiseManager.whenAnyCompleted(list);
 
         assertFalse(promise.isDone());
     }
@@ -389,7 +389,7 @@ public class PromiseManagerTest {
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
         Promise<String> promise3 = null;
 
-        Promise<String> promise = PromiseManager.whenAnyComplete(promise1, promise2, promise3);
+        Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2, promise3);
 
         assertResolves(SUCCESS1, promise);
     }

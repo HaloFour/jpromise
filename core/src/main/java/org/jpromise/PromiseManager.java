@@ -153,15 +153,15 @@ public class PromiseManager {
     }
 
     @SafeVarargs
-    public static <V> Promise<V> whenAnyComplete(Promise<V>... promises) {
+    public static <V> Promise<V> whenAnyCompleted(Promise<V>... promises) {
         if (promises == null || promises.length == 0) {
             Deferred<V> deferred = Promise.defer();
             return deferred.promise();
         }
-        return whenAnyComplete(Arrays.asList(promises));
+        return whenAnyCompleted(Arrays.asList(promises));
     }
 
-    public static <V> Promise<V> whenAnyComplete(Iterable<? extends Promise<V>> promises) {
+    public static <V> Promise<V> whenAnyCompleted(Iterable<? extends Promise<V>> promises) {
         final Deferred<V> deferred = Promise.defer();
         if (promises == null) {
             return deferred.promise();
