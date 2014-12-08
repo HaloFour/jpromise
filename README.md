@@ -14,8 +14,7 @@ Basics:
 Creating promises:
 ------------------
 
-```
-#!java
+```java
 
 // Creating an already resolved promise
 Promise<String> promise1 = Promise.resolved("Hello World!");
@@ -50,8 +49,7 @@ is finishes.  For `thenCompose` and `withFallback` the returned promise propagat
 promise returned in the callback.  In all cases if the callback throws an exception, either checked or unchecked,
 the returned promise is rejected with that exception.
 
-```
-#!java
+```java
 Promise<String> promise1 = Promise.resolved("Hello World!");
 
 Promise<String> promise2 = promise1.then(new OnResolved<String>() {
@@ -94,8 +92,7 @@ Promise<String> promise7 = promise.withFallback(new OnRejectedHandler<Throwable,
 The rejected promise methods each have overloads that accept an argument of `Class<? extends Throwable>` which
 specify that the callback is typed to a specific exception type or any of its subclasses.
 
-```
-#!java
+```java
 Promise<String> promise8 = promise.rejected(IllegalArgumentException.class, new OnRejected<IllegalArgumentException>() {
     @Override public void rejected(IllegalArgumentException exception) {
         // This callback will only be called if the exception is an instance of IllegalArgumentException
@@ -107,8 +104,7 @@ All of the composable methods also accept an `Executor` instance on which the ca
 the callbacks are executed by the current thread, meaning that if the promise is already completed the callback
 is invoked immediately and the composing method will not return until the callback returns.
 
-```
-#!java
+```java
 ForkJoinPool mainPool = ...;
 
 Promise<String> promise9 = promise.then(mainPool, new OnResolved<String>() {
@@ -122,7 +118,7 @@ Promise<String> promise9 = promise.then(mainPool, new OnResolved<String>() {
 All of the composable methods are written specifically so that they play well with Java 8 lambdas, eliminating
 overload ambiguity.  The following are identical to the examples above.
 
-#!java
+```java
 Promise<String> promise1 = Promise.resolved("Hello World!");
 
 Promise<String> promise2 = promise1.then(result -> { System.out.println(result); });
