@@ -8,7 +8,6 @@ import rx.Observable;
 import rx.Subscriber;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 
 public class PromiseObservable<V> extends Observable<V> {
@@ -35,7 +34,7 @@ public class PromiseObservable<V> extends Observable<V> {
                 final Iterable<Promise<?>> subscribed = subscribeWhileIterating(promises, subscriber);
                 Promise<Void> completed;
                 if (skipRejections) {
-                    completed = PromiseManager.whenAllComplete(subscribed);
+                    completed = PromiseManager.whenAllCompleted(subscribed);
                 }
                 else {
                     completed = PromiseManager.whenAllResolved(subscribed);
