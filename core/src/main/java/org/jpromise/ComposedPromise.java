@@ -4,7 +4,6 @@ import org.jpromise.functions.OnCompleted;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> implements OnCompleted<V_IN> {
     private final Executor executor;
@@ -67,7 +66,7 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
             if (future instanceof Promise) {
                 promise = (Promise<V_OUT>) future;
             } else {
-                promise = new FuturePromise<>(future);
+                promise = new FuturePromise<>(PromiseExecutors.NEW, future);
             }
             completeWithPromise(promise);
         }
@@ -79,7 +78,7 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
         }
         else {
             composed = promise;
-            promise.whenCompleted(new OnCompleted<V_OUT>() {
+            promise.whenCompleted(this.executor, new OnCompleted<V_OUT>() {
                 @Override
                 public void completed(Promise<V_OUT> promise, V_OUT result, Throwable exception) throws Throwable {
                     if (cancelled) {

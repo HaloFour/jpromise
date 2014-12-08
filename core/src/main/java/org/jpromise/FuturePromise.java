@@ -1,20 +1,17 @@
 package org.jpromise;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 class FuturePromise<V> extends AbstractPromise<V> implements Runnable {
     private final Future<V> future;
     private final long timeout;
     private final TimeUnit timeUnit;
 
-    FuturePromise(Future<V> future) {
-        this(future, Long.MIN_VALUE, null);
+    FuturePromise(Executor executor, Future<V> future) {
+        this(executor, future, Long.MIN_VALUE, null);
     }
 
-    FuturePromise(Future<V> future, long timeout, TimeUnit timeUnit) {
+    FuturePromise(Executor executor, Future<V> future, long timeout, TimeUnit timeUnit) {
         this.future = future;
         this.timeout = timeout;
         this.timeUnit = timeUnit;
@@ -22,9 +19,7 @@ class FuturePromise<V> extends AbstractPromise<V> implements Runnable {
             this.run();
         }
         else {
-            Thread thread = new Thread(this);
-            thread.setDaemon(true);
-            thread.start();
+            executor.execute(this);
         }
     }
 

@@ -183,22 +183,6 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         return result;
     }
 
-    @Override
-    public V getNow(V defaultValue) throws ExecutionException, CancellationException {
-        if (state == PromiseState.PENDING) {
-            return defaultValue;
-        }
-        else if (state == PromiseState.RESOLVED) {
-            return result;
-        }
-        else {
-            if (exception instanceof CancellationException) {
-                throw (CancellationException)exception;
-            }
-            throw new ExecutionException(exception);
-        }
-    }
-
     protected boolean complete(V result) {
         if (state != PromiseState.PENDING) {
             return false;

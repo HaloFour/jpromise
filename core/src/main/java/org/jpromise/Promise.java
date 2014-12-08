@@ -2,13 +2,12 @@ package org.jpromise;
 
 import org.jpromise.functions.*;
 
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.*;
 
 public abstract class Promise<V> implements Future<V> {
-    public static final Executor DEFAULT_EXECUTOR = CurrentThreadExecutor.INSTANCE;
+    public static final Executor DEFAULT_EXECUTOR = PromiseExecutors.CURRENT;
 
     public abstract PromiseState state();
 
@@ -31,9 +30,31 @@ public abstract class Promise<V> implements Future<V> {
         try {
             return this.get();
         }
+        catch (ExecutionException exception) {
+            Throwable cause = exception.getCause();
+            if (cause instanceof CancellationException) {
+                throw (CancellationException)cause;
+            }
+            throw exception;
+        }
         catch (InterruptedException exception) {
             throw new ExecutionException(exception);
         }
+    }
+
+    public Promise<Boolean> cancelAfter(final boolean mayInterruptIfRunning, long timeout, TimeUnit timeUnit) {
+        if (isDone()) {
+            return Promise.resolved(false);
+        }
+        final Deferred<Boolean> deferred = Promise.defer();
+        Timer timer = new Timer(true);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                deferred.resolve(Promise.this.cancel(mayInterruptIfRunning));
+            }
+        }, timeUnit.toMillis(timeout));
+        return deferred.promise();
     }
 
     public Promise<V> then(OnResolved<? super V> action) {

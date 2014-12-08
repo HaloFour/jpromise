@@ -3,7 +3,6 @@ package org.jpromise;
 import org.jpromise.functions.OnCompleted;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
@@ -12,6 +11,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PromiseManager {
+    private static final Executor FUTURE_EXECUTOR = PromiseExecutors.NEW;
+
+    private PromiseManager() { }
+
     public static <V> Promise<V> create(final Callable<V> callable, Executor executor) {
         Arg.ensureNotNull(callable, "callable");
         Arg.ensureNotNull(executor, "executor");
@@ -31,23 +34,33 @@ public class PromiseManager {
     }
 
     public static <V> Promise<V> fromFuture(Future<V> future) {
+        return fromFuture(PromiseExecutors.NEW, future);
+    }
+
+    public static <V> Promise<V> fromFuture(Executor executor, Future<V> future) {
+        Arg.ensureNotNull(executor, "executor");
         Arg.ensureNotNull(future, "future");
         if (future instanceof Promise) {
             return (Promise<V>)future;
         }
-        return new FuturePromise<>(future);
+        return new FuturePromise<>(executor, future);
     }
 
     public static <V> Promise<V> fromFuture(Future<V> future, long timeout, TimeUnit timeUnit) {
+        return fromFuture(FUTURE_EXECUTOR, future, timeout, timeUnit);
+    }
+
+    public static <V> Promise<V> fromFuture(Executor executor, Future<V> future, long timeout, TimeUnit timeUnit) {
+        Arg.ensureNotNull(executor, "executor");
         Arg.ensureNotNull(future, "future");
         Arg.ensureNotNull(timeUnit, "timeUnit");
         if (future instanceof Promise) {
             return (Promise<V>)future;
         }
-        return new FuturePromise<>(future, timeout, timeUnit);
+        return new FuturePromise<>(executor, future, timeout, timeUnit);
     }
 
-    private static <V> void whenComplete(Promise<V> promise, final Deferred<Void> deferred, final AtomicInteger counter) {
+    private static <V> void whenCompleted(Promise<V> promise, final Deferred<Void> deferred, final AtomicInteger counter) {
         promise.whenCompleted(new OnCompleted<V>() {
             @Override
             public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
@@ -58,14 +71,14 @@ public class PromiseManager {
         });
     }
 
-    public static Promise<Void> whenAllComplete(Promise<?>... promises) {
+    public static Promise<Void> whenAllCompleted(Promise<?>... promises) {
         if (promises == null || promises.length == 0) {
             return Promise.resolved(null);
         }
-        return whenAllComplete(Arrays.asList(promises));
+        return whenAllCompleted(Arrays.asList(promises));
     }
 
-    public static Promise<Void> whenAllComplete(Iterable<Promise<?>> promises) {
+    public static Promise<Void> whenAllCompleted(Iterable<? extends Promise<?>> promises) {
         if (promises == null) {
             return Promise.resolved(null);
         }
@@ -79,7 +92,7 @@ public class PromiseManager {
                 continue;
             }
             counter.incrementAndGet();
-            whenComplete(promise, deferred, counter);
+            whenCompleted(promise, deferred, counter);
         }
         if (counter.decrementAndGet() <= 0) {
             deferred.resolve(null);
@@ -112,7 +125,7 @@ public class PromiseManager {
         return whenAllResolved(Arrays.asList(promises));
     }
 
-    public static Promise<Void> whenAllResolved(Iterable<Promise<?>> promises) {
+    public static Promise<Void> whenAllResolved(Iterable<? extends Promise<?>> promises) {
         if (promises == null) {
             return Promise.resolved(null);
         }
@@ -145,7 +158,7 @@ public class PromiseManager {
         return whenAnyComplete(Arrays.asList(promises));
     }
 
-    public static <V> Promise<V> whenAnyComplete(Iterable<Promise<V>> promises) {
+    public static <V> Promise<V> whenAnyComplete(Iterable<? extends Promise<V>> promises) {
         final Deferred<V> deferred = Promise.defer();
         if (promises == null) {
             return deferred.promise();
@@ -185,7 +198,7 @@ public class PromiseManager {
         return whenAnyResolved(Arrays.asList(promises));
     }
 
-    public static <V> Promise<V> whenAnyResolved(Iterable<Promise<V>> promises) {
+    public static <V> Promise<V> whenAnyResolved(Iterable<? extends Promise<V>> promises) {
         final Deferred<V> deferred = Promise.defer();
         if (promises == null) {
             return deferred.promise();
