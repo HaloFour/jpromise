@@ -554,6 +554,24 @@ public class PromiseTest {
     }
 
     @Test
+    public void cancelAfter() throws Throwable {
+        Promise<String> promise = resolveAfter(SUCCESS1, 100);
+        Promise<Boolean> cancel = promise.cancelAfter(true, 10, TimeUnit.MILLISECONDS);
+
+        assertResolves(true, cancel);
+        assertRejects(CancellationException.class, promise);
+    }
+
+    @Test(timeout = 1000)
+    public void cancelAfterAlreadyCompleted() throws Throwable {
+        Promise<String> promise = resolveAfter(SUCCESS1, 10);
+        Promise<Boolean> cancel = promise.cancelAfter(true, 5000, TimeUnit.MILLISECONDS);
+
+        assertResolves(false, cancel);
+        assertResolves(SUCCESS1, promise);
+    }
+
+    @Test
     public void get() throws Throwable {
         Promise<String> promise = resolveAfter(SUCCESS1, 10);
         String result = promise.get();

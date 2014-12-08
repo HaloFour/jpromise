@@ -5,6 +5,7 @@ import org.jpromise.functions.*;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Promise<V> implements Future<V> {
     public static final Executor DEFAULT_EXECUTOR = PromiseExecutors.CURRENT;
@@ -47,13 +48,25 @@ public abstract class Promise<V> implements Future<V> {
             return Promise.resolved(false);
         }
         final Deferred<Boolean> deferred = Promise.defer();
-        Timer timer = new Timer(true);
+        final Timer timer = new Timer(true);
+        final AtomicBoolean flag = new AtomicBoolean();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                deferred.resolve(Promise.this.cancel(mayInterruptIfRunning));
+                if (flag.compareAndSet(false, true)) {
+                    deferred.resolve(Promise.this.cancel(mayInterruptIfRunning));
+                }
             }
         }, timeUnit.toMillis(timeout));
+        this.whenCompleted(new OnCompleted<V>() {
+            @Override
+            public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
+                if (flag.compareAndSet(false, true)) {
+                    timer.cancel();
+                    deferred.resolve(false);
+                }
+            }
+        });
         return deferred.promise();
     }
 
