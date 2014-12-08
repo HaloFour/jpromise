@@ -17,9 +17,9 @@ public class PromiseManager {
 
     private PromiseManager() { }
 
-    public static <V> Promise<V> create(final Callable<V> callable, Executor executor) {
-        if (callable == null) throw new IllegalArgumentException(mustNotBeNull("callable"));
+    public static <V> Promise<V> create(Executor executor, final Callable<V> callable) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        if (callable == null) throw new IllegalArgumentException(mustNotBeNull("callable"));
         final Deferred<V> deferred = Promise.defer();
         executor.execute(new Runnable() {
             @Override

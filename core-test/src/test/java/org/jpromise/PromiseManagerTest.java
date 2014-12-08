@@ -27,12 +27,12 @@ public class PromiseManagerTest {
         Executor executor = mock(Executor.class);
         doNothing().when(executor).execute(any(Runnable.class));
 
-        Promise<String> promise = PromiseManager.create(new Callable<String>() {
+        Promise<String> promise = PromiseManager.create(executor, new Callable<String>() {
             @Override
             public String call() throws Exception {
                 return SUCCESS1;
             }
-        }, executor);
+        });
 
         assertFalse(promise.isDone());
 
@@ -56,12 +56,12 @@ public class PromiseManagerTest {
         doNothing().when(executor).execute(any(Runnable.class));
 
         final Exception exception = new Exception();
-        Promise<String> promise = PromiseManager.create(new Callable<String>() {
+        Promise<String> promise = PromiseManager.create(executor, new Callable<String>() {
             @Override
             public String call() throws Exception {
                 throw exception;
             }
-        }, executor);
+        });
 
         assertFalse(promise.isDone());
 
