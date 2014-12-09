@@ -137,6 +137,51 @@ public class PromiseStream<V> {
         });
     }
 
+    public PromiseStream<V> take(final int count) {
+        return new PromiseStream<V>(new OnSubscribe<V>() {
+            @Override
+            public void subscribed(final PromiseSubscriber<V> subscriber) {
+                final AtomicInteger counter = new AtomicInteger();
+                final AtomicBoolean complete = new AtomicBoolean();
+                counter.set(count);
+                subscribe.subscribed(new PromiseSubscriber<V>() {
+                    @Override
+                    public void resolved(V result) {
+                        if (shouldPropagate()) {
+                            subscriber.resolved(result);
+                        }
+                    }
+
+                    @Override
+                    public void rejected(Throwable exception) {
+                        if (shouldPropagate()) {
+                            subscriber.rejected(exception);
+                        }
+                    }
+
+                    @Override
+                    public void complete() {
+                        tryComplete();
+                    }
+
+                    private boolean shouldPropagate() {
+                        if (counter.getAndDecrement() > 0) {
+                            return true;
+                        }
+                        tryComplete();
+                        return false;
+                    }
+
+                    private void tryComplete() {
+                        if (complete.compareAndSet(false, true)) {
+                            subscriber.complete();
+                        }
+                    }
+                });
+            }
+        });
+    }
+
     public Promise<List<V>> toList(Class<V> resultClass) {
         return collect(PromiseCollectors.toList(resultClass));
     }

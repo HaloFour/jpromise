@@ -302,4 +302,14 @@ public class PromiseStreamTest {
 
         assertRejects(IllegalStateException.class, promise);
     }
+
+    @Test
+    public void take() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Promise<String[]> promise = stream.take(3).toArray(String.class);
+
+        String[] result = assertResolves(promise);
+        assertEquals(3, result.length);
+    }
+
 }
