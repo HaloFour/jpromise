@@ -4,7 +4,6 @@ import org.jpromise.functions.OnCompleted;
 import org.jpromise.functions.OnResolved;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
@@ -93,7 +92,7 @@ public class PromiseManager {
     }
 
     public static <V> Promise<Void> whenAllCompleted(Iterable<? extends Promise<V>> promises, OnCompleted<V> action) {
-        Objects.requireNonNull(action, mustNotBeNull("action"));
+        if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
         if (promises == null) {
             return Promise.resolved(null);
         }
@@ -151,7 +150,7 @@ public class PromiseManager {
     }
 
     public static <V> Promise<Void> whenAllResolved(Iterable<? extends Promise<V>> promises, OnResolved<? super V> action) {
-        Objects.requireNonNull(action, mustNotBeNull("action"));
+        if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
         if (promises == null) {
             return Promise.resolved(null);
         }

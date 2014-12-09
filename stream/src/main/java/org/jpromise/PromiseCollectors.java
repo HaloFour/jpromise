@@ -6,6 +6,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.jpromise.util.MessageUtil.doesNotSupportMultipleAccumulators;
+import static org.jpromise.util.MessageUtil.mustNotBeNull;
+
 public class PromiseCollectors {
     private static abstract class SingleAccumulatorPromiseCollector<V, A, R> implements PromiseCollector<V, A, R> {
         private final AtomicBoolean done = new AtomicBoolean();
@@ -20,7 +23,7 @@ public class PromiseCollectors {
             if (done.compareAndSet(false, true)) {
                 return accumulator;
             }
-            throw new IllegalStateException();
+            throw new IllegalStateException(doesNotSupportMultipleAccumulators());
         }
     }
 
@@ -51,7 +54,8 @@ public class PromiseCollectors {
         };
     }
 
-    public static <V> PromiseCollector<V, ?, V[]> toArray(final V[] array) {
+    public static <V> PromiseCollector<V, ?, V[]> toArray(V[] array) {
+        if (array == null) throw new IllegalArgumentException(mustNotBeNull("array"));
         final AtomicBoolean done = new AtomicBoolean();
         class ArrayWrapper {
             public V[] array;
@@ -73,6 +77,7 @@ public class PromiseCollectors {
     }
 
     public static <V> PromiseCollector<V, ?, V[]> toArray(Class<V> resultClass, final Callable<V[]> arrayFactory) {
+        if (arrayFactory == null) throw new IllegalArgumentException(mustNotBeNull("arrayFactory"));
         class ArrayWrapper {
             public V[] array;
             public final AtomicInteger index = new AtomicInteger();
@@ -101,16 +106,18 @@ public class PromiseCollectors {
         return toCollection(resultClass, new Callable<List<V>>() {
             @Override
             public List<V> call() throws Exception {
-                return new LinkedList<V>();
+                return new LinkedList<>();
             }
         });
     }
 
     public static <V, L extends List<V>> PromiseCollector<V, ?, L> toList(L list) {
+        if (list == null) throw new IllegalArgumentException(mustNotBeNull("list"));
         return toCollection(list);
     }
 
     public static <V, L extends List<V>> PromiseCollector<V, ?, L> toList(Class<V> resultClass, Callable<L> listFactory) {
+        if (listFactory == null) throw new IllegalArgumentException(mustNotBeNull("listFactory"));
         return toCollection(resultClass, listFactory);
     }
 
@@ -124,7 +131,13 @@ public class PromiseCollectors {
     }
 
     public static <V, S extends Set<V>> PromiseCollector<V, ?, S> toSet(S set) {
+        if (set == null) throw new IllegalArgumentException(mustNotBeNull("set"));
         return toCollection(set);
+    }
+
+    public static <V, S extends Set<V>> PromiseCollector<V, ?, S> toSet(Class<V> resultClass, Callable<S> setFactory) {
+        if (setFactory == null) throw new IllegalArgumentException(mustNotBeNull("setFactory"));
+        return toCollection(resultClass, setFactory);
     }
 
     public static <V> PromiseCollector<V, ?, Collection<V>> toCollection(Class<V> resultClass) {
@@ -137,6 +150,7 @@ public class PromiseCollectors {
     }
 
     public static <V, C extends Collection<V>> PromiseCollector<V, ?, C> toCollection(Class<V> resultClass, final Callable<C> collectionFactory) {
+        if (collectionFactory == null) throw new IllegalArgumentException(mustNotBeNull("collectionFactory"));
         return new PromiseCollector<V, C, C>() {
             @Override
             public C getAccumulator() throws Throwable {
@@ -156,6 +170,7 @@ public class PromiseCollectors {
     }
 
     public static <V, C extends Collection<V>> PromiseCollector<V, ?, C> toCollection(final C collection) {
+        if (collection == null) throw new IllegalArgumentException(mustNotBeNull("collection"));
         return new SingleAccumulatorPromiseCollector<V, C, C>(collection) {
             @Override
             public synchronized void accumulate(C accumulator, V result) throws Throwable {
@@ -202,6 +217,9 @@ public class PromiseCollectors {
     }
 
     public static <V, MK, MV, M extends Map<MK, MV>> PromiseCollector<V, ?, M> toMap(final M map, final OnResolvedFunction<V, MK> keyMapper, final OnResolvedFunction<V, MV> valueMapper) {
+        if (map == null) throw new IllegalArgumentException(mustNotBeNull("map"));
+        if (keyMapper == null) throw new IllegalArgumentException(mustNotBeNull("keyMapper"));
+        if (valueMapper == null) throw new IllegalArgumentException(mustNotBeNull("valueMapper"));
         final Object lock = new Object();
         return new SingleAccumulatorPromiseCollector<V, M, M>(map) {
             @Override
@@ -221,6 +239,9 @@ public class PromiseCollectors {
     }
 
     public static <V, MK, MV, M extends Map<MK, MV>> PromiseCollector<V, ?, M> toMap(final Callable<M> mapFactory, final OnResolvedFunction<V, MK> keyMapper, final OnResolvedFunction<V, MV> valueMapper) {
+        if (mapFactory == null) throw new IllegalArgumentException(mustNotBeNull("mapFactory"));
+        if (keyMapper == null) throw new IllegalArgumentException(mustNotBeNull("keyMapper"));
+        if (valueMapper == null) throw new IllegalArgumentException(mustNotBeNull("valueMapper"));
         final Object lock = new Object();
         return new PromiseCollector<V, M, M>() {
             @Override
@@ -244,12 +265,20 @@ public class PromiseCollectors {
         };
     }
 
+    public static <V, A, K> PromiseCollector<V, ?, Map<K, Set<V>>> groupingBy(Class<K> keyClass, Class<V> resultClass, OnResolvedFunction<V, K> keyMapper) {
+        Map<K, Set<V>> groupMap = new HashMap<>();
+        return groupingBy(groupMap, keyMapper, PromiseCollectors.toSet(resultClass));
+    }
+
     public static <V, A, K, C> PromiseCollector<V, ?, Map<K, C>> groupingBy(Class<K> keyClass, final OnResolvedFunction<V, K> keyMapper, final PromiseCollector<V, A, C> groupCollector) {
         Map<K, C> groupMap = new HashMap<>();
         return groupingBy(groupMap, keyMapper, groupCollector);
     }
 
     public static <V, A, K, C, M extends Map<K, C>> PromiseCollector<V, ?, M> groupingBy(final M map, final OnResolvedFunction<V, K> keyMapper, final PromiseCollector<V, A, C> groupCollector) {
+        if (map == null) throw new IllegalArgumentException(mustNotBeNull("map"));
+        if (keyMapper == null) throw new IllegalArgumentException(mustNotBeNull("keyMapper"));
+        if (groupCollector == null) throw new IllegalArgumentException(mustNotBeNull("groupCollector"));
         final Object lock = new Object();
         return new PromiseCollector<V, Map<K, A>, M>() {
             @Override

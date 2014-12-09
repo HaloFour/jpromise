@@ -25,7 +25,7 @@ public enum PromiseComposition implements PromiseCompositionListener {
     private static final CompositePromiseCompositionListener composite = new CompositePromiseCompositionListener(listeners);
 
     public static boolean register(PromiseCompositionListener listener) {
-        Objects.requireNonNull(listener, mustNotBeNull("listener"));
+        if (listener == null) throw new IllegalArgumentException(mustNotBeNull("listener"));
         return listeners.add(listener);
     }
 

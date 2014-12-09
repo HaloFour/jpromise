@@ -9,6 +9,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.jpromise.util.MessageUtil.mustNotBeNull;
+
 public class PromiseStream<V> {
     private final OnSubscribe<V> subscribe;
 
@@ -25,6 +27,7 @@ public class PromiseStream<V> {
     }
 
     <V_APPLIED> PromiseStream<V_APPLIED> map(final OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
+        if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
         return new PromiseStream<>(new StreamOperator<V, V_APPLIED>(subscribe) {
             @Override
             protected void resolved(PromiseSubscriber<V_APPLIED> subscriber, V result) throws Throwable {
@@ -34,6 +37,7 @@ public class PromiseStream<V> {
     }
 
     <V_COMPOSED> PromiseStream<V_COMPOSED> compose(final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
+        if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
         final AtomicInteger counter = new AtomicInteger();
         counter.set(1);
         return new PromiseStream<>(new StreamOperator<V, V_COMPOSED>(subscribe) {
@@ -74,6 +78,7 @@ public class PromiseStream<V> {
     }
 
     public PromiseStream<V> filter(final OnResolvedFunction<V, Boolean> predicate) {
+        if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
         return new PromiseStream<>(new StreamOperator<V, V>(subscribe) {
             @Override
             protected void resolved(PromiseSubscriber<V> subscriber, V result) throws Throwable {
@@ -108,6 +113,8 @@ public class PromiseStream<V> {
     }
 
     public <E extends Throwable> PromiseStream<V> filterRejected(final Class<E> exceptionClass, final OnRejectedHandler<? super E, Boolean> predicate) {
+        if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
+        if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
         return new PromiseStream<V>(new StreamOperator<V, V>(subscribe) {
             @Override
             protected void resolved(PromiseSubscriber<V> subscriber, V result) {
@@ -146,7 +153,7 @@ public class PromiseStream<V> {
         return collect(PromiseCollectors.toArray(array));
     }
 
-    public <C extends Collection<V>> Promise<C> toCollection(final C collection) {
+    public <C extends Collection<V>> Promise<C> toCollection(C collection) {
         return collect(PromiseCollectors.toCollection(collection));
     }
 
@@ -159,6 +166,7 @@ public class PromiseStream<V> {
     }
 
     public <A, R> Promise<R> collect(PromiseCollector<V, A, R> collector) {
+        if (collector == null) throw new IllegalArgumentException(mustNotBeNull("collector"));
         try {
             A accumulator = collector.getAccumulator();
             return collect(accumulator, collector);
