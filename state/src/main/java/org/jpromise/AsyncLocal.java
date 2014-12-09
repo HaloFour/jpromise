@@ -1,8 +1,5 @@
 package org.jpromise;
 
-import org.jpromise.functions.OnPromiseCallback;
-import org.jpromise.functions.OnPromiseComposing;
-
 import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
