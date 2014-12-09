@@ -242,7 +242,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void fail() throws Throwable {
+    public void rejectedPromise() throws Throwable {
         Exception exception = new TimeoutException();
         Promise<String> promise1 = Promise.rejected(exception);
 
@@ -256,7 +256,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void typedFail() throws Throwable {
+    public void typedRejected() throws Throwable {
         Exception exception = new TimeoutException();
         Promise<String> promise1 = Promise.rejected(exception);
 
@@ -272,7 +272,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void typedFailMismatch() throws Throwable {
+    public void typedRejectedMismatch() throws Throwable {
         Exception exception = new TimeoutException();
         Promise<String> promise1 = Promise.rejected(exception);
 
@@ -288,7 +288,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void failResolved() throws Throwable {
+    public void rejectedResolved() throws Throwable {
         Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
 
         OnRejectedHandler<Throwable, String> callback = mock(OnRejectedHandler.class);
@@ -300,7 +300,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void failThrows() throws Throwable {
+    public void rejectedThrows() throws Throwable {
         Exception exception1 = new TimeoutException();
         final Exception exception2 = new IllegalArgumentException();
         Promise<String> promise1 = Promise.rejected(exception1);
@@ -317,7 +317,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void handle() throws Throwable {
+    public void handleWith() throws Throwable {
         Exception exception = new Exception();
         Promise<String> promise1 = rejectAfter(exception, 10);
         Promise<String> promise2 = promise1.handleWith(new OnRejectedHandler<Throwable, String>() {
@@ -332,7 +332,17 @@ public class PromiseTest {
     }
 
     @Test
-    public void typedHandle() throws Throwable {
+    public void handleWithResult() throws Throwable {
+        Exception exception = new ArithmeticException();
+        Promise<String> promise1 = rejectAfter(exception, 10);
+        Promise<String> promise2 = promise1.handleWith(ArithmeticException.class, SUCCESS1);
+
+        assertRejects(exception, promise1);
+        assertResolves(SUCCESS1, promise2);
+    }
+
+    @Test
+    public void typedHandleWith() throws Throwable {
         Exception exception = new ArithmeticException();
         Promise<String> promise1 = rejectAfter(exception, 10);
         Promise<String> promise2 = promise1.handleWith(ArithmeticException.class, new OnRejectedHandler<ArithmeticException, String>() {
@@ -347,7 +357,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void typedHandleMismatch() throws Throwable {
+    public void typedHandleWithMismatch() throws Throwable {
         Exception exception = new Exception();
         Promise<String> promise1 = rejectAfter(exception, 10);
         Promise<String> promise2 = promise1.handleWith(ArithmeticException.class, new OnRejectedHandler<ArithmeticException, String>() {
@@ -362,7 +372,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void handleResolved() throws Throwable {
+    public void handleWithResolved() throws Throwable {
         Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
         Promise<String> promise2 = promise1.handleWith(new OnRejectedHandler<Throwable, String>() {
             @Override
@@ -376,7 +386,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void handleThrows() throws Throwable {
+    public void handleWithThrows() throws Throwable {
         Exception exception1 = new Exception();
         final Exception exception2 = new Exception();
         Promise<String> promise1 = rejectAfter(exception1, 10);
@@ -392,7 +402,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void fallback() throws Throwable {
+    public void fallbackWith() throws Throwable {
         Exception exception = new Exception();
         Promise<String> promise1 = rejectAfter(exception, 10);
 
@@ -408,7 +418,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void fallbackResolved() throws Throwable {
+    public void fallbackWithResolved() throws Throwable {
         Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
 
         Promise<String> promise2 = promise1.fallbackWith(new OnRejectedHandler<Throwable, Promise<String>>() {
@@ -423,7 +433,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void fallbackRejects() throws Throwable {
+    public void fallbackWithRejects() throws Throwable {
         final Exception exception1 = new Exception();
         final Exception exception2 = new Exception();
         Promise<String> promise1 = rejectAfter(exception1, 10);
@@ -440,7 +450,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void fallbackThrows() throws Throwable {
+    public void fallbackWithThrows() throws Throwable {
         final Exception exception1 = new Exception();
         final Exception exception2 = new Exception();
         Promise<String> promise1 = rejectAfter(exception1, 10);
@@ -457,7 +467,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void fallbackNullPromise() throws Throwable {
+    public void fallbackWithNullPromise() throws Throwable {
         final Exception exception = new Exception();
         Promise<String> promise1 = rejectAfter(exception, 10);
 
@@ -473,7 +483,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void typedFallback() throws Throwable {
+    public void typedFallbackWith() throws Throwable {
         final Exception exception = new ArithmeticException();
         Promise<String> promise1 = rejectAfter(exception, 10);
 
@@ -489,7 +499,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void typedFallbackMismatch() throws Throwable {
+    public void typedFallbackWithMismatch() throws Throwable {
         final Exception exception = new Exception();
         Promise<String> promise1 = rejectAfter(exception, 10);
 
@@ -552,7 +562,7 @@ public class PromiseTest {
 
         promise2.cancel(true);
         assertRejects(CancellationException.class, promise2);
-        verify(future, timeout(10000).times(1)).cancel(anyBoolean());
+        verify(future, timeout(100).times(1)).cancel(anyBoolean());
     }
 
     @Test

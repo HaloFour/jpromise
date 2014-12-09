@@ -92,6 +92,10 @@ public abstract class Promise<V> implements Future<V> {
         return this.rejected(Throwable.class, executor, action);
     }
 
+    public Promise<V> handleWith(V result) {
+        return this.handleWith(Throwable.class, result);
+    }
+
     public Promise<V> handleWith(OnRejectedHandler<Throwable, ? extends V> handler) {
         return this.handleWith(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, handler);
     }
@@ -124,6 +128,7 @@ public abstract class Promise<V> implements Future<V> {
     public abstract <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, OnResolvedFunction<? super V, ? extends V_APPLIED> function);
     public abstract <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function);
     public abstract <E extends Throwable> Promise<V> rejected(Class<E> exceptionClass, Executor executor, OnRejected<? super E> action);
+    public abstract <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, V result);
     public abstract <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, Executor executor, OnRejectedHandler<? super E, ? extends V> handler);
     public abstract <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, Executor executor, OnRejectedHandler<? super E, ? extends Future<V>> fallback);
     public abstract Promise<V> whenCompleted(Executor executor, OnCompleted<V> action);

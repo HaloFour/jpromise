@@ -109,6 +109,17 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     }
 
     @Override
+    public <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, final V result) {
+        if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
+        return registerCallback(new RejectedPromise<E, V>(this, PromiseExecutors.CURRENT_THREAD, exceptionClass) {
+            @Override
+            protected void handle(E exception) throws Throwable {
+                complete(result);
+            }
+        });
+    }
+
+    @Override
     public <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, Executor executor, final OnRejectedHandler<? super E, ? extends V> handler) {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
