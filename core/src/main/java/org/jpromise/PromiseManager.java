@@ -97,15 +97,17 @@ public class PromiseManager {
     }
 
     private static <V> void whenCompleted(Promise<V> promise, OnCompleted<V> action, final Deferred<Void> deferred, final AtomicInteger counter) {
-        promise.whenCompleted(action)
-                .whenCompleted(new OnCompleted<V>() {
-                    @Override
-                    public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
-                        if (counter.decrementAndGet() <= 0) {
-                            deferred.resolve(null);
-                        }
-                    }
-                });
+        if (action != null) {
+            promise = promise.whenCompleted(action);
+        }
+        promise.whenCompleted(new OnCompleted<V>() {
+            @Override
+            public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
+                if (counter.decrementAndGet() <= 0) {
+                    deferred.resolve(null);
+                }
+            }
+        });
     }
 
     public static Promise<Void> whenAllCompleted(Promise<?>... promises) {
@@ -113,19 +115,19 @@ public class PromiseManager {
             return Promise.resolved(null);
         }
         return whenAllCompleted(Arrays.asList(promises));
-
     }
 
     @SuppressWarnings("unchecked")
     public static Promise<Void> whenAllCompleted(Iterable<? extends Promise<?>> promises) {
-        return whenAllCompleted((Iterable) promises, new OnCompleted<Object>() {
-            @Override
-            public void completed(Promise<Object> promise, Object result, Throwable exception) throws Throwable { }
-        });
+        return whenAllCompletedImpl((Iterable) promises, null);
     }
 
     public static <V> Promise<Void> whenAllCompleted(Iterable<? extends Promise<V>> promises, OnCompleted<V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
+        return whenAllCompletedImpl(promises, action);
+    }
+
+    private static <V> Promise<Void> whenAllCompletedImpl(Iterable<? extends Promise<V>> promises, OnCompleted<V> action) {
         if (promises == null) {
             return Promise.resolved(null);
         }
@@ -149,22 +151,24 @@ public class PromiseManager {
     }
 
     private static <V> void whenResolved(Promise<V> promise, OnResolved<? super V> action, final Deferred<Void> deferred, final AtomicInteger counter, final AtomicBoolean done) {
-        promise.then(action)
-                .whenCompleted(new OnCompleted<V>() {
-                    @Override
-                    public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
-                        if (promise.isRejected()) {
-                            if (done.compareAndSet(false, true)) {
-                                deferred.reject(exception);
-                            }
-                        }
-                        else {
-                            if (counter.decrementAndGet() <= 0 && done.compareAndSet(false, true)) {
-                                deferred.resolve(null);
-                            }
-                        }
+        if (action != null) {
+            promise = promise.then(action);
+        }
+        promise.whenCompleted(new OnCompleted<V>() {
+            @Override
+            public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
+                if (promise.isRejected()) {
+                    if (done.compareAndSet(false, true)) {
+                        deferred.reject(exception);
                     }
-                });
+                }
+                else {
+                    if (counter.decrementAndGet() <= 0 && done.compareAndSet(false, true)) {
+                        deferred.resolve(null);
+                    }
+                }
+            }
+        });
     }
 
     public static Promise<Void> whenAllResolved(Promise<?>... promises) {
@@ -176,14 +180,15 @@ public class PromiseManager {
 
     @SuppressWarnings("unchecked")
     public static Promise<Void> whenAllResolved(Iterable<? extends Promise<?>> promises) {
-        return whenAllResolved((Iterable)promises, new OnResolved<Object>() {
-            @Override
-            public void resolved(Object result) throws Throwable { }
-        });
+        return whenAllResolvedImpl((Iterable)promises, null);
     }
 
     public static <V> Promise<Void> whenAllResolved(Iterable<? extends Promise<V>> promises, OnResolved<? super V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
+        return whenAllResolvedImpl(promises, action);
+    }
+
+    public static <V> Promise<Void> whenAllResolvedImpl(Iterable<? extends Promise<V>> promises, OnResolved<? super V> action) {
         if (promises == null) {
             return Promise.resolved(null);
         }
