@@ -4,17 +4,24 @@ import java.util.concurrent.*;
 
 class FuturePromise<V> extends AbstractPromise<V> implements Runnable {
     private final Future<V> future;
-    private final long timeout;
+    private final Long timeout;
     private final TimeUnit timeUnit;
 
     FuturePromise(Executor executor, Future<V> future) {
-        this(executor, future, Long.MIN_VALUE, null);
+        this.future = future;
+        this.timeout = null;
+        this.timeUnit = null;
+        start(executor);
     }
 
     FuturePromise(Executor executor, Future<V> future, long timeout, TimeUnit timeUnit) {
         this.future = future;
         this.timeout = timeout;
         this.timeUnit = timeUnit;
+        start(executor);
+    }
+
+    private void start(Executor executor) {
         if (future.isDone()) {
             this.run();
         }
@@ -31,7 +38,7 @@ class FuturePromise<V> extends AbstractPromise<V> implements Runnable {
     @Override
     public void run() {
         try {
-            if (timeout == Long.MIN_VALUE) {
+            if (timeout == null) {
                 complete(future.get());
             }
             else {
