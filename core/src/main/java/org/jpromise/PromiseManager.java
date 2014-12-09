@@ -14,8 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
 public class PromiseManager {
-    private static final Executor FUTURE_EXECUTOR = PromiseExecutors.NEW_THREAD;
-
     private PromiseManager() { }
 
     public static <Void> Promise<Void> create(Executor executor, Runnable runnable) {
@@ -60,7 +58,7 @@ public class PromiseManager {
     }
 
     public static <V> Promise<V> fromFuture(Future<V> future) {
-        return fromFuture(PromiseExecutors.NEW_THREAD, future);
+        return fromFuture(PromiseExecutors.DEFAULT_FUTURE_EXECUTOR, future);
     }
 
     public static <V> Promise<V> fromFuture(Executor executor, Future<V> future) {
@@ -73,7 +71,7 @@ public class PromiseManager {
     }
 
     public static <V> Promise<V> fromFuture(Future<V> future, long timeout, TimeUnit timeUnit) {
-        return fromFuture(FUTURE_EXECUTOR, future, timeout, timeUnit);
+        return fromFuture(PromiseExecutors.DEFAULT_FUTURE_EXECUTOR, future, timeout, timeUnit);
     }
 
     public static <V> Promise<V> fromFuture(Executor executor, Future<V> future, long timeout, TimeUnit timeUnit) {

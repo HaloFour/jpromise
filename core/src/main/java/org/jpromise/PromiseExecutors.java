@@ -30,6 +30,8 @@ public enum PromiseExecutors implements Executor {
             }
         }
     };
+    public final static Executor DEFAULT_CONTINUATION_EXECUTOR = COMMON_POOL;
+    public final static Executor DEFAULT_FUTURE_EXECUTOR = NEW_THREAD;
 
     private final static ForkJoinPool pool = new ForkJoinPool();
 }

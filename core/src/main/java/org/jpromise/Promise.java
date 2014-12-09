@@ -8,8 +8,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Promise<V> implements Future<V> {
-    public static final Executor DEFAULT_EXECUTOR = PromiseExecutors.CURRENT_THREAD;
-
     public abstract PromiseState state();
 
     public boolean isDone() {
@@ -71,23 +69,23 @@ public abstract class Promise<V> implements Future<V> {
     }
 
     public Promise<V> then(OnResolved<? super V> action) {
-        return this.then(DEFAULT_EXECUTOR, action);
+        return this.then(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
 
     public <V_APPLIED> Promise<V_APPLIED> thenApply(OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
-        return this.thenApply(DEFAULT_EXECUTOR, function);
+        return this.thenApply(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, function);
     }
 
     public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
-        return this.thenCompose(DEFAULT_EXECUTOR, function);
+        return this.thenCompose(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, function);
     }
 
     public Promise<V> rejected(OnRejected<Throwable> action) {
-        return this.rejected(Throwable.class, DEFAULT_EXECUTOR, action);
+        return this.rejected(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
 
     public <E extends Throwable> Promise<V> rejected(Class<E> exceptionClass, OnRejected<? super E> action) {
-        return this.rejected(exceptionClass, DEFAULT_EXECUTOR, action);
+        return this.rejected(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
 
     public Promise<V> rejected(Executor executor, OnRejected<Throwable> action) {
@@ -95,7 +93,7 @@ public abstract class Promise<V> implements Future<V> {
     }
 
     public Promise<V> handleWith(OnRejectedHandler<Throwable, ? extends V> handler) {
-        return this.handleWith(Throwable.class, DEFAULT_EXECUTOR, handler);
+        return this.handleWith(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, handler);
     }
 
     public Promise<V> handleWith(Executor executor, OnRejectedHandler<Throwable, ? extends V> handler) {
@@ -103,11 +101,11 @@ public abstract class Promise<V> implements Future<V> {
     }
 
     public <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, OnRejectedHandler<? super E, ? extends V> handler) {
-        return this.handleWith(exceptionClass, DEFAULT_EXECUTOR, handler);
+        return this.handleWith(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, handler);
     }
 
     public Promise<V> fallbackWith(OnRejectedHandler<Throwable, ? extends Future<V>> fallback) {
-        return this.fallbackWith(Throwable.class, DEFAULT_EXECUTOR, fallback);
+        return this.fallbackWith(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, fallback);
     }
 
     public Promise<V> fallbackWith(Executor executor, OnRejectedHandler<Throwable, ? extends Future<V>> fallback) {
@@ -115,11 +113,11 @@ public abstract class Promise<V> implements Future<V> {
     }
 
     public <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, OnRejectedHandler<? super E, ? extends Future<V>> fallback) {
-        return this.fallbackWith(exceptionClass, DEFAULT_EXECUTOR, fallback);
+        return this.fallbackWith(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, fallback);
     }
 
     public Promise<V> whenCompleted(OnCompleted<V> action) {
-        return this.whenCompleted(DEFAULT_EXECUTOR, action);
+        return this.whenCompleted(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
 
     public abstract Promise<V> then(Executor executor, OnResolved<? super V> action);

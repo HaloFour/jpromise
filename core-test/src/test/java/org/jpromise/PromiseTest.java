@@ -2,8 +2,10 @@ package org.jpromise;
 
 import junit.framework.AssertionFailedError;
 import org.jpromise.functions.*;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.concurrent.*;
@@ -249,8 +251,8 @@ public class PromiseTest {
         Promise<String> promise2 = promise1.rejected(callback);
 
         assertRejects(exception, promise1);
-        verify(callback, times(1)).rejected(exception);
         assertRejects(exception, promise2);
+        verify(callback, times(1)).rejected(exception);
     }
 
     @Test
@@ -529,7 +531,7 @@ public class PromiseTest {
     }
 
     @Test
-    public void cancelComposed() throws Throwable {
+    public void cancelComposedCancelsPromise() throws Throwable {
         Deferred<String> deferred = Promise.defer();
         Promise<String> promise1 = deferred.promise();
 
@@ -539,18 +541,18 @@ public class PromiseTest {
         Promise<String> future = mock(Promise.class);
 
         when(callback.resolved(anyString())).thenReturn(future);
-        OnCompleted<String> anyCompleted = any();
-        when(future.whenCompleted(anyCompleted)).thenReturn(null);
+        when(future.whenCompleted(any(Executor.class), Mockito.<OnCompleted<String>>any())).thenReturn(null);
         when(future.cancel(anyBoolean())).thenReturn(true);
 
         Promise<String> promise2 = promise1.thenCompose(callback);
 
         deferred.resolve(SUCCESS1);
-        promise2.cancel(true);
-
-        assertRejects(CancellationException.class, promise2);
         assertResolves(SUCCESS1, promise1);
-        verify(future, times(1)).cancel(anyBoolean());
+        verify(future, timeout(10).times(1)).whenCompleted(any(Executor.class), Mockito.<OnCompleted<String>>any());
+
+        promise2.cancel(true);
+        assertRejects(CancellationException.class, promise2);
+        verify(future, timeout(10000).times(1)).cancel(anyBoolean());
     }
 
     @Test

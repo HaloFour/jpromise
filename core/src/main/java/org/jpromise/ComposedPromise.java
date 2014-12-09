@@ -48,7 +48,10 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
     public boolean cancel(boolean mayInterruptIfRunning) {
         if (super.cancel(mayInterruptIfRunning)) {
             cancelled = true;
-            return composed == null || composed.cancel(mayInterruptIfRunning);
+            if (composed != null) {
+                return composed.cancel(mayInterruptIfRunning);
+            }
+            return true;
         }
         return false;
     }
@@ -75,6 +78,9 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
     }
 
     protected void completeWithPromise(Promise<V_OUT> promise) {
+        if (cancelled) {
+            return;
+        }
         if (promise == null) {
             complete(null);
         }
