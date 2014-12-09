@@ -16,6 +16,18 @@ import static org.jpromise.util.MessageUtil.mustNotBeNull;
 public class PromiseManager {
     private PromiseManager() { }
 
+    public static <Void> Promise<Void> create(Runnable runnable) {
+        return create(PromiseExecutors.DEFAULT_CREATION_EXECUTOR, runnable);
+    }
+
+    public static <V> Promise<V> create(Runnable runnable, V result) {
+        return create(PromiseExecutors.DEFAULT_CREATION_EXECUTOR, runnable, result);
+    }
+
+    public static <V> Promise<V> create(Callable<V> callable) {
+        return create(PromiseExecutors.DEFAULT_CREATION_EXECUTOR, callable);
+    }
+
     public static <Void> Promise<Void> create(Executor executor, Runnable runnable) {
         return create(executor, runnable, null);
     }
