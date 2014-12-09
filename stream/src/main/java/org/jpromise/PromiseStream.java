@@ -137,7 +137,7 @@ public class PromiseStream<V> {
         });
     }
 
-    public Promise<? extends List<V>> toList(Class<V> resultClass) {
+    public Promise<List<V>> toList(Class<V> resultClass) {
         return collect(PromiseCollectors.toList(resultClass));
     }
 
@@ -145,16 +145,40 @@ public class PromiseStream<V> {
         return collect(PromiseCollectors.toList(list));
     }
 
+    public Promise<Set<V>> toSet(Class<V> resultClass) {
+        return collect(PromiseCollectors.toSet(resultClass));
+    }
+
     public Promise<Set<V>> toSet(Set<V> set) {
         return collect(PromiseCollectors.toSet(set));
+    }
+
+    public Promise<V[]> toArray(Class<V> resultClass) {
+        return collect(PromiseCollectors.toArray(resultClass));
+    }
+
+    public Promise<V[]> toArray(Class<V> resultClass, int initialCapacity) {
+        return collect(PromiseCollectors.toArray(resultClass, initialCapacity));
     }
 
     public Promise<V[]> toArray(V[] array) {
         return collect(PromiseCollectors.toArray(array));
     }
 
+    public Promise<Collection<V>> toCollection(Class<V> resultClass) {
+        return collect(PromiseCollectors.toCollection(resultClass));
+    }
+
     public <C extends Collection<V>> Promise<C> toCollection(C collection) {
         return collect(PromiseCollectors.toCollection(collection));
+    }
+
+    public <K> Promise<Map<K, V>> toMap(Class<K> keyClass, Class<V> valueClass, OnResolvedFunction<V, K> keyMapper) {
+        return collect(PromiseCollectors.toMap(keyClass, valueClass, keyMapper));
+    }
+
+    public <K, MV> Promise<Map<K, MV>> toMap(Class<K> keyClass, Class<MV> valueClass, OnResolvedFunction<V, K> keyMapper, OnResolvedFunction<V, MV> valueMapper) {
+        return collect(PromiseCollectors.toMap(keyClass, valueClass, keyMapper, valueMapper));
     }
 
     public <K> Promise<Map<K, V>> toMap(Map<K, V> map, OnResolvedFunction<V, K> keyMapper) {

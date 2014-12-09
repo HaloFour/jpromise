@@ -1,6 +1,8 @@
 package org.jpromise;
 
 import org.jpromise.functions.OnResolvedFunction;
+
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,7 +35,8 @@ public class PromiseCollectors {
         return toArray(resultClass, 0);
     }
 
-    public static <V> PromiseCollector<V, ?, V[]> toArray(Class<V> resultClass, final int initialCapacity) {
+    public static <V> PromiseCollector<V, ?, V[]> toArray(final Class<V> resultClass, final int initialCapacity) {
+        if (resultClass == null) throw new IllegalArgumentException(mustNotBeNull("resultClass"));
         final ArrayList<V> list = new ArrayList<>(initialCapacity);
         return new PromiseCollector<V, ArrayList<V>, V[]>() {
             @Override
@@ -49,14 +52,14 @@ public class PromiseCollectors {
             @Override
             @SuppressWarnings("unchecked")
             public V[] finish(ArrayList<V> accumulator) {
-                return (V[])accumulator.toArray();
+                V[] array = (V[])Array.newInstance(resultClass, accumulator.size());
+                return accumulator.toArray(array);
             }
         };
     }
 
     public static <V> PromiseCollector<V, ?, V[]> toArray(V[] array) {
         if (array == null) throw new IllegalArgumentException(mustNotBeNull("array"));
-        final AtomicBoolean done = new AtomicBoolean();
         class ArrayWrapper {
             public V[] array;
             public final AtomicInteger index = new AtomicInteger();
