@@ -1,9 +1,10 @@
 package org.jpromise;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 public enum PromiseExecutors implements Executor {
-    CURRENT {
+    CURRENT_THREAD {
         @Override
         public void execute(Runnable command) {
             if (command != null) {
@@ -11,7 +12,7 @@ public enum PromiseExecutors implements Executor {
             }
         }
     },
-    NEW {
+    NEW_THREAD {
         @Override
         public void execute(Runnable command) {
             if (command != null) {
@@ -20,6 +21,16 @@ public enum PromiseExecutors implements Executor {
                 thread.start();
             }
         }
-    }
+    },
+    COMMON_POOL {
+        @Override
+        public void execute(Runnable command) {
+            if (command != null) {
+                pool.execute(command);
+            }
+        }
+    };
+
+    private final static ForkJoinPool pool = new ForkJoinPool();
 }
 

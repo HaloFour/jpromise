@@ -1,7 +1,6 @@
 package org.jpromise;
 
 import org.jpromise.functions.OnCompleted;
-import org.jpromise.functions.OnPromiseCallback;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
@@ -69,7 +68,7 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
             if (future instanceof Promise) {
                 promise = (Promise<V_OUT>) future;
             } else {
-                promise = new FuturePromise<>(PromiseExecutors.NEW, future);
+                promise = new FuturePromise<>(PromiseExecutors.NEW_THREAD, future);
             }
             completeWithPromise(promise);
         }

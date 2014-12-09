@@ -26,7 +26,7 @@ public class AsyncContextTest {
 
         Promise<String> promise1 = Promise.resolved(SUCCESS1);
 
-        Promise<String> promise2 = promise1.then(PromiseExecutors.NEW, new OnResolved<String>() {
+        Promise<String> promise2 = promise1.then(PromiseExecutors.NEW_THREAD, new OnResolved<String>() {
             @Override
             public void resolved(String result) throws Throwable {
                 assertNotEquals(thread, Thread.currentThread());

@@ -15,7 +15,7 @@ public class AsyncLocalTest {
         final Thread thread = Thread.currentThread();
 
         Promise<String> promise = Promise.resolved("SUCCESS1");
-        promise.then(PromiseExecutors.NEW, new OnResolved<String>() {
+        promise.then(PromiseExecutors.NEW_THREAD, new OnResolved<String>() {
             @Override
             public void resolved(String result) throws Throwable {
                 assertNotEquals(thread, Thread.currentThread());

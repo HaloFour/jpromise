@@ -14,9 +14,32 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
 public class PromiseManager {
-    private static final Executor FUTURE_EXECUTOR = PromiseExecutors.NEW;
+    private static final Executor FUTURE_EXECUTOR = PromiseExecutors.NEW_THREAD;
 
     private PromiseManager() { }
+
+    public static <Void> Promise<Void> create(Executor executor, Runnable runnable) {
+        return create(executor, runnable, null);
+    }
+
+    public static <V> Promise<V> create(Executor executor, final Runnable runnable, final V result) {
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        if (runnable == null) throw new IllegalArgumentException(mustNotBeNull("runnable"));
+        final Deferred<V> deferred = Promise.defer();
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                    deferred.resolve(result);
+                }
+                catch (Throwable exception) {
+                    deferred.reject(exception);
+                }
+            }
+        });
+        return deferred.promise();
+    }
 
     public static <V> Promise<V> create(Executor executor, final Callable<V> callable) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
@@ -37,7 +60,7 @@ public class PromiseManager {
     }
 
     public static <V> Promise<V> fromFuture(Future<V> future) {
-        return fromFuture(PromiseExecutors.NEW, future);
+        return fromFuture(PromiseExecutors.NEW_THREAD, future);
     }
 
     public static <V> Promise<V> fromFuture(Executor executor, Future<V> future) {

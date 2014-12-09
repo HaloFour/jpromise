@@ -8,7 +8,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Promise<V> implements Future<V> {
-    public static final Executor DEFAULT_EXECUTOR = PromiseExecutors.CURRENT;
+    public static final Executor DEFAULT_EXECUTOR = PromiseExecutors.CURRENT_THREAD;
 
     public abstract PromiseState state();
 
