@@ -26,6 +26,9 @@
         <module name="core-test" />
         <module name="patterns" />
         <module name="rx" />
+        <module name="slf4j" />
+        <module name="state" />
+        <module name="stream" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -34,6 +37,9 @@
       <module name="jpromise" target="1.7" />
       <module name="patterns" target="1.7" />
       <module name="rx" target="1.7" />
+      <module name="slf4j" target="1.7" />
+      <module name="state" target="1.7" />
+      <module name="stream" target="1.7" />
     </bytecodeTargetLevel>
   </component>
 </project>

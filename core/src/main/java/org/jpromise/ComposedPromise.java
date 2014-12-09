@@ -1,17 +1,20 @@
 package org.jpromise;
 
 import org.jpromise.functions.OnCompleted;
+import org.jpromise.functions.OnPromiseCallback;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
 abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> implements OnCompleted<V_IN> {
     private final Executor executor;
+    private final PromiseCallbackListener callback;
     private Promise<V_OUT> composed;
     private boolean cancelled;
 
-    protected ComposedPromise(Executor executor) {
+    protected ComposedPromise(Promise<V_IN> promise, Executor executor) {
         this.executor = executor;
+        this.callback = PromiseComposition.LISTENER.composingCallback(promise, this);
     }
 
     @Override
@@ -25,7 +28,7 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
                 if (cancelled) {
                     return;
                 }
-                try {
+                try (AutoCloseable ignored = callback.invokingPromiseCallback(promise, ComposedPromise.this, result, exception)) {
                     switch (promise.state()) {
                         case RESOLVED:
                             completeComposed(result);

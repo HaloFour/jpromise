@@ -8,7 +8,6 @@ import rx.Observable;
 import rx.Subscriber;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
 public class PromiseObservable<V> extends Observable<V> {
     private final Iterable<Promise<V>> promises;
@@ -31,13 +30,26 @@ public class PromiseObservable<V> extends Observable<V> {
                     return;
                 }
 
-                final Iterable<Promise<?>> subscribed = subscribeWhileIterating(promises, subscriber);
                 Promise<Void> completed;
                 if (skipRejections) {
-                    completed = PromiseManager.whenAllCompleted(subscribed);
+                    completed = PromiseManager.whenAllCompleted(promises, new OnCompleted<V>() {
+                        @Override
+                        public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
+                            if (promise.isResolved() && !subscriber.isUnsubscribed()) {
+                                subscriber.onNext(result);
+                            }
+                        }
+                    });
                 }
                 else {
-                    completed = PromiseManager.whenAllResolved(subscribed);
+                    completed = PromiseManager.whenAllResolved(promises, new OnResolved<V>() {
+                        @Override
+                        public void resolved(V result) throws Throwable {
+                            if (!subscriber.isUnsubscribed()) {
+                                subscriber.onNext(result);
+                            }
+                        }
+                    });
                 }
 
                 completed.whenCompleted(new OnCompleted<Void>() {
@@ -63,42 +75,5 @@ public class PromiseObservable<V> extends Observable<V> {
 
     public PromiseObservable<V> ignoringRejected() {
         return new PromiseObservable<V>(promises, true) { };
-    }
-
-    private static <V> Iterable<Promise<?>> subscribeWhileIterating(final Iterable<Promise<V>> promises, final Subscriber<? super V> subscriber) {
-        return new Iterable<Promise<?>>() {
-            @Override
-            public Iterator<Promise<?>> iterator() {
-                final Iterator<Promise<V>> iterator = promises.iterator();
-                return new Iterator<Promise<?>>() {
-                    @Override
-                    public boolean hasNext() {
-                        return iterator.hasNext();
-                    }
-
-                    @Override
-                    public Promise<?> next() {
-                        Promise<V> promise = iterator.next();
-                        if (promise == null) {
-                            return null;
-                        }
-                        return promise.then(new OnResolved<V>() {
-                            @Override
-                            public void resolved(V result) throws Throwable {
-                                if (subscriber.isUnsubscribed()) {
-                                    return;
-                                }
-                                subscriber.onNext(result);
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void remove() {
-                        iterator.remove();
-                    }
-                };
-            }
-        };
     }
 }

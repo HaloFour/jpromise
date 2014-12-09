@@ -1,6 +1,11 @@
 package org.jpromise;
 
-public interface Cancellation {
-    boolean isRequested();
-    void throwIfRequested();
+public class Cancellation {
+
+    public static boolean isRequested() {
+        return false;
+    }
+
+    public static void throwIfRequested() {
+    }
 }

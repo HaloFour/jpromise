@@ -59,7 +59,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         if (action == null) {
             return this;
         }
-        return registerCallback(new ComposedPromise<V, V>(executor) {
+        return registerCallback(new ComposedPromise<V, V>(this, executor) {
             @Override
             protected void completeComposed(V result) throws Throwable {
                 action.resolved(result);
@@ -72,7 +72,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     public <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, final OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return registerCallback(new ComposedPromise<V, V_APPLIED>(executor) {
+        return registerCallback(new ComposedPromise<V, V_APPLIED>(this, executor) {
             @Override
             protected void completeComposed(V result) throws Throwable {
                 complete(function.resolved(result));
@@ -84,7 +84,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return registerCallback(new ComposedPromise<V, V_COMPOSED>(executor) {
+        return registerCallback(new ComposedPromise<V, V_COMPOSED>(this, executor) {
             @Override
             protected void completeComposed(V result) throws Throwable {
                 completeWithFuture(function.resolved(result));
@@ -99,7 +99,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         if (action == null) {
             return this;
         }
-        return registerCallback(new RejectedPromise<E, V>(executor, exceptionClass) {
+        return registerCallback(new RejectedPromise<E, V>(this, executor, exceptionClass) {
             @Override
             protected void handle(E exception) throws Throwable {
                 action.rejected(exception);
@@ -113,7 +113,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (handler == null) throw new IllegalArgumentException(mustNotBeNull("handler"));
-        return registerCallback(new RejectedPromise<E, V>(executor, exceptionClass) {
+        return registerCallback(new RejectedPromise<E, V>(this, executor, exceptionClass) {
             @Override
             protected void handle(E exception) throws Throwable {
                 handler.handle(exception);
@@ -127,7 +127,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (fallback == null) throw new IllegalArgumentException(mustNotBeNull("fallback"));
-        return registerCallback(new RejectedPromise<E, V>(executor, exceptionClass) {
+        return registerCallback(new RejectedPromise<E, V>(this, executor, exceptionClass) {
             @Override
             protected void handle(E exception) throws Throwable {
                 Future<V> future = fallback.handle(exception);
@@ -145,7 +145,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     public Promise<V> whenCompleted(Executor executor, final OnCompleted<V> action) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
-        return registerCallback(new ComposedPromise<V, V>(executor) {
+        return registerCallback(new ComposedPromise<V, V>(this, executor) {
             @Override
             protected void completeComposed(V result) throws Throwable {
                 action.completed(AbstractPromise.this, result, null);

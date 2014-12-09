@@ -5,8 +5,8 @@ import java.util.concurrent.Executor;
 abstract class RejectedPromise<E extends Throwable, V> extends ComposedPromise<V, V> {
     private final Class<E> exceptionClass;
 
-    RejectedPromise(Executor executor, Class<E> exceptionClass) {
-        super(executor);
+    RejectedPromise(Promise<V> promise, Executor executor, Class<E> exceptionClass) {
+        super(promise, executor);
         this.exceptionClass = exceptionClass;
     }
 
