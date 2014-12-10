@@ -39,6 +39,14 @@ Promise<String> promise4 = PromiseManager.create(mainPool, new Callable<String>(
 // Creating a promise from an existing Future
 Future<String> future = ...;
 Promise<String> promise = PromiseManager.fromFuture(future);
+
+// Creating a promise from an rx.Observable<T>
+Observable<String> observable = Observable.from(new String[] { "Hello World!" });
+Promise<String> promise = new ObservablePromise(observable);
+
+// Creating a promise from a CompletionStage
+CompletableFuture<String> future = new CompletableFuture<>();
+Promise<String> promise = new CompletablePromise<>(future);
 ```
 
 Composing promises:
@@ -58,33 +66,46 @@ Promise<String> promise2 = promise1.then(new OnResolved<String>() {
     }
 });
 
-Promise<String> promise3 = promise.thenApply(new OnResolvedFunction<String, String>() {
+Promise<String> promise3 = promise2.thenApply(new OnResolvedFunction<String, String>() {
     @Override public String resolved(String result) {
         return new StringBuilder(result).reverse().toString();
     }
 });
 
-Promise<String> promise4 = promise.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+Promise<String> promise4 = promise3.thenCompose(new OnResolvedFunction<String, Future<String>>() {
     @Override public Future<String> resolved(String result) {
         return Promise.resolved("Goodbye world!");
     }
 });
 
-Promise<String> promise5 = promise.rejected(new OnRejected<Throwable>() {
+Promise<String> promise5 = promise4.whenRejected(new OnRejected<Throwable>() {
     @Override public void rejected(Throwable exception) {
         System.err.println(exception.toString());
     }
 });
 
-Promise<String> promise6 = promise.withHandler(new OnRejectedHandler<Throwable, String>() {
+Promise<String> promise6 = promise5.withHandler(new OnRejectedHandler<Throwable, String>() {
     @Override public String handle(Throwable exception) {
         return "Oops, this oughta fix it.";
     }
 });
 
-Promise<String> promise7 = promise.withFallback(new OnRejectedHandler<Throwable, Future<String>>() {
+Promise<String> promise7 = promise6.withFallback(new OnRejectedHandler<Throwable, Future<String>>() {
     @Override public Future<String> handle(Throwable exception) {
         return Promise.resolved("Got a good value from somewhere else.");
+    }
+});
+
+Promise<String> promise8 = promise7.whenCompleted(new OnCompleted<String>() {
+    @Override public void completed(Promise<String> promise, String result, Throwable exception) {
+        switch (promise.state()) {
+            case RESOLVED:
+                System.out.printf("The promise was successful: %s%n", result);
+                break;
+            case REJECTED:
+                System.err.printf("Oops, the promise failed: %s%n", exception.getMessage());
+                break;
+        }
     }
 });
 ```
@@ -93,26 +114,30 @@ The rejected promise methods each have overloads that accept an argument of `Cla
 specify that the callback is typed to a specific exception type or any of its subclasses.
 
 ```java
-Promise<String> promise8 = promise.rejected(IllegalArgumentException.class, new OnRejected<IllegalArgumentException>() {
+Promise<String> promise9 = promise8.whenRejected(IllegalArgumentException.class, new OnRejected<IllegalArgumentException>() {
     @Override public void rejected(IllegalArgumentException exception) {
         // This callback will only be called if the exception is an instance of IllegalArgumentException
     }
 });
 ```
 
-All of the composable methods also accept an `Executor` instance on which the callback can be executed.  Currently
-the callbacks are executed by the current thread, meaning that if the promise is already completed the callback
-is invoked immediately and the composing method will not return until the callback returns.
+All of the composable methods also accept an `Executor` instance on which the callback can be executed.  If an
+executor is not specified the callbacks will be executed asynchronously on a common ForkJoinPool.
 
 ```java
 ForkJoinPool mainPool = ...;
 
-Promise<String> promise9 = promise.then(mainPool, new OnResolved<String>() {
+Promise<String> promise10 = promise9.then(mainPool, new OnResolved<String>() {
     @Override public void resolved(String result) {
-        // executed on the ForkJoinPool
+        // executed asynchronously on the specified ForkJoinPool
     }
 });
 
+Promise<String> promise11 = promise10.then(PromiseExecutors.CURRENT_THREAD, new OnResolved<String>() {
+    @Override public void resolved(String result) {
+        // executed synchronously on the thread that resolved the promise
+    }
+});
 ```
 
 All of the composable methods are written specifically so that they play well with Java 8 lambdas, eliminating
@@ -123,15 +148,26 @@ Promise<String> promise1 = Promise.resolved("Hello World!");
 
 Promise<String> promise2 = promise1.then(result -> { System.out.println(result); });
 
-Promise<String> promise3 = promise.thenApply(result -> new StringBuilder(result).reverse().toString());
+Promise<String> promise3 = promise2.thenApply(result -> new StringBuilder(result).reverse().toString());
 
-Promise<String> promise4 = promise.thenCompose(result -> Promise.resolved("Goodbye world!"));
+Promise<String> promise4 = promise3.thenCompose(result -> Promise.resolved("Goodbye world!"));
 
-Promise<String> promise5 = promise.rejected(exception -> { System.err.println(exception.toString()); });
+Promise<String> promise5 = promise4.whenRejected(exception -> { System.err.println(exception.toString()); });
 
-Promise<String> promise6 = promise.withHandler(exception -> "Oops, this oughta fix it.");
+Promise<String> promise6 = promise5.withHandler(exception -> "Oops, this oughta fix it.");
 
-Promise<String> promise7 = promise.withFallback(exception -> Promise.resolved("Got a good value from somewhere else."));
+Promise<String> promise7 = promise6.withFallback(exception -> Promise.resolved("Got a good value from somewhere else."));
+
+Promise<String> promise8 = promise7.whenCompleted((p, result, exception) -> {
+    switch (promise.state()) {
+        case RESOLVED:
+            System.out.printf("The promise was successful: %s%n", result);
+            break;
+        case REJECTED:
+            System.err.printf("Oops, the promise failed: %s%n", exception.getMessage());
+            break;
+    }
+});
 ```
 
 There's much more, including methods to wait on the completion of multiple promises, methods to race promises,

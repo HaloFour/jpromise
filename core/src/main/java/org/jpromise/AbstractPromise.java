@@ -93,7 +93,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     }
 
     @Override
-    public <E extends Throwable> Promise<V> rejected(Class<E> exceptionClass, Executor executor, final OnRejected<? super E> action) {
+    public <E extends Throwable> Promise<V> whenRejected(Class<E> exceptionClass, Executor executor, final OnRejected<? super E> action) {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (action == null) {

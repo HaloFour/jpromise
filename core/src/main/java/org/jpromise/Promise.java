@@ -80,16 +80,16 @@ public abstract class Promise<V> implements Future<V> {
         return this.thenCompose(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, function);
     }
 
-    public Promise<V> rejected(OnRejected<Throwable> action) {
-        return this.rejected(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
+    public Promise<V> whenRejected(OnRejected<Throwable> action) {
+        return this.whenRejected(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
 
-    public <E extends Throwable> Promise<V> rejected(Class<E> exceptionClass, OnRejected<? super E> action) {
-        return this.rejected(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
+    public <E extends Throwable> Promise<V> whenRejected(Class<E> exceptionClass, OnRejected<? super E> action) {
+        return this.whenRejected(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
 
-    public Promise<V> rejected(Executor executor, OnRejected<Throwable> action) {
-        return this.rejected(Throwable.class, executor, action);
+    public Promise<V> whenRejected(Executor executor, OnRejected<Throwable> action) {
+        return this.whenRejected(Throwable.class, executor, action);
     }
 
     public Promise<V> handleWith(V result) {
@@ -127,7 +127,7 @@ public abstract class Promise<V> implements Future<V> {
     public abstract Promise<V> then(Executor executor, OnResolved<? super V> action);
     public abstract <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, OnResolvedFunction<? super V, ? extends V_APPLIED> function);
     public abstract <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function);
-    public abstract <E extends Throwable> Promise<V> rejected(Class<E> exceptionClass, Executor executor, OnRejected<? super E> action);
+    public abstract <E extends Throwable> Promise<V> whenRejected(Class<E> exceptionClass, Executor executor, OnRejected<? super E> action);
     public abstract <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, V result);
     public abstract <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, Executor executor, OnRejectedHandler<? super E, ? extends V> handler);
     public abstract <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, Executor executor, OnRejectedHandler<? super E, ? extends Future<V>> fallback);

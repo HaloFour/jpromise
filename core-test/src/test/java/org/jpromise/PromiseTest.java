@@ -2,7 +2,6 @@ package org.jpromise;
 
 import junit.framework.AssertionFailedError;
 import org.jpromise.functions.*;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -242,13 +241,13 @@ public class PromiseTest {
     }
 
     @Test
-    public void rejectedPromise() throws Throwable {
+    public void whenRejectedPromise() throws Throwable {
         Exception exception = new TimeoutException();
         Promise<String> promise1 = Promise.rejected(exception);
 
         @SuppressWarnings("unchecked")
         OnRejected<Throwable> callback = mock(OnRejected.class);
-        Promise<String> promise2 = promise1.rejected(callback);
+        Promise<String> promise2 = promise1.whenRejected(callback);
 
         assertRejects(exception, promise1);
         assertRejects(exception, promise2);
@@ -256,14 +255,14 @@ public class PromiseTest {
     }
 
     @Test
-    public void typedRejected() throws Throwable {
+    public void typedWhenRejected() throws Throwable {
         Exception exception = new TimeoutException();
         Promise<String> promise1 = Promise.rejected(exception);
 
         @SuppressWarnings("unchecked")
         OnRejected<Throwable> callback = mock(OnRejected.class);
 
-        Promise<String> promise2 = promise1.rejected(TimeoutException.class, callback);
+        Promise<String> promise2 = promise1.whenRejected(TimeoutException.class, callback);
 
         assertRejects(exception, promise1);
         assertRejects(exception, promise2);
@@ -272,14 +271,14 @@ public class PromiseTest {
     }
 
     @Test
-    public void typedRejectedMismatch() throws Throwable {
+    public void typedWhenRejectedMismatch() throws Throwable {
         Exception exception = new TimeoutException();
         Promise<String> promise1 = Promise.rejected(exception);
 
         @SuppressWarnings("unchecked")
         OnRejected<Throwable> callback = mock(OnRejected.class);
 
-        Promise<String> promise2 = promise1.rejected(IllegalArgumentException.class, callback);
+        Promise<String> promise2 = promise1.whenRejected(IllegalArgumentException.class, callback);
 
         assertRejects(exception, promise1);
         assertRejects(exception, promise2);
@@ -288,24 +287,25 @@ public class PromiseTest {
     }
 
     @Test
-    public void rejectedResolved() throws Throwable {
+    public void whenRejectedResolved() throws Throwable {
         Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
 
-        OnRejectedHandler<Throwable, String> callback = mock(OnRejectedHandler.class);
-        Promise<String> promise2 = promise1.handleWith(callback);
+        @SuppressWarnings("unchecked")
+        OnRejected<Throwable> callback = mock(OnRejected.class);
+        Promise<String> promise2 = promise1.whenRejected(callback);
 
         assertResolves(SUCCESS1, promise1);
         assertResolves(SUCCESS1, promise2);
-        verify(callback, never()).handle(any(Throwable.class));
+        verify(callback, never()).rejected(any(Throwable.class));
     }
 
     @Test
-    public void rejectedThrows() throws Throwable {
+    public void whenRejectedThrows() throws Throwable {
         Exception exception1 = new TimeoutException();
         final Exception exception2 = new IllegalArgumentException();
         Promise<String> promise1 = Promise.rejected(exception1);
 
-        Promise<String> promise2 = promise1.rejected(new OnRejected<Throwable>() {
+        Promise<String> promise2 = promise1.whenRejected(new OnRejected<Throwable>() {
             @Override
             public void rejected(Throwable reason) throws Throwable {
                 throw exception2;
