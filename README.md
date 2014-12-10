@@ -20,7 +20,7 @@ Creating promises:
 Promise<String> promise1 = Promise.resolved("Hello World!");
 
 // Creating an already rejected promise
-Promise<String> promise2 = Promise.rejected(new Exception("Oops!");
+Promise<String> promise2 = Promise.rejected(new Exception("Oops!"));
 
 // Creating a deferred promise that will be resolved or rejected later
 Deferred<String> deferred = Promise.defer();
@@ -170,6 +170,74 @@ Promise<String> promise8 = promise7.whenCompleted((p, result, exception) -> {
 });
 ```
 
-There's much more, including methods to wait on the completion of multiple promises, methods to race promises,
-methods to join promise results into patterns and then deconstruct their results and methods to convert to/from
-Rx Observables.
+Joining Promises:
+-----------------
+
+There are several methods available to join the results of multiple promises into a single promise.  The simplest
+is to join two-to-five separate heterogeneous promises into a pattern which behaves like an immutable tuple.
+
+```java
+Promise<String> promise1 = ...;
+Promise<Integer> promise2 = ...;
+
+// create a single promise that will resolve when all of the specified promises have resolved
+Promise<Pattern2<String, Integer>> joined = Pattern.join(promise1, promise2);
+
+// helper methods on the Pattern class can deconstruct the result into the individual arguments
+joined.then(Pattern.spread2(new OnResolved2<String, Integer>() {
+    @Override public void resolved(String result1, Integer result2) {
+        System.out.printf("Both promises completed successfully: %s, %d%n", result1, result2);
+    }
+}));
+```
+
+You can also asynchronously wait on the completion or resolution of any number of promises.
+
+```java
+List<Promise<?>> promises = ...;
+
+// Returns a promise that will resolve when all of the specified promises have either been resolved or rejected
+Promise<Void> completed = PromiseManager.whenAllCompleted(promises);
+
+// Returns a promise that will resolve when all of the specified promises have been resolved.  If any of the
+// promises is rejected then the returned promise will propagate that rejection.
+Promise<Void> resolved = PromiseManager.whenAllResolved(promises);
+```
+
+There are methods to race the completion of one or more promises.
+
+```java
+List<Promise<String>> promises = ...;
+
+// Returns a promise that propagates the result or rejection of the first promise that completes.
+Promise<String> completed = PromiseManager.whenAnyCompleted(promises);
+
+// Returns a promise that propagates the result of the first promise that resolves.
+Promise<String> resolved = PromiseManager.whenAnyResolved(promises);
+```
+
+The `PromiseStream` class provides basic query and collection functionality over any number of homogeneous promises.
+
+```java
+List<Promise<String>> promises = ...;
+
+PromiseStream<String> stream = PromiseStream.from(promises);
+
+Promise<Integer[]> promise = stream
+    // transform the results of the individual promises
+    .map(new OnResolvedFunction<String, Integer>() {
+        @Override public Integer resolved(String result) {
+            return Integer.valueOf(result, 10);
+        }
+    })
+    // filter out any rejected promises with the specified exception class
+    .filterRejected(NumberFormatException.class)
+    // collect the results into an array via an ArrayList with the specified initial capacity
+    .toArray(Integer.class, 10);
+    
+promise.then(new OnResolved<Integer[]>() {
+    @Override public void resolved(Integer[] result) {
+        // use the final results here
+    }
+});
+```
