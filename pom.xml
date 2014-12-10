@@ -16,6 +16,7 @@
         <module>stream</module>
         <module>slf4j</module>
         <module>state</module>
+        <module>completable</module>
     </modules>
 
     <properties>
