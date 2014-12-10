@@ -156,10 +156,14 @@ public class PromiseStream<V> {
         return new PromiseStream<V>(new OnSubscribe<V>() {
             @Override
             public void subscribed(final PromiseSubscriber<V> subscriber) {
-                final AtomicInteger counter = new AtomicInteger();
-                final AtomicBoolean complete = new AtomicBoolean();
-                counter.set(count);
                 subscribe.subscribed(new PromiseSubscriber<V>() {
+                    final AtomicInteger counter = new AtomicInteger();
+                    final AtomicBoolean complete = new AtomicBoolean();
+
+                    {
+                        counter.set(count);
+                    }
+
                     @Override
                     public synchronized void resolved(V result) {
                         if (shouldPropagate()) {

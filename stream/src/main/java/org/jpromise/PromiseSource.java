@@ -29,7 +29,7 @@ class PromiseSource<V> implements OnSubscribe<V> {
                         }
                     }
                 })
-                .whenCompleted(new OnCompleted<Void>() {
+                .whenCompleted(PromiseExecutors.CURRENT_THREAD, new OnCompleted<Void>() {
                     @Override
                     public void completed(Promise<Void> promise, Void result, Throwable exception) throws Throwable {
                         subscriber.complete();
