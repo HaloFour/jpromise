@@ -26,7 +26,7 @@ public class PromiseStream<V> {
         this.subscribe = subscribe;
     }
 
-    <V_APPLIED> PromiseStream<V_APPLIED> map(final OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
+    public <V_APPLIED> PromiseStream<V_APPLIED> map(final OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
         return new PromiseStream<>(new StreamOperator<V, V_APPLIED>(subscribe) {
             @Override
@@ -36,7 +36,22 @@ public class PromiseStream<V> {
         });
     }
 
-    <V_COMPOSED> PromiseStream<V_COMPOSED> compose(final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
+    public <V_APPLIED, I extends Iterable<? extends V_APPLIED>> PromiseStream<V_APPLIED> flatMap(final OnResolvedFunction<? super V, I> function) {
+        if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
+        return new PromiseStream<>(new StreamOperator<V, V_APPLIED>(subscribe) {
+            @Override
+            protected void resolved(PromiseSubscriber<V_APPLIED> subscriber, V result) throws Throwable {
+                I iterable = function.resolved(result);
+                if (iterable != null) {
+                    for (V_APPLIED value : iterable) {
+                        subscriber.resolved(value);
+                    }
+                }
+            }
+        });
+    }
+
+    public <V_COMPOSED> PromiseStream<V_COMPOSED> compose(final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
         final AtomicInteger counter = new AtomicInteger();
         counter.set(1);

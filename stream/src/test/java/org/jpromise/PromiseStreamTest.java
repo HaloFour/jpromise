@@ -236,6 +236,30 @@ public class PromiseStreamTest {
     }
 
     @Test
+    public void flatMap() throws Throwable {
+        Promise<List<String>> promise1 = resolveAfter(Arrays.asList(SUCCESS1, SUCCESS2, SUCCESS3), 10);
+        Promise<List<String>> promise2 = resolveAfter(Arrays.asList(SUCCESS4, SUCCESS5), 10);
+        PromiseStream<List<String>> stream = PromiseStream.from(promise1, promise2);
+
+        PromiseStream<String> flattened = stream.flatMap(new OnResolvedFunction<List<String>, Iterable<String>>() {
+            @Override
+            public Iterable<String> resolved(List<String> result) throws Throwable {
+                return result;
+            }
+        });
+
+        Promise<List<String>> promise = flattened.toList(String.class);
+
+        List<String> result = assertResolves(promise);
+        assertEquals(5, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+        assertTrue(result.contains(SUCCESS3));
+        assertTrue(result.contains(SUCCESS4));
+        assertTrue(result.contains(SUCCESS5));
+    }
+
+    @Test
     public void compose() throws Throwable {
         PromiseStream<String> stream = createStream(false);
         Promise<String[]> promise = stream.compose(new OnResolvedFunction<String, Future<String>>() {
