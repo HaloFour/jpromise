@@ -161,21 +161,21 @@ public class PromiseStream<V> {
                 counter.set(count);
                 subscribe.subscribed(new PromiseSubscriber<V>() {
                     @Override
-                    public void resolved(V result) {
+                    public synchronized void resolved(V result) {
                         if (shouldPropagate()) {
                             subscriber.resolved(result);
                         }
                     }
 
                     @Override
-                    public void rejected(Throwable exception) {
+                    public synchronized void rejected(Throwable exception) {
                         if (shouldPropagate()) {
                             subscriber.rejected(exception);
                         }
                     }
 
                     @Override
-                    public void complete() {
+                    public synchronized void complete() {
                         tryComplete();
                     }
 
