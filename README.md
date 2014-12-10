@@ -240,4 +240,12 @@ promise.then(new OnResolved<Integer[]>() {
         // use the final results here
     }
 });
+
+// or, in Java 8
+
+PromiseStream.from(promises)
+    .map(result -> Integer.valueOf(result, 10))
+    .filterRejected(NumberFormatException.class)
+    .toArray(Integer.class, 10)
+    .then(array -> { ... });
 ```
