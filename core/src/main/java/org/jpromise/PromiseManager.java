@@ -96,9 +96,9 @@ public class PromiseManager {
         return new FuturePromise<>(executor, future, timeout, timeUnit);
     }
 
-    private static <V> void whenCompleted(Promise<V> promise, OnCompleted<V> action, final Deferred<Void> deferred, final AtomicInteger counter) {
+    private static <V> void whenCompleted(Promise<V> promise, Executor executor, OnCompleted<V> action, final Deferred<Void> deferred, final AtomicInteger counter) {
         if (action != null) {
-            promise = promise.whenCompleted(action);
+            promise = promise.whenCompleted(executor, action);
         }
         promise.whenCompleted(new OnCompleted<V>() {
             @Override
@@ -119,15 +119,20 @@ public class PromiseManager {
 
     @SuppressWarnings("unchecked")
     public static Promise<Void> whenAllCompleted(Iterable<? extends Promise<?>> promises) {
-        return whenAllCompletedImpl((Iterable) promises, null);
+        return whenAllCompletedImpl((Iterable)promises, null, null);
     }
 
     public static <V> Promise<Void> whenAllCompleted(Iterable<? extends Promise<V>> promises, OnCompleted<V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
-        return whenAllCompletedImpl(promises, action);
+        return whenAllCompletedImpl(promises, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
+    }
+    public static <V> Promise<Void> whenAllCompleted(Iterable<? extends Promise<V>> promises, Executor executor, OnCompleted<V> action) {
+        if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        return whenAllCompletedImpl(promises, executor, action);
     }
 
-    private static <V> Promise<Void> whenAllCompletedImpl(Iterable<? extends Promise<V>> promises, OnCompleted<V> action) {
+    private static <V> Promise<Void> whenAllCompletedImpl(Iterable<? extends Promise<V>> promises, Executor executor, OnCompleted<V> action) {
         if (promises == null) {
             return Promise.resolved(null);
         }
@@ -141,7 +146,7 @@ public class PromiseManager {
                 continue;
             }
             counter.incrementAndGet();
-            whenCompleted(promise, action, deferred, counter);
+            whenCompleted(promise, executor, action, deferred, counter);
         }
         if (counter.decrementAndGet() <= 0) {
             deferred.resolve(null);
@@ -150,9 +155,9 @@ public class PromiseManager {
         return deferred.promise();
     }
 
-    private static <V> void whenResolved(Promise<V> promise, OnResolved<? super V> action, final Deferred<Void> deferred, final AtomicInteger counter, final AtomicBoolean done) {
+    private static <V> void whenResolved(Promise<V> promise, Executor executor, OnResolved<? super V> action, final Deferred<Void> deferred, final AtomicInteger counter, final AtomicBoolean done) {
         if (action != null) {
-            promise = promise.then(action);
+            promise = promise.then(executor, action);
         }
         promise.whenCompleted(new OnCompleted<V>() {
             @Override
@@ -180,15 +185,21 @@ public class PromiseManager {
 
     @SuppressWarnings("unchecked")
     public static Promise<Void> whenAllResolved(Iterable<? extends Promise<?>> promises) {
-        return whenAllResolvedImpl((Iterable)promises, null);
+        return whenAllResolvedImpl((Iterable)promises, null, null);
     }
 
     public static <V> Promise<Void> whenAllResolved(Iterable<? extends Promise<V>> promises, OnResolved<? super V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
-        return whenAllResolvedImpl(promises, action);
+        return whenAllResolvedImpl(promises, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
 
-    public static <V> Promise<Void> whenAllResolvedImpl(Iterable<? extends Promise<V>> promises, OnResolved<? super V> action) {
+    public static <V> Promise<Void> whenAllResolved(Iterable<? extends Promise<V>> promises, Executor executor, OnResolved<? super V> action) {
+        if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        return whenAllResolvedImpl(promises, executor, action);
+    }
+
+    public static <V> Promise<Void> whenAllResolvedImpl(Iterable<? extends Promise<V>> promises, Executor executor, OnResolved<? super V> action) {
         if (promises == null) {
             return Promise.resolved(null);
         }
@@ -203,7 +214,7 @@ public class PromiseManager {
                 continue;
             }
             counter.incrementAndGet();
-            whenResolved(promise, action, deferred, counter, done);
+            whenResolved(promise, executor, action, deferred, counter, done);
         }
         if (counter.decrementAndGet() <= 0 && done.compareAndSet(false, true)) {
             deferred.resolve(null);

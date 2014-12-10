@@ -1,6 +1,7 @@
 package org.jpromise.rx;
 
 import org.jpromise.Promise;
+import org.jpromise.PromiseExecutors;
 import org.jpromise.PromiseManager;
 import org.jpromise.functions.OnCompleted;
 import org.jpromise.functions.OnResolved;
@@ -32,7 +33,7 @@ public class PromiseObservable<V> extends Observable<V> {
 
                 Promise<Void> completed;
                 if (skipRejections) {
-                    completed = PromiseManager.whenAllCompleted(promises, new OnCompleted<V>() {
+                    completed = PromiseManager.whenAllCompleted(promises, PromiseExecutors.CURRENT_THREAD, new OnCompleted<V>() {
                         @Override
                         public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
                             if (promise.isResolved() && !subscriber.isUnsubscribed()) {
@@ -42,7 +43,7 @@ public class PromiseObservable<V> extends Observable<V> {
                     });
                 }
                 else {
-                    completed = PromiseManager.whenAllResolved(promises, new OnResolved<V>() {
+                    completed = PromiseManager.whenAllResolved(promises, PromiseExecutors.CURRENT_THREAD, new OnResolved<V>() {
                         @Override
                         public void resolved(V result) throws Throwable {
                             if (!subscriber.isUnsubscribed()) {
@@ -52,7 +53,7 @@ public class PromiseObservable<V> extends Observable<V> {
                     });
                 }
 
-                completed.whenCompleted(new OnCompleted<Void>() {
+                completed.whenCompleted(PromiseExecutors.CURRENT_THREAD, new OnCompleted<Void>() {
                     @Override
                     public void completed(Promise<Void> promise, Void result, Throwable exception) throws Throwable {
                         if (subscriber.isUnsubscribed()) {
@@ -73,7 +74,7 @@ public class PromiseObservable<V> extends Observable<V> {
         this.promises = promises;
     }
 
-    public PromiseObservable<V> ignoringRejected() {
+    public PromiseObservable<V> filterRejected() {
         return new PromiseObservable<V>(promises, true) { };
     }
 }

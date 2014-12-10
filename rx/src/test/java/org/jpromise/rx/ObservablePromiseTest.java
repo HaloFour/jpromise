@@ -112,7 +112,7 @@ public class ObservablePromiseTest {
         Promise<String> promise3 = Promise.resolved(SUCCESS3);
         Promise<String> promise4 = Promise.rejected(exception);
 
-        BlockingObservable<List<String>> observable = new PromiseObservable<>(promise1, promise2, promise3, promise4).ignoringRejected().toList().toBlocking();
+        BlockingObservable<List<String>> observable = new PromiseObservable<>(promise1, promise2, promise3, promise4).filterRejected().toList().toBlocking();
 
         List<String> list = observable.single();
 
