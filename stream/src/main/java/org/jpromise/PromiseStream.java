@@ -53,9 +53,9 @@ public class PromiseStream<V> {
 
     public <V_COMPOSED> PromiseStream<V_COMPOSED> compose(final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        final AtomicInteger counter = new AtomicInteger();
-        counter.set(1);
         return new PromiseStream<>(new StreamOperator<V, V_COMPOSED>(subscribe) {
+            private final AtomicInteger outstanding = new AtomicInteger(1);
+
             @Override
             protected void resolved(final PromiseSubscriber<V_COMPOSED> subscriber, V result) throws Throwable {
                 Future<V_COMPOSED> future = function.resolved(result);
@@ -63,7 +63,7 @@ public class PromiseStream<V> {
                     subscriber.resolved(null);
                     return;
                 }
-                counter.incrementAndGet();
+                outstanding.incrementAndGet();
                 Promise<V_COMPOSED> promise = PromiseManager.fromFuture(future);
                 promise.whenCompleted(new OnCompleted<V_COMPOSED>() {
                     @Override
@@ -76,7 +76,7 @@ public class PromiseStream<V> {
                                 subscriber.rejected(exception);
                                 break;
                         }
-                        if (counter.decrementAndGet() == 0) {
+                        if (outstanding.decrementAndGet() == 0) {
                             subscriber.complete();
                         }
                     }
@@ -85,7 +85,7 @@ public class PromiseStream<V> {
 
             @Override
             protected void complete(PromiseSubscriber<V_COMPOSED> subscriber) {
-                if (counter.decrementAndGet() == 0) {
+                if (outstanding.decrementAndGet() == 0) {
                     subscriber.complete();
                 }
             }
@@ -157,12 +157,8 @@ public class PromiseStream<V> {
             @Override
             public void subscribed(final PromiseSubscriber<V> subscriber) {
                 subscribe.subscribed(new PromiseSubscriber<V>() {
-                    final AtomicInteger counter = new AtomicInteger();
+                    final AtomicInteger counter = new AtomicInteger(count);
                     final AtomicBoolean complete = new AtomicBoolean();
-
-                    {
-                        counter.set(count);
-                    }
 
                     @Override
                     public synchronized void resolved(V result) {
