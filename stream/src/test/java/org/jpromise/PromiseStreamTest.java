@@ -5,6 +5,7 @@ import org.jpromise.functions.OnResolvedFunction;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -335,5 +336,4 @@ public class PromiseStreamTest {
         String[] result = assertResolves(promise);
         assertEquals(3, result.length);
     }
-
 }

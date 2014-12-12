@@ -1,5 +1,5 @@
 package org.jpromise;
 
-interface OnSubscribe<V> {
+public interface OnSubscribe<V> {
     void subscribed(PromiseSubscriber<V> subscriber);
 }

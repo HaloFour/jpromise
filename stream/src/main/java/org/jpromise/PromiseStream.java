@@ -1,13 +1,12 @@
 package org.jpromise;
 
-import org.jpromise.functions.OnCompleted;
 import org.jpromise.functions.OnRejectedHandler;
 import org.jpromise.functions.OnResolvedFunction;
+import org.jpromise.operators.*;
 
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
@@ -28,99 +27,30 @@ public class PromiseStream<V> {
 
     public <V_APPLIED> PromiseStream<V_APPLIED> map(final OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return new PromiseStream<>(new StreamOperator<V, V_APPLIED>(subscribe) {
-            @Override
-            protected void resolved(PromiseSubscriber<V_APPLIED> subscriber, V result) throws Throwable {
-                subscriber.resolved(function.resolved(result));
-            }
-        });
+        return new PromiseStream<>(new MapOperator<>(subscribe, function));
     }
 
-    public <V_APPLIED, I extends Iterable<? extends V_APPLIED>> PromiseStream<V_APPLIED> flatMap(final OnResolvedFunction<? super V, I> function) {
+    public <V_APPLIED> PromiseStream<V_APPLIED> flatMap(final OnResolvedFunction<? super V, ? extends Iterable<? extends V_APPLIED>> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return new PromiseStream<>(new StreamOperator<V, V_APPLIED>(subscribe) {
-            @Override
-            protected void resolved(PromiseSubscriber<V_APPLIED> subscriber, V result) throws Throwable {
-                I iterable = function.resolved(result);
-                if (iterable != null) {
-                    for (V_APPLIED value : iterable) {
-                        subscriber.resolved(value);
-                    }
-                }
-            }
-        });
+        return new PromiseStream<>(new FlatMapOperator<>(subscribe, function));
     }
 
     public <V_COMPOSED> PromiseStream<V_COMPOSED> compose(final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return new PromiseStream<>(new StreamOperator<V, V_COMPOSED>(subscribe) {
-            private final AtomicInteger outstanding = new AtomicInteger(1);
-
-            @Override
-            protected void resolved(final PromiseSubscriber<V_COMPOSED> subscriber, V result) throws Throwable {
-                Future<V_COMPOSED> future = function.resolved(result);
-                if (future == null) {
-                    subscriber.resolved(null);
-                    return;
-                }
-                outstanding.incrementAndGet();
-                Promise<V_COMPOSED> promise = PromiseManager.fromFuture(future);
-                promise.whenCompleted(new OnCompleted<V_COMPOSED>() {
-                    @Override
-                    public void completed(Promise<V_COMPOSED> promise, V_COMPOSED result, Throwable exception) throws Throwable {
-                        switch (promise.state()) {
-                            case RESOLVED:
-                                subscriber.resolved(result);
-                                break;
-                            case REJECTED:
-                                subscriber.rejected(exception);
-                                break;
-                        }
-                        if (outstanding.decrementAndGet() == 0) {
-                            subscriber.complete();
-                        }
-                    }
-                });
-            }
-
-            @Override
-            protected void complete(PromiseSubscriber<V_COMPOSED> subscriber) {
-                if (outstanding.decrementAndGet() == 0) {
-                    subscriber.complete();
-                }
-            }
-        });
+        return new PromiseStream<>(new ComposeOperator<>(subscribe, function));
     }
 
     public PromiseStream<V> filter(final OnResolvedFunction<V, Boolean> predicate) {
         if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
-        return new PromiseStream<>(new StreamOperator<V, V>(subscribe) {
-            @Override
-            protected void resolved(PromiseSubscriber<V> subscriber, V result) throws Throwable {
-                Boolean filter = predicate.resolved(result);
-                if (filter != null && filter) {
-                    subscriber.resolved(result);
-                }
-            }
-        });
+        return new PromiseStream<>(new FilterOperator<>(subscribe, predicate));
     }
 
     public PromiseStream<V> filterNulls() {
-        return filter(new OnResolvedFunction<V, Boolean>() {
-            @Override
-            public Boolean resolved(V result) throws Throwable {
-                return (result != null);
-            }
-        });
+        return new PromiseStream<>(new FilterNullOperator<>(subscribe));
     }
 
     public PromiseStream<V> filterRejected() {
-        return filterRejected(Throwable.class, new OnRejectedHandler<Throwable, Boolean>() {
-            @Override
-            public Boolean handle(Throwable exception) {
-                return true;
-            }
-        });
+        return new PromiseStream<V>(new FilterRejectedOperator<>(subscribe, Throwable.class));
     }
 
     public PromiseStream<V> filterRejected(OnRejectedHandler<Throwable, Boolean> predicate) {
@@ -130,71 +60,11 @@ public class PromiseStream<V> {
     public <E extends Throwable> PromiseStream<V> filterRejected(final Class<E> exceptionClass, final OnRejectedHandler<? super E, Boolean> predicate) {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
         if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
-        return new PromiseStream<V>(new StreamOperator<V, V>(subscribe) {
-            @Override
-            protected void resolved(PromiseSubscriber<V> subscriber, V result) {
-                subscriber.resolved(result);
-            }
-
-            @Override
-            protected void rejected(PromiseSubscriber<V> subscriber, Throwable exception) throws Throwable {
-                if (exceptionClass.isInstance(exception)) {
-                    E typed = exceptionClass.cast(exception);
-                    Boolean filter = predicate.handle(typed);
-                    if (filter == null || !filter) {
-                        subscriber.rejected(exception);
-                    }
-                }
-                else {
-                    subscriber.rejected(exception);
-                }
-            }
-        });
+        return new PromiseStream<V>(new FilterRejectedOperator<>(subscribe, exceptionClass, predicate));
     }
 
-    public PromiseStream<V> take(final int count) {
-        return new PromiseStream<V>(new OnSubscribe<V>() {
-            @Override
-            public void subscribed(final PromiseSubscriber<V> subscriber) {
-                subscribe.subscribed(new PromiseSubscriber<V>() {
-                    final AtomicInteger counter = new AtomicInteger(count);
-                    final AtomicBoolean complete = new AtomicBoolean();
-
-                    @Override
-                    public synchronized void resolved(V result) {
-                        if (shouldPropagate()) {
-                            subscriber.resolved(result);
-                        }
-                    }
-
-                    @Override
-                    public synchronized void rejected(Throwable exception) {
-                        if (shouldPropagate()) {
-                            subscriber.rejected(exception);
-                        }
-                    }
-
-                    @Override
-                    public synchronized void complete() {
-                        tryComplete();
-                    }
-
-                    private boolean shouldPropagate() {
-                        if (counter.getAndDecrement() > 0) {
-                            return true;
-                        }
-                        tryComplete();
-                        return false;
-                    }
-
-                    private void tryComplete() {
-                        if (complete.compareAndSet(false, true)) {
-                            subscriber.complete();
-                        }
-                    }
-                });
-            }
-        });
+    public PromiseStream<V> take(int count) {
+        return new PromiseStream<>(new TakeOperator<>(subscribe, count));
     }
 
     public Promise<List<V>> toList(Class<V> resultClass) {
@@ -251,52 +121,8 @@ public class PromiseStream<V> {
 
     public <A, R> Promise<R> collect(PromiseCollector<V, A, R> collector) {
         if (collector == null) throw new IllegalArgumentException(mustNotBeNull("collector"));
-        try {
-            A accumulator = collector.getAccumulator();
-            return collect(accumulator, collector);
-        }
-        catch (Throwable exception) {
-            return Promise.rejected(exception);
-        }
-    }
-
-    private <A, R> Promise<R> collect(final A accumulator, final PromiseCollector<V, A, R> collector) {
-        final Deferred<R> deferred = Promise.defer();
-        final AtomicBoolean done = new AtomicBoolean();
-        subscribe.subscribed(new PromiseSubscriber<V>() {
-            @Override
-            public void resolved(V result) {
-                try {
-                    if (!done.get()) {
-                        collector.accumulate(accumulator, result);
-                    }
-                }
-                catch (Throwable exception) {
-                    rejected(exception);
-                }
-            }
-
-            @Override
-            public void rejected(Throwable exception) {
-                if (done.compareAndSet(false, true)) {
-                    deferred.reject(exception);
-                }
-            }
-
-            @Override
-            public void complete() {
-                if (done.compareAndSet(false, true)) {
-                    try {
-                        R result = collector.finish(accumulator);
-                        deferred.resolve(result);
-                    }
-                    catch (Throwable exception) {
-                        deferred.reject(exception);
-                    }
-                }
-            }
-        });
-        return deferred.promise();
+        CollectOperator<V, A, R> operator = new CollectOperator<>(subscribe, collector);
+        return operator.subscribe();
     }
 
     @SafeVarargs

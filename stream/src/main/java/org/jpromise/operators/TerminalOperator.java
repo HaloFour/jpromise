@@ -1,0 +1,82 @@
+package org.jpromise.operators;
+
+import org.jpromise.Deferred;
+import org.jpromise.OnSubscribe;
+import org.jpromise.Promise;
+import org.jpromise.PromiseSubscriber;
+import sun.plugin.dom.exception.InvalidStateException;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public abstract class TerminalOperator<V, R> {
+    private final OnSubscribe<V> subscribe;
+
+    protected TerminalOperator(OnSubscribe<V> subscribe) {
+        this.subscribe = subscribe;
+    }
+
+    protected abstract TerminalOperation<V, R> operation();
+
+    public final Promise<R> subscribe() {
+        TerminalOperation<V, R> operation = operation();
+        if (operation == null) {
+            throw new InvalidStateException("");
+        }
+        TerminalPromiseSubscriber<V, R> subscriber = new TerminalPromiseSubscriber<>(operation);
+        subscribe.subscribed(subscriber);
+        return subscriber.promise();
+    }
+
+    private static class TerminalPromiseSubscriber<V, R> implements PromiseSubscriber<V> {
+        private final Deferred<R> deferred = Promise.defer();
+        private final Promise<R> promise = deferred.promise();
+        private final TerminalOperation<V, R> operation;
+        private final AtomicBoolean first = new AtomicBoolean(true);
+
+        public TerminalPromiseSubscriber(TerminalOperation<V, R> operation) {
+            this.operation = operation;
+        }
+
+        @Override
+        public synchronized void resolved(V result) {
+            try {
+                if (first.compareAndSet(true, false)) {
+                    operation.start();
+                }
+                if (!promise.isDone()) {
+                    operation.resolved(result);
+                }
+            }
+            catch (Throwable exception) {
+                rejected(exception);
+            }
+        }
+
+        @Override
+        public void rejected(Throwable exception) {
+            if (!promise.isDone()) {
+                deferred.reject(exception);
+            }
+        }
+
+        @Override
+        public void complete() {
+            try {
+                if (first.compareAndSet(true, false)) {
+                    operation.start();
+                }
+                if (!promise.isDone()) {
+                    R result = operation.completed();
+                    deferred.resolve(result);
+                }
+            }
+            catch (Throwable exception) {
+                deferred.reject(exception);
+            }
+        }
+
+        public Promise<R> promise() {
+            return promise;
+        }
+    }
+}
