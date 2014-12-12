@@ -4,9 +4,10 @@ import org.jpromise.Deferred;
 import org.jpromise.OnSubscribe;
 import org.jpromise.Promise;
 import org.jpromise.PromiseSubscriber;
-import sun.plugin.dom.exception.InvalidStateException;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.jpromise.util.MessageUtil.nullOperation;
 
 public abstract class TerminalOperator<V, R> {
     private final OnSubscribe<V> subscribe;
@@ -20,7 +21,7 @@ public abstract class TerminalOperator<V, R> {
     public final Promise<R> subscribe() {
         TerminalOperation<V, R> operation = operation();
         if (operation == null) {
-            throw new InvalidStateException("");
+            throw new IllegalStateException(nullOperation());
         }
         TerminalPromiseSubscriber<V, R> subscriber = new TerminalPromiseSubscriber<>(operation);
         subscribe.subscribed(subscriber);

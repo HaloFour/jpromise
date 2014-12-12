@@ -2,7 +2,8 @@ package org.jpromise.operators;
 
 import org.jpromise.OnSubscribe;
 import org.jpromise.PromiseCollector;
-import sun.plugin.dom.exception.InvalidStateException;
+
+import static org.jpromise.util.MessageUtil.*;
 
 public class CollectOperator<V, A, R> extends TerminalOperator<V, R> {
     private final PromiseCollector<V, A, R> collector;
@@ -29,7 +30,7 @@ public class CollectOperator<V, A, R> extends TerminalOperator<V, R> {
         public void start() throws Throwable {
             accumulator = collector.getAccumulator();
             if (accumulator == null) {
-                throw new InvalidStateException("");
+                throw new IllegalStateException(nullAccumulator());
             }
         }
 
