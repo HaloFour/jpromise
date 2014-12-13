@@ -4,6 +4,7 @@ import junit.framework.AssertionFailedError;
 import org.jpromise.functions.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -48,6 +49,12 @@ public class PromiseTest {
 
         assertResolves(SUCCESS1, promise);
         assertEquals("[RESOLVED]: SUCCESS1", promise.toString());
+    }
+
+    @Test
+    public void resolvedVoid() throws Throwable {
+        Promise<Void> promise = Promise.resolved();
+        assertResolves(promise);
     }
 
     @Test
@@ -565,6 +572,54 @@ public class PromiseTest {
     }
 
     @Test
+    public void cancelCompleted() throws Throwable {
+        Promise<String> promise = Promise.resolved(SUCCESS1);
+        assertFalse(promise.cancel(true));
+        assertResolves(SUCCESS1, promise);
+        assertFalse(promise.isCancelled());
+    }
+
+    @Test
+    public void cancelPreventsCallback() throws Throwable {
+        @SuppressWarnings("unchecked")
+        OnResolved<String> callback = mock(OnResolved.class);
+
+        Deferred<String> deferred = Promise.defer();
+        Promise<String> promise1 = deferred.promise();
+        Promise<String> promise2 = promise1.then(callback);
+
+        assertTrue(promise2.cancel(true));
+        deferred.resolve(SUCCESS1);
+
+        assertResolves(SUCCESS1, promise1);
+        assertRejects(CancellationException.class, promise2);
+        verify(callback, never()).resolved(anyString());
+    }
+
+    @Test
+    public void cancelPreventsSubmittedCallback() throws Throwable {
+        Executor executor = mock(Executor.class);
+        @SuppressWarnings("unchecked")
+        OnResolved<String> callback = mock(OnResolved.class);
+
+        Deferred<String> deferred = Promise.defer();
+        Promise<String> promise1 = deferred.promise();
+        Promise<String> promise2 = promise1.then(executor, callback);
+
+        deferred.resolve(SUCCESS1);
+        assertTrue(promise2.cancel(true));
+
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor, times(1)).execute(captor.capture());
+        Runnable runnable = captor.getValue();
+        runnable.run();
+
+        assertResolves(SUCCESS1, promise1);
+        assertRejects(CancellationException.class, promise2);
+        verify(callback, never()).resolved(anyString());
+    }
+
+    @Test
     public void cancelChained() throws Throwable {
         Deferred<String> deferred = Promise.defer();
         Promise<String> promise1 = deferred.promise();
@@ -605,6 +660,20 @@ public class PromiseTest {
         promise2.cancel(true);
         assertRejects(CancellationException.class, promise2);
         verify(future, timeout(100).times(1)).cancel(anyBoolean());
+    }
+
+    @Test
+    public void cancelComposedAlreadyComplete() throws Throwable {
+        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise2 = promise1.then(PromiseExecutors.CURRENT_THREAD, new OnResolved<String>() {
+            @Override
+            public void resolved(String result) throws Throwable { }
+        });
+
+        assertFalse(promise2.cancel(true));
+        assertResolves(SUCCESS1, promise1);
+        assertResolves(SUCCESS1, promise2);
+        assertFalse(promise2.isCancelled());
     }
 
     @Test
