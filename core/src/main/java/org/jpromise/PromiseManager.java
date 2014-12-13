@@ -14,7 +14,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
 public class PromiseManager {
-    private PromiseManager() { }
+    private PromiseManager() {
+        throw new IllegalStateException();
+    }
 
     public static <Void> Promise<Void> create(Runnable runnable) {
         return create(PromiseExecutors.DEFAULT_CREATION_EXECUTOR, runnable);
@@ -91,7 +93,9 @@ public class PromiseManager {
         if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
         if (timeUnit == null) throw new IllegalArgumentException(mustNotBeNull("timeUnit"));
         if (future instanceof Promise) {
-            return (Promise<V>)future;
+            Promise<V> promise = (Promise<V>)future;
+            promise.cancelAfter(true, timeout, timeUnit);
+            return promise;
         }
         return new FuturePromise<>(executor, future, timeout, timeUnit);
     }

@@ -57,10 +57,15 @@ public class PromiseStream<V> {
         return filterRejected(Throwable.class, predicate);
     }
 
+    public <E extends Throwable> PromiseStream<V> filterRejected(Class<E> exceptionClass) {
+        if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
+        return new PromiseStream<>(new FilterRejectedOperator<>(subscribe, exceptionClass));
+    }
+
     public <E extends Throwable> PromiseStream<V> filterRejected(final Class<E> exceptionClass, final OnRejectedHandler<? super E, Boolean> predicate) {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
         if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
-        return new PromiseStream<V>(new FilterRejectedOperator<>(subscribe, exceptionClass, predicate));
+        return new PromiseStream<>(new FilterRejectedOperator<>(subscribe, exceptionClass, predicate));
     }
 
     public PromiseStream<V> take(int count) {

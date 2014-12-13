@@ -3,8 +3,14 @@ package org.jpromise;
 import org.jpromise.functions.OnResolved;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -22,8 +28,78 @@ public class PromiseManagerTest {
     private static final String SUCCESS3 = "SUCCESS3";
     private static final String SUCCESS4 = "SUCCESS4";
 
+    @Test(expected = IllegalStateException.class)
+    public void PromiseManagerCannotBeCreated() throws Throwable {
+        Class<PromiseManager> promiseManagerClass = PromiseManager.class;
+        Constructor<?>[] constructors = promiseManagerClass.getDeclaredConstructors();
+        assertEquals(1, constructors.length);
+        Constructor<?> constructor = constructors[0];
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        constructor.setAccessible(true);
+        try {
+            constructor.newInstance();
+        }
+        catch (InvocationTargetException exception) {
+            throw exception.getCause();
+        }
+    }
+
     @Test
-    public void create() throws Throwable {
+    public void createWithRunnable() throws Throwable {
+        Runnable runnable = mock(Runnable.class);
+        Promise<Void> promise = PromiseManager.create(runnable);
+        assertResolves(promise);
+        verify(runnable, times(1)).run();
+    }
+
+    @Test
+    public void createWithCallable() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Callable<String> callable = mock(Callable.class);
+        when(callable.call()).thenReturn(SUCCESS1);
+        Promise<String> promise = PromiseManager.create(callable);
+        assertResolves(SUCCESS1, promise);
+        verify(callable, times(1)).call();
+    }
+
+    @Test
+    public void createWithRunnableAndValue() throws Throwable {
+        Runnable runnable = mock(Runnable.class);
+        Promise<String> promise = PromiseManager.create(runnable, SUCCESS1);
+        assertResolves(SUCCESS1, promise);
+        verify(runnable, times(1)).run();
+    }
+
+    @Test
+    public void createWithExecutorAndRunnable() throws Throwable {
+        Executor executor = mock(Executor.class);
+        doNothing().when(executor).execute(any(Runnable.class));
+
+        Promise<Void> promise = PromiseManager.create(executor, new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        });
+
+        assertFalse(promise.isDone());
+
+        verify(executor).execute(argThat(new ArgumentMatcher<Runnable>() {
+            @Override
+            public boolean matches(Object argument) {
+                if (argument instanceof Runnable) {
+                    ((Runnable)argument).run();
+                    return true;
+                }
+                return false;
+            }
+        }));
+
+        assertResolves(promise);
+    }
+
+    @Test
+    public void createWithExecutorAndCallable() throws Throwable {
         Executor executor = mock(Executor.class);
         doNothing().when(executor).execute(any(Runnable.class));
 
@@ -51,7 +127,36 @@ public class PromiseManagerTest {
     }
 
     @Test
-    public void createRejects() throws Throwable {
+    public void createWithRunnableThrows() throws Throwable {
+        Executor executor = mock(Executor.class);
+        doNothing().when(executor).execute(any(Runnable.class));
+
+        final RuntimeException exception = new RuntimeException();
+        Promise<String> promise = PromiseManager.create(executor, new Runnable() {
+            @Override
+            public void run() {
+                throw exception;
+            }
+        });
+
+        assertFalse(promise.isDone());
+
+        verify(executor).execute(argThat(new ArgumentMatcher<Runnable>() {
+            @Override
+            public boolean matches(Object argument) {
+                if (argument instanceof Runnable) {
+                    ((Runnable)argument).run();
+                    return true;
+                }
+                return false;
+            }
+        }));
+
+        assertRejects(exception, promise);
+    }
+
+    @Test
+    public void createWithCallableThrows() throws Throwable {
         Executor executor = mock(Executor.class);
         doNothing().when(executor).execute(any(Runnable.class));
 
@@ -92,7 +197,37 @@ public class PromiseManagerTest {
     }
 
     @Test
-    public void fromFutureWait() throws Throwable {
+    public void fromFutureWithPromiseReturnsSelf() throws Throwable {
+        Future<String> future = Promise.resolved(SUCCESS1);
+
+        Promise<String> promise = PromiseManager.fromFuture(future);
+
+        assertEquals(future, promise);
+        assertResolves(SUCCESS1, promise);
+    }
+
+    @Test
+    public void fromFutureWithPromiseAndTimeOutReturnsSelf() throws Throwable {
+        Future<String> future = Promise.resolved(SUCCESS1);
+
+        Promise<String> promise = PromiseManager.fromFuture(future);
+
+        assertEquals(future, promise);
+        assertResolves(SUCCESS1, promise);
+    }
+
+    @Test
+    public void fromFutureWithPromiseAndTimeOutEnforcesTimeout() throws Throwable {
+        Future<String> future = resolveAfter(SUCCESS1, 1000);
+
+        Promise<String> promise = PromiseManager.fromFuture(future, 10, TimeUnit.MILLISECONDS);
+
+        assertEquals(future, promise);
+        assertRejects(CancellationException.class, promise);
+    }
+
+    @Test
+    public void fromFutureCompletesEventually() throws Throwable {
         @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
         when(future.isDone()).thenReturn(false);
@@ -117,6 +252,32 @@ public class PromiseManagerTest {
     }
 
     @Test
+    public void fromFutureThrowsWithoutCause() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Future<String> future = mock(Future.class);
+        when(future.isDone()).thenReturn(false);
+        ExecutionException exception = new ExecutionException(null);
+        when(future.get()).thenThrow(exception);
+
+        Promise<String> promise = PromiseManager.fromFuture(future);
+
+        assertRejects(exception, promise);
+    }
+
+    @Test
+    public void fromFutureThrowsEventually() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Future<String> future = mock(Future.class);
+        when(future.isDone()).thenReturn(false);
+        Exception exception = new Exception();
+        when(future.get()).thenThrow(new ExecutionException(exception));
+
+        Promise<String> promise = PromiseManager.fromFuture(future);
+
+        assertRejects(exception, promise);
+    }
+
+    @Test
     public void fromFutureTimesOut() throws Throwable {
         @SuppressWarnings("unchecked")
         Future<String> future = mock(Future.class);
@@ -127,6 +288,27 @@ public class PromiseManagerTest {
         Promise<String> promise = PromiseManager.fromFuture(future, 10, TimeUnit.MILLISECONDS);
 
         assertRejects(exception, promise);
+    }
+
+    @Test
+    public void fromFutureCancelled() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Future<String> future = mock(Future.class);
+        when(future.isDone()).thenReturn(false);
+        when(future.cancel(anyBoolean())).thenReturn(true);
+        when(future.get()).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                Thread.sleep(1000);
+                return SUCCESS1;
+            }
+        });
+
+        Promise<String> promise = PromiseManager.fromFuture(future);
+        assertTrue(promise.cancel(true));
+
+        assertRejects(CancellationException.class, promise);
+        verify(future).cancel(true);
     }
 
     @Test
@@ -212,6 +394,14 @@ public class PromiseManagerTest {
     }
 
     @Test
+    public void whenAllCompleteNullArray() throws Throwable {
+        Promise<String>[] array = null;
+        Promise<Void> promise = PromiseManager.whenAllCompleted(array);
+
+        assertResolves(promise);
+    }
+
+    @Test
     public void whenAllCompleteListContainsNull() throws Throwable {
         final Promise<String> promise1 = Promise.resolved(SUCCESS1);
         final Promise<String> promise2 = Promise.resolved(SUCCESS2);
@@ -251,6 +441,37 @@ public class PromiseManagerTest {
                 });
 
         assertResolves(promise);
+    }
+
+    @Test
+    public void whenAllResolvedWithCallback() throws Throwable {
+        @SuppressWarnings("unchecked")
+        OnResolved<String> callback = (OnResolved<String>)mock(OnResolved.class);
+
+        final Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        final Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        final Promise<String> promise3 = Promise.resolved(SUCCESS3);
+        final Promise<String> promise4 = Promise.resolved(SUCCESS4);
+
+        List<Promise<String>> promises = new ArrayList<>(Arrays.asList(promise1, promise2, promise3, promise4));
+
+        Promise<Void> promise = PromiseManager.whenAllResolved(promises, callback)
+                .then(new OnResolved<Void>() {
+                    @Override
+                    public void resolved(Void result) throws Throwable {
+                        assertResolves(SUCCESS1, promise1);
+                        assertResolves(SUCCESS2, promise2);
+                        assertResolves(SUCCESS3, promise3);
+                        assertResolves(SUCCESS4, promise4);
+                    }
+                });
+
+        assertResolves(promise);
+        verify(callback, times(4)).resolved(anyString());
+        verify(callback, times(1)).resolved(SUCCESS1);
+        verify(callback, times(1)).resolved(SUCCESS2);
+        verify(callback, times(1)).resolved(SUCCESS3);
+        verify(callback, times(1)).resolved(SUCCESS4);
     }
 
     @Test
@@ -300,6 +521,14 @@ public class PromiseManagerTest {
     public void whenAllResolvedNullList() throws Throwable {
         List<Promise<String>> list = null;
         Promise<Void> promise = PromiseManager.whenAllResolved(list);
+
+        assertResolves(promise);
+    }
+
+    @Test
+    public void whenAllResolvedNullArray() throws Throwable {
+        Promise<String>[] array = null;
+        Promise<Void> promise = PromiseManager.whenAllResolved(array);
 
         assertResolves(promise);
     }
@@ -384,6 +613,14 @@ public class PromiseManagerTest {
     }
 
     @Test
+    public void whenAnyCompleteNullArray() throws Throwable {
+        Promise<String>[] array = null;
+        Promise<String> promise = PromiseManager.whenAnyCompleted(array);
+
+        assertFalse(promise.isDone());
+    }
+
+    @Test
     public void whenAnyCompleteListContainsNulls() throws Throwable {
         Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
@@ -448,6 +685,14 @@ public class PromiseManagerTest {
     public void whenAnyResolvedNullList() throws Throwable {
         List<Promise<String>> list = null;
         Promise<String> promise = PromiseManager.whenAnyResolved(list);
+
+        assertFalse(promise.isDone());
+    }
+
+    @Test
+    public void whenAnyResolvedNullArray() throws Throwable {
+        Promise<String>[] array = null;
+        Promise<String> promise = PromiseManager.whenAnyResolved(array);
 
         assertFalse(promise.isDone());
     }

@@ -1,11 +1,10 @@
 package org.jpromise;
 
 import org.jpromise.functions.OnCompleted;
-
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
-abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> implements OnCompleted<V_IN> {
+abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> implements ComposedCallback<V_IN> {
     private final Executor executor;
     private final PromiseCallbackListener callback;
     private Promise<V_OUT> composed;
@@ -17,41 +16,43 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
     }
 
     @Override
-    public final void completed(final Promise<V_IN> promise, final V_IN result, final Throwable exception) throws Throwable {
+    public final void completed(final Promise<V_IN> promise, final V_IN result, final Throwable exception) {
         if (cancelled) {
             return;
         }
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (cancelled) {
-                    return;
-                }
-                try (AutoCloseable ignored = callback.invokingPromiseCallback(promise, ComposedPromise.this, result, exception)) {
-                    switch (promise.state()) {
-                        case RESOLVED:
-                            completeComposed(result);
-                            break;
-                        case REJECTED:
-                            completeComposedWithException(exception);
-                            break;
+        try {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    if (cancelled) {
+                        return;
+                    }
+                    try (AutoCloseable ignored = callback.invokingPromiseCallback(promise, ComposedPromise.this, result, exception)) {
+                        switch (promise.state()) {
+                            case RESOLVED:
+                                completeComposed(result);
+                                break;
+                            case REJECTED:
+                                completeComposedWithException(exception);
+                                break;
+                        }
+                    }
+                    catch (Throwable thrown) {
+                        completeWithException(thrown);
                     }
                 }
-                catch (Throwable thrown) {
-                    completeWithException(thrown);
-                }
-            }
-        });
+            });
+        }
+        catch (Throwable thrown) {
+            completeWithException(thrown);
+        }
     }
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
         if (super.cancel(mayInterruptIfRunning)) {
             cancelled = true;
-            if (composed != null) {
-                return composed.cancel(mayInterruptIfRunning);
-            }
-            return true;
+            return composed == null || composed.cancel(mayInterruptIfRunning);
         }
         return false;
     }
@@ -70,7 +71,8 @@ abstract class ComposedPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> imple
             Promise<V_OUT> promise;
             if (future instanceof Promise) {
                 promise = (Promise<V_OUT>) future;
-            } else {
+            }
+            else {
                 promise = new FuturePromise<>(PromiseExecutors.NEW_THREAD, future);
             }
             completeWithPromise(promise);

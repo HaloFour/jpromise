@@ -2,7 +2,11 @@ package org.jpromise;
 
 import junit.framework.AssertionFailedError;
 import org.jpromise.functions.OnResolvedFunction;
+import org.jpromise.operators.TerminalOperation;
+import org.jpromise.operators.TerminalOperator;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -11,6 +15,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.jpromise.PromiseHelpers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class PromiseStreamTest {
     public static final String SUCCESS1 = "SUCCESS1";
@@ -335,5 +342,34 @@ public class PromiseStreamTest {
 
         String[] result = assertResolves(promise);
         assertEquals(3, result.length);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void nullOperationFails() throws Throwable {
+        @SuppressWarnings("unchecked")
+        OnSubscribe<String> subscribe = mock(OnSubscribe.class);
+        TerminalOperator<String, String> operator = new TerminalOperator<String, String>(subscribe) {
+            @Override
+            protected TerminalOperation<String, String> operation() {
+                return null;
+            }
+        };
+
+        Promise<String> ignore = operator.subscribe();
+    }
+
+    @Test
+    public void nullAccumulatorFails() throws Throwable {
+        @SuppressWarnings("unchecked")
+        OnSubscribe<String> subscribe = mock(OnSubscribe.class);
+        @SuppressWarnings("unchecked")
+        PromiseCollector<String, String, String> collector = mock(PromiseCollector.class);
+        when(collector.getAccumulator()).thenReturn(null);
+
+        Promise<String> promise = Promise.resolved(SUCCESS1);
+        PromiseStream<String> stream = PromiseStream.from(promise);
+        promise = stream.collect(collector);
+
+        assertRejects(IllegalStateException.class, promise);
     }
 }

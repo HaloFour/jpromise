@@ -17,7 +17,7 @@ public enum PromiseComposition implements PromiseCompositionListener {
 
         @Override
         public void exception(Throwable exception) {
-
+            composite.exception(exception);
         }
     };
 

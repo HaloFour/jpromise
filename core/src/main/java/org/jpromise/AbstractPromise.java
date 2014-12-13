@@ -11,7 +11,7 @@ import static org.jpromise.util.MessageUtil.mustNotBeNull;
 public abstract class AbstractPromise<V> extends Promise<V> {
     private final Object lock = new Object();
     private final CountDownLatch latch = new CountDownLatch(1);
-    private final List<OnCompleted<V>> callbacks = new LinkedList<>();
+    private final List<ComposedCallback<V>> callbacks = new LinkedList<>();
     private PromiseState state = PromiseState.PENDING;
     private V result;
     private Throwable exception;
@@ -56,13 +56,12 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     @Override
     public Promise<V> then(Executor executor, final OnResolved<? super V> action) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
-        if (action == null) {
-            return this;
-        }
         return registerCallback(new ComposedPromise<V, V>(this, executor) {
             @Override
             protected void completeComposed(V result) throws Throwable {
-                action.resolved(result);
+                if (action != null) {
+                    action.resolved(result);
+                }
                 complete(result);
             }
         });
@@ -96,13 +95,12 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     public <E extends Throwable> Promise<V> whenRejected(Class<E> exceptionClass, Executor executor, final OnRejected<? super E> action) {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
-        if (action == null) {
-            return this;
-        }
         return registerCallback(new RejectedPromise<E, V>(this, executor, exceptionClass) {
             @Override
             protected void handle(E exception) throws Throwable {
-                action.rejected(exception);
+                if (action != null) {
+                    action.rejected(exception);
+                }
                 completeWithException(exception);
             }
         });
@@ -201,9 +199,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
             return false;
         }
         synchronized (lock) {
-            if (state != PromiseState.PENDING) {
-                return false;
-            }
+            if (state != PromiseState.PENDING) return false;
             state = PromiseState.RESOLVED;
             this.result = result;
             onResolved(result);
@@ -216,9 +212,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
             return false;
         }
         synchronized (lock) {
-            if (state != PromiseState.PENDING) {
-                return false;
-            }
+            if (state != PromiseState.PENDING) return false;
             state = PromiseState.REJECTED;
             this.exception = exception;
             onRejected(exception);
@@ -240,14 +234,11 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     }
 
     private <V_OUT> Promise<V_OUT> registerCallback(final ComposedPromise<V, V_OUT> composedFuture) {
-        registerCallback((OnCompleted<V>)composedFuture);
+        registerCallback((ComposedCallback<V>)composedFuture);
         return composedFuture;
     }
 
-    private void registerCallback(final OnCompleted<V> callback) {
-        if (callback == null) {
-            return;
-        }
+    private void registerCallback(final ComposedCallback<V> callback) {
         if (state == PromiseState.PENDING) {
             synchronized (lock) {
                 if (state == PromiseState.PENDING) {
@@ -259,18 +250,13 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         invokeCallback(callback, result, exception);
     }
 
-    private void invokeCallbacks(Iterable<OnCompleted<V>> callbacks, V result, Throwable exception) {
-        for (OnCompleted<V> callback : callbacks) {
+    private void invokeCallbacks(Iterable<ComposedCallback<V>> callbacks, V result, Throwable exception) {
+        for (ComposedCallback<V> callback : callbacks) {
             invokeCallback(callback, result, exception);
         }
     }
 
-    private void invokeCallback(final OnCompleted<V> callback, V result, Throwable exception) {
-        try {
-            callback.completed(this, result, exception);
-        }
-        catch (Throwable ignored) {
-            //TODO: Should do something with this here
-        }
+    private void invokeCallback(final ComposedCallback<V> callback, V result, Throwable exception) {
+        callback.completed(this, result, exception);
     }
 }

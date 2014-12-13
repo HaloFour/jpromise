@@ -8,7 +8,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
 import static org.jpromise.PromiseHelpers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class CompletionPromiseTest {
     private static final String SUCCESS1 = "SUCCESS1";

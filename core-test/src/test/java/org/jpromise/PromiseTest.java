@@ -7,6 +7,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.concurrent.*;
 
 import static org.jpromise.PromiseHelpers.*;
@@ -238,6 +241,27 @@ public class PromiseTest {
 
         assertResolves(SUCCESS1, promise1);
         assertResolves(null, promise2);
+    }
+
+    @Test
+    public void thenComposeFuture() throws Throwable {
+        final ForkJoinPool pool = new ForkJoinPool();
+        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> resolved(String result) throws Throwable {
+                return pool.submit(new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        return SUCCESS2;
+                    }
+                });
+            }
+        });
+
+        assertResolves(SUCCESS1, promise1);
+        assertResolves(SUCCESS2, promise2);
     }
 
     @Test
@@ -515,6 +539,24 @@ public class PromiseTest {
     }
 
     @Test
+    public void executorThrows() throws Throwable {
+        Throwable exception = new RuntimeException();
+        Executor executor = mock(Executor.class);
+        doThrow(exception).when(executor).execute(any(Runnable.class));
+
+        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise2 = promise1.thenApply(executor, new OnResolvedFunction<String, String>() {
+            @Override
+            public String resolved(String result) throws Throwable {
+                return SUCCESS2;
+            }
+        });
+
+        assertResolves(SUCCESS1, promise1);
+        assertRejects(exception, promise2);
+    }
+
+    @Test
     public void cancel() throws Throwable {
         Promise<String> promise = resolveAfter(SUCCESS1, 100);
         assertTrue(promise.cancel(true));
@@ -575,8 +617,17 @@ public class PromiseTest {
     }
 
     @Test(timeout = 1000)
-    public void cancelAfterAlreadyCompleted() throws Throwable {
+    public void cancelAfterCompletes() throws Throwable {
         Promise<String> promise = resolveAfter(SUCCESS1, 10);
+        Promise<Boolean> cancel = promise.cancelAfter(true, 5000, TimeUnit.MILLISECONDS);
+
+        assertResolves(false, cancel);
+        assertResolves(SUCCESS1, promise);
+    }
+
+    @Test
+    public void cancelAfterAlreadyCompleted() throws Throwable {
+        Promise<String> promise = Promise.resolved(SUCCESS1);
         Promise<Boolean> cancel = promise.cancelAfter(true, 5000, TimeUnit.MILLISECONDS);
 
         assertResolves(false, cancel);
@@ -601,15 +652,15 @@ public class PromiseTest {
     public void getNowDefaultValue() throws Throwable {
         Deferred<String> deferred = Promise.defer();
         Promise<String> promise = deferred.promise();
-        String result = promise.getNow(SUCCESS2);
-        assertEquals(SUCCESS2, result);
+        String result = promise.getNow(SUCCESS1);
+        assertEquals(SUCCESS1, result);
     }
 
     @Test(expected = ExecutionException.class)
     public void getNowRejected() throws Throwable {
         Throwable exception = new Throwable();
         Promise<String> promise = Promise.rejected(exception);
-        String ignored = promise.getNow(SUCCESS2);
+        String ignored = promise.getNow(SUCCESS1);
     }
 
     @Test(expected = CancellationException.class)
@@ -617,12 +668,31 @@ public class PromiseTest {
         Deferred<String> deferred = Promise.defer();
         Promise<String> promise = deferred.promise();
         promise.cancel(true);
-        String ignored = promise.getNow(SUCCESS2);
+        String ignored = promise.getNow(SUCCESS1);
     }
 
     @Test(expected = ExecutionException.class)
     public void getRejected() throws Throwable {
         Promise<String> promise = rejectAfter(new ArithmeticException(), 10);
+        String ignored = promise.get();
+        throw new AssertionFailedError("promise.get() should not return successfully");
+    }
+
+    @Test(expected = InterruptedException.class)
+    public void getInterrupted() throws Throwable {
+        Deferred<String> deferred = Promise.defer();
+        Promise<String> promise = deferred.promise();
+
+        final Thread current = Thread.currentThread();
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                current.interrupt();
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+
         String ignored = promise.get();
         throw new AssertionFailedError("promise.get() should not return successfully");
     }
@@ -646,5 +716,24 @@ public class PromiseTest {
         Promise<String> promise = resolveAfter(SUCCESS1, 1000);
         String ignored = promise.get(10, TimeUnit.MILLISECONDS);
         throw new AssertionFailedError("promise.get(long, TimeUnit) should not return successfully");
+    }
+
+    @Test(expected = InterruptedException.class)
+    public void getTimedInterrupted() throws Throwable {
+        Deferred<String> deferred = Promise.defer();
+        Promise<String> promise = deferred.promise();
+
+        final Thread current = Thread.currentThread();
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                current.interrupt();
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+
+        String ignored = promise.get(100, TimeUnit.MILLISECONDS);
+        throw new AssertionFailedError("promise.get() should not return successfully");
     }
 }

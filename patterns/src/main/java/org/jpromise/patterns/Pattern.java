@@ -18,7 +18,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class Pattern {
-    private Pattern() { }
+    private Pattern() {
+        throw new IllegalStateException();
+    }
 
     public static <V1, V2> Pattern2<V1, V2> of(V1 first, V2 second) {
         return new Pattern2<>(first, second);

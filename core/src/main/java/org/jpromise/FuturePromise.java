@@ -32,7 +32,8 @@ class FuturePromise<V> extends AbstractPromise<V> implements Runnable {
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-        return future.cancel(mayInterruptIfRunning);
+        return future.cancel(mayInterruptIfRunning)
+                && completeWithException(new CancellationException());
     }
 
     @Override
