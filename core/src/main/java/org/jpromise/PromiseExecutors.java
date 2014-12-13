@@ -30,9 +30,15 @@ public enum PromiseExecutors implements Executor {
             }
         }
     };
-    public final static Executor DEFAULT_CREATION_EXECUTOR = COMMON_POOL;
-    public final static Executor DEFAULT_CONTINUATION_EXECUTOR = COMMON_POOL;
-    public final static Executor DEFAULT_FUTURE_EXECUTOR = NEW_THREAD;
+    public final static Executor DEFAULT_CREATION_EXECUTOR;
+    public final static Executor DEFAULT_CONTINUATION_EXECUTOR;
+    public final static Executor DEFAULT_FUTURE_EXECUTOR;
+
+    static {
+        DEFAULT_CONTINUATION_EXECUTOR = ExecutorResolver.resolveBySetting("org.jpromise.continuation_executor", COMMON_POOL);
+        DEFAULT_FUTURE_EXECUTOR = ExecutorResolver.resolveBySetting("org.jpromise.future_executor", NEW_THREAD);
+        DEFAULT_CREATION_EXECUTOR = ExecutorResolver.resolveBySetting("org.jpromise.creation_executor", COMMON_POOL);
+    }
 
     private final static ForkJoinPool pool = new ForkJoinPool();
 }
