@@ -168,10 +168,10 @@ public class ObservablePromiseTest {
 
     @Test
     public void toObservableImmediatelyUnsubscribes() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 10);
-        Promise<String> promise3 = resolveAfter(SUCCESS3, 10);
-        Promise<String> promise4 = resolveAfter(SUCCESS4, 10);
+        Promise<String> promise1 = resolveAfter(SUCCESS1, 100);
+        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
+        Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
+        Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
 
         @SuppressWarnings("unchecked")
         Action1<String> action = mock(Action1.class);
