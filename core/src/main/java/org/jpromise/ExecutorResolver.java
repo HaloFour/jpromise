@@ -7,6 +7,7 @@ import java.lang.reflect.Modifier;
 import java.util.concurrent.Executor;
 
 import static java.util.Locale.ENGLISH;
+import static org.jpromise.util.MessageUtil.*;
 
 public class ExecutorResolver {
     private ExecutorResolver() {
@@ -33,14 +34,11 @@ public class ExecutorResolver {
         catch (Throwable exception) {
             return defaultExecutor;
         }
-        if (executor == null) {
-            executor = defaultExecutor;
-        }
         return executor;
     }
 
-    public static Executor resolveByName(String name) throws ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchFieldException, NoSuchMethodException, IllegalAccessException, InvocationTargetException{
-        Class<Executor> executorClass = Executor.class;
+    public static Executor resolveByName(String name) throws ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchFieldException, NoSuchMethodException, InvocationTargetException {
+        if (name == null) throw new IllegalArgumentException(mustNotBeNull("name"));
         int memberSeparator = name.indexOf('#');
         if (memberSeparator == -1) {
             return resolveByClassName(name);
@@ -59,7 +57,7 @@ public class ExecutorResolver {
         if (executorClass.isAssignableFrom(cls)) {
             return (Executor) cls.newInstance();
         }
-        throw new IllegalArgumentException("The specified class does not implement the Executor interface.");
+        throw new IllegalArgumentException(doesNotImplementExecutor(cls));
     }
 
     static Executor resolveByClassNameAndMemberName(String className, String memberName) throws ClassNotFoundException, NoSuchFieldException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -78,17 +76,14 @@ public class ExecutorResolver {
             method.setAccessible(true);
         }
         int modifiers = method.getModifiers();
-        if (!Modifier.isPublic(modifiers)) {
-            throw new IllegalArgumentException("Method is not public.");
-        }
         if (!Modifier.isStatic(modifiers)) {
-            throw new IllegalArgumentException("Method is not static.");
+            throw new IllegalArgumentException(methodNotStatic(method));
         }
         Class<?> returnType = method.getReturnType();
         if (Executor.class.isAssignableFrom(returnType)) {
             return (Executor)method.invoke(null);
         }
-        throw new IllegalArgumentException("Method does not return Executor.");
+        throw new IllegalArgumentException(methodDoesNotReturnExecutor(method));
     }
 
     static Executor resolveByClassAndFieldName(Class<?> cls, String fieldName) throws NoSuchFieldException, IllegalAccessException {
@@ -97,15 +92,12 @@ public class ExecutorResolver {
             field.setAccessible(true);
         }
         int modifiers = field.getModifiers();
-        if (!Modifier.isPublic(modifiers)) {
-            throw new IllegalArgumentException("Field is not public.");
-        }
         if (!Modifier.isStatic(modifiers)) {
-            throw new IllegalArgumentException("Field is not static.");
+            throw new IllegalArgumentException(fieldNotStatic(field));
         }
         Class<?> fieldType = field.getType();
         if (!Executor.class.isAssignableFrom(fieldType)) {
-            throw new IllegalArgumentException("Field is not an Executor.");
+            throw new IllegalArgumentException(fieldIsNotExecutor(field));
         }
         return (Executor)field.get(null);
     }
