@@ -27,21 +27,6 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     }
 
     @Override
-    public boolean isDone() {
-        return (state != PromiseState.PENDING);
-    }
-
-    @Override
-    public boolean isResolved() {
-        return (state == PromiseState.RESOLVED);
-    }
-
-    @Override
-    public boolean isRejected() {
-        return (state == PromiseState.REJECTED);
-    }
-
-    @Override
     public String toString() {
         switch (state) {
             case RESOLVED:
@@ -125,7 +110,6 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         return registerCallback(new RejectedPromise<E, V>(this, executor, exceptionClass) {
             @Override
             protected void handle(E exception) throws Throwable {
-                handler.handle(exception);
                 complete(handler.handle(exception));
             }
         });

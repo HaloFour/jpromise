@@ -8,9 +8,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.concurrent.*;
 
 import static org.jpromise.PromiseHelpers.*;
@@ -61,6 +58,15 @@ public class PromiseTest {
     public void rejected() throws Throwable {
         Exception exception = new Exception(FAIL1);
         Promise<String> promise = Promise.rejected(exception);
+
+        assertRejects(exception, promise);
+        assertEquals("[REJECTED]: " + exception.toString(), promise.toString());
+    }
+
+    @Test
+    public void typedRejected() throws Throwable {
+        Exception exception = new Exception(FAIL1);
+        Promise<String> promise = Promise.rejected(String.class, exception);
 
         assertRejects(exception, promise);
         assertEquals("[REJECTED]: " + exception.toString(), promise.toString());
@@ -348,6 +354,27 @@ public class PromiseTest {
     }
 
     @Test
+    public void whenRejectedWithExecutor() throws Throwable {
+        @SuppressWarnings("unchecked")
+        OnRejected<Throwable> callback = mock(OnRejected.class);
+        Executor executor = mock(Executor.class);
+        Throwable exception = new Exception();
+
+        Promise<String> promise1 = rejectAfter(exception, 10);
+        Promise<String> promise2 = promise1.whenRejected(executor, callback);
+
+        assertRejects(exception, promise1);
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor, times(1)).execute(captor.capture());
+
+        Runnable runnable = captor.getValue();
+        runnable.run();
+        verify(callback, times(1)).rejected(exception);
+
+        assertRejects(exception, promise2);
+    }
+
+    @Test
     public void handleWith() throws Throwable {
         Exception exception = new Exception();
         Promise<String> promise1 = rejectAfter(exception, 10);
@@ -364,9 +391,9 @@ public class PromiseTest {
 
     @Test
     public void handleWithResult() throws Throwable {
-        Exception exception = new ArithmeticException();
+        Exception exception = new Exception();
         Promise<String> promise1 = rejectAfter(exception, 10);
-        Promise<String> promise2 = promise1.handleWith(ArithmeticException.class, SUCCESS1);
+        Promise<String> promise2 = promise1.handleWith(SUCCESS1);
 
         assertRejects(exception, promise1);
         assertResolves(SUCCESS1, promise2);
@@ -382,6 +409,16 @@ public class PromiseTest {
                 return SUCCESS1;
             }
         });
+
+        assertRejects(exception, promise1);
+        assertResolves(SUCCESS1, promise2);
+    }
+
+    @Test
+    public void typedHandleWithResult() throws Throwable {
+        Exception exception = new ArithmeticException();
+        Promise<String> promise1 = rejectAfter(exception, 10);
+        Promise<String> promise2 = promise1.handleWith(ArithmeticException.class, SUCCESS1);
 
         assertRejects(exception, promise1);
         assertResolves(SUCCESS1, promise2);
@@ -430,6 +467,28 @@ public class PromiseTest {
 
         assertRejects(exception1, promise1);
         assertRejects(exception2, promise2);
+    }
+
+    @Test
+    public void handleWithWithExecutor() throws Throwable {
+        Throwable exception = new Exception();
+        @SuppressWarnings("unchecked")
+        OnRejectedHandler<Throwable, String> callback = mock(OnRejectedHandler.class);
+        when(callback.handle(exception)).thenReturn(SUCCESS1);
+        Executor executor = mock(Executor.class);
+
+        Promise<String> promise1 = rejectAfter(exception, 10);
+        Promise<String> promise2 = promise1.handleWith(executor, callback);
+
+        assertRejects(exception, promise1);
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor, times(1)).execute(captor.capture());
+
+        Runnable runnable = captor.getValue();
+        runnable.run();
+        verify(callback, times(1)).handle(exception);
+
+        assertResolves(SUCCESS1, promise2);
     }
 
     @Test
@@ -511,6 +570,33 @@ public class PromiseTest {
 
         assertRejects(exception, promise1);
         assertRejects(exception, promise2);
+    }
+
+    @Test
+    public void fallbackWithWithExecutor() throws Throwable {
+        Throwable exception = new Exception();
+        @SuppressWarnings("unchecked")
+        OnRejectedHandler<Throwable, Future<String>> callback = mock(OnRejectedHandler.class);
+        when(callback.handle(exception)).thenReturn(Promise.resolved(SUCCESS1));
+        Executor executor = mock(Executor.class);
+
+        Promise<String> promise1 = rejectAfter(exception, 10);
+        Promise<String> promise2 = promise1.fallbackWith(executor, callback);
+
+        assertRejects(exception, promise1);
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor, times(1)).execute(captor.capture());
+        reset(executor);
+
+        Runnable runnable = captor.getValue();
+        runnable.run();
+
+        verify(callback, times(1)).handle(exception);
+        verify(executor, times(1)).execute(captor.capture());
+        runnable = captor.getValue();
+        runnable.run();
+
+        assertResolves(SUCCESS1, promise2);
     }
 
     @Test
@@ -667,7 +753,8 @@ public class PromiseTest {
         Promise<String> promise1 = Promise.resolved(SUCCESS1);
         Promise<String> promise2 = promise1.then(PromiseExecutors.CURRENT_THREAD, new OnResolved<String>() {
             @Override
-            public void resolved(String result) throws Throwable { }
+            public void resolved(String result) throws Throwable {
+            }
         });
 
         assertFalse(promise2.cancel(true));
@@ -738,6 +825,25 @@ public class PromiseTest {
         Promise<String> promise = deferred.promise();
         promise.cancel(true);
         String ignored = promise.getNow(SUCCESS1);
+    }
+
+    @Test
+    public void getNowInterrupted() throws Throwable {
+        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise2 = promise1.then(PromiseExecutors.CURRENT_THREAD, new OnResolved<String>() {
+            @Override
+            public void resolved(String result) throws Throwable {
+                throw new InterruptedException();
+            }
+        });
+
+        try {
+            String ignored = promise2.getNow(SUCCESS2);
+            throw new AssertionFailedError("promise.getNow() should not return successfully");
+        }
+        catch (ExecutionException exception) {
+            assertTrue(exception.getCause() instanceof InterruptedException);
+        }
     }
 
     @Test(expected = ExecutionException.class)

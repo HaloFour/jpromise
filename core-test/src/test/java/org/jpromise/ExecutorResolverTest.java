@@ -8,11 +8,11 @@ import java.util.concurrent.ForkJoinPool;
 import static org.junit.Assert.*;
 
 public class ExecutorResolverTest {
-    private static final String PROPERTY_KEY = "org.jpromise.continuation_executor";
+    private static final String PROPERTY_KEY = PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR_KEY;
 
     @Test
     public void resolveCommonPool() throws Throwable {
-        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, "common_pool")) {
+        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, PromiseExecutors.COMMON_POOL_KEY)) {
             Executor executor = ExecutorResolver.resolveBySetting(PROPERTY_KEY, null);
             assertEquals(PromiseExecutors.COMMON_POOL, executor);
         }
@@ -20,7 +20,7 @@ public class ExecutorResolverTest {
 
     @Test
     public void resolveCurrentThread() throws Throwable {
-        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, "current_thread")) {
+        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, PromiseExecutors.CURRENT_THREAD_KEY)) {
             Executor executor = ExecutorResolver.resolveBySetting(PROPERTY_KEY, null);
             assertEquals(PromiseExecutors.CURRENT_THREAD, executor);
         }
@@ -28,7 +28,7 @@ public class ExecutorResolverTest {
 
     @Test
     public void resolveNewThread() throws Throwable {
-        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, "new_thread")) {
+        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, PromiseExecutors.NEW_THREAD_KEY)) {
             Executor executor = ExecutorResolver.resolveBySetting(PROPERTY_KEY, null);
             assertEquals(PromiseExecutors.NEW_THREAD, executor);
         }

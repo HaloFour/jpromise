@@ -9,18 +9,22 @@ import java.util.concurrent.Executor;
 import static java.util.Locale.ENGLISH;
 
 public class ExecutorResolver {
+    private ExecutorResolver() {
+        throw new IllegalStateException();
+    }
+
     public static Executor resolveBySetting(String settingName, Executor defaultExecutor) {
         String settingValue = System.getProperty(settingName);
         if (settingValue == null || settingValue.length() == 0) {
             return defaultExecutor;
         }
         switch (settingValue.toLowerCase(ENGLISH)) {
-            case "common_pool":
+            case PromiseExecutors.COMMON_POOL_KEY:
                 return PromiseExecutors.COMMON_POOL;
-            case "new_thread":
-                return PromiseExecutors.NEW_THREAD;
-            case "current_thread":
+            case PromiseExecutors.CURRENT_THREAD_KEY:
                 return PromiseExecutors.CURRENT_THREAD;
+            case PromiseExecutors.NEW_THREAD_KEY:
+                return PromiseExecutors.NEW_THREAD;
         }
         Executor executor = null;
         try {
