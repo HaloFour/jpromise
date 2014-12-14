@@ -1,10 +1,6 @@
 package org.jpromise;
 
-import org.jpromise.Deferred;
-import org.jpromise.DeferredPromise;
-import org.jpromise.Promise;
-import org.jpromise.PromiseState;
-import org.jpromise.functions.*;
+import org.jpromise.functions.OnCompleted;
 
 import java.util.Timer;
 import java.util.TimerTask;
