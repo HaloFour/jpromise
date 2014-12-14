@@ -706,6 +706,40 @@ public class PromiseTest {
     }
 
     @Test
+    public void cancelInterruptsCallbackThread() throws Throwable {
+        final CountDownLatch latch1 = new CountDownLatch(1);
+        final CountDownLatch latch2 = new CountDownLatch(1);
+        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        class Closure {
+            public Throwable exception;
+        }
+        final Closure closure = new Closure();
+        Promise<String> promise2 = promise1.then(PromiseExecutors.NEW_THREAD, new OnResolved<String>() {
+            @Override
+            public void resolved(String result) throws Throwable {
+                latch1.countDown();
+                try {
+                    Thread.sleep(10000);
+                }
+                catch (InterruptedException exception) {
+                    closure.exception = exception;
+                }
+                finally {
+                    latch2.countDown();
+                }
+            }
+        });
+
+        assertResolves(promise1);
+        latch1.await();
+
+        assertTrue(promise2.cancel(true));
+        assertRejects(CancellationException.class, promise2);
+        latch2.await();
+        assertTrue(closure.exception instanceof InterruptedException);
+    }
+
+    @Test
     public void cancelChained() throws Throwable {
         Deferred<String> deferred = Promise.defer();
         Promise<String> promise1 = deferred.promise();

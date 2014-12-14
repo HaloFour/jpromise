@@ -8,6 +8,7 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
     private final Executor executor;
     private final PromiseCallbackListener callback;
     private Promise<V_OUT> composed;
+    private Thread callbackThread;
     private boolean cancelled;
 
     protected ContinuationPromise(Promise<V_IN> promise, Executor executor) {
@@ -28,6 +29,7 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
                         return;
                     }
                     try (AutoCloseable ignored = callback.invokingPromiseCallback(promise, ContinuationPromise.this, result, exception)) {
+                        callbackThread = Thread.currentThread();
                         switch (promise.state()) {
                             case RESOLVED:
                                 completeComposed(result);
@@ -39,6 +41,9 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
                     }
                     catch (Throwable thrown) {
                         completeWithException(thrown);
+                    }
+                    finally {
+                        callbackThread = null;
                     }
                 }
             });
@@ -52,6 +57,11 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
     public boolean cancel(boolean mayInterruptIfRunning) {
         if (super.cancel(mayInterruptIfRunning)) {
             cancelled = true;
+            Promise<V_OUT> composed = this.composed;
+            Thread callbackThread = this.callbackThread;
+            if (mayInterruptIfRunning && callbackThread != null) {
+                callbackThread.interrupt();
+            }
             return composed == null || composed.cancel(mayInterruptIfRunning);
         }
         return false;

@@ -58,7 +58,11 @@ public enum PromiseComposition implements PromiseCompositionListener {
         }
 
         @Override
-        public void exception(Throwable exception) { }
+        public void exception(Throwable exception) {
+            for (PromiseCompositionListener listener : listeners) {
+                listener.exception(exception);
+            }
+        }
     }
 
     private static class ComposablePromiseCallbackListener implements PromiseCallbackListener {
