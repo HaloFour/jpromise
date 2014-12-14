@@ -223,15 +223,18 @@ public abstract class AbstractPromise<V> extends Promise<V> {
     }
 
     private void registerCallback(final Continuation<V> callback) {
+        boolean invokeImmediately = true;
         if (state == PromiseState.PENDING) {
             synchronized (lock) {
                 if (state == PromiseState.PENDING) {
+                    invokeImmediately = false;
                     callbacks.add(callback);
-                    return;
                 }
             }
         }
-        invokeCallback(callback, result, exception);
+        if (invokeImmediately) {
+            invokeCallback(callback, result, exception);
+        }
     }
 
     private void invokeCallbacks(Iterable<Continuation<V>> callbacks, V result, Throwable exception) {
