@@ -2,10 +2,10 @@ package org.jpromise;
 
 import java.util.concurrent.Executor;
 
-abstract class RejectedPromise<E extends Throwable, V> extends ComposedPromise<V, V> {
+abstract class RejectionPromise<E extends Throwable, V> extends ContinuationPromise<V, V> {
     private final Class<E> exceptionClass;
 
-    RejectedPromise(Promise<V> promise, Executor executor, Class<E> exceptionClass) {
+    RejectionPromise(Promise<V> promise, Executor executor, Class<E> exceptionClass) {
         super(promise, executor);
         this.exceptionClass = exceptionClass;
     }
