@@ -137,6 +137,10 @@ public abstract class Promise<V> implements Future<V> {
         return new DeferredPromise<>();
     }
 
+    public static <V> Deferred<V> defer(Class<V> resultClass) {
+        return new DeferredPromise<>();
+    }
+
     public static Promise<Void> resolved() {
         return resolved(null);
     }

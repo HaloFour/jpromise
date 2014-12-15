@@ -217,7 +217,7 @@ public abstract class AbstractPromise<V> extends Promise<V> {
         invokeCallbacks(callbacks, result, exception);
     }
 
-    private <V_OUT> Promise<V_OUT> registerCallback(final ContinuationPromise<V, V_OUT> composedFuture) {
+    <V_OUT> Promise<V_OUT> registerCallback(final ContinuationPromise<V, V_OUT> composedFuture) {
         registerCallback((Continuation<V>)composedFuture);
         return composedFuture;
     }

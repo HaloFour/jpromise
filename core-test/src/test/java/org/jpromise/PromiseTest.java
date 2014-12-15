@@ -29,6 +29,13 @@ public class PromiseTest {
     }
 
     @Test
+    public void deferWithType() throws Throwable {
+        Deferred<String> deferred = Promise.defer(String.class);
+        Promise<String> promise = deferred.promise();
+        assertFalse(promise.isDone());
+    }
+
+    @Test
     public void pending() {
         Deferred<String> deferred = new DeferredPromise<>();
         Promise<String> promise = deferred.promise();
@@ -706,6 +713,54 @@ public class PromiseTest {
     }
 
     @Test
+    public void cancelPreventsComposingReturnedFuture() throws Throwable {
+        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Executor executor = PromiseExecutors.CURRENT_THREAD;
+
+        final Promise<String> promise3 = spy(Promise.resolved(SUCCESS2));
+
+        ContinuationPromise<String, String> promise2 = new ContinuationPromise<String, String>(promise1, executor) {
+            @Override
+            protected void completeComposed(String result) throws Throwable {
+                assertTrue(cancel(false));
+                completeWithPromise(promise3);
+            }
+        };
+
+        promise2.completed(promise1, SUCCESS1, null);
+
+        assertRejects(CancellationException.class, promise2);
+        verify(promise3, never()).whenCompleted(any(Executor.class), any(OnCompleted.class));
+    }
+
+    @Test
+    public void cancelPreventsComposedFutureCallback() throws Throwable {
+        Deferred<String> deferred = Promise.defer();
+        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Executor executor = PromiseExecutors.CURRENT_THREAD;
+        final Promise<String> promise3 = spy(deferred.promise());
+
+        ContinuationPromise<String, String> promise2 = new ContinuationPromise<String, String>(promise1, executor) {
+            @Override
+            protected void completeComposed(String result) throws Throwable {
+                completeWithPromise(promise3);
+            }
+
+            @Override
+            protected boolean complete(String result) {
+                throw new AssertionFailedError("ContinuationPromise.complete() should never be called.");
+            }
+        };
+
+        promise2.completed(promise1, SUCCESS1, null);
+        assertTrue(promise2.cancel(false));
+        deferred.resolve(SUCCESS2);
+
+        assertRejects(CancellationException.class, promise2);
+        verify(promise3, times(1)).whenCompleted(any(Executor.class), any(OnCompleted.class));
+    }
+
+    @Test
     public void cancelInterruptsCallbackThread() throws Throwable {
         final CountDownLatch latch1 = new CountDownLatch(1);
         final CountDownLatch latch2 = new CountDownLatch(1);
@@ -863,20 +918,18 @@ public class PromiseTest {
 
     @Test
     public void getNowInterrupted() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        Promise<String> promise2 = promise1.then(PromiseExecutors.CURRENT_THREAD, new OnResolved<String>() {
-            @Override
-            public void resolved(String result) throws Throwable {
-                throw new InterruptedException();
-            }
-        });
+        Promise<String> promise = Promise.resolved(SUCCESS1);
+        Promise<String> spy = spy(promise);
+
+        InterruptedException exception = new InterruptedException();
+        when(spy.get()).thenThrow(exception);
 
         try {
-            String ignored = promise2.getNow(SUCCESS2);
+            String ignored = spy.getNow(SUCCESS2);
             throw new AssertionFailedError("promise.getNow() should not return successfully");
         }
-        catch (ExecutionException exception) {
-            assertTrue(exception.getCause() instanceof InterruptedException);
+        catch (ExecutionException executionException) {
+            assertTrue(executionException.getCause() == exception);
         }
     }
 
