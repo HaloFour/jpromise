@@ -23,7 +23,8 @@ public class MDCPromiseTracker implements PromiseCompositionListener {
                     MDC.clear();
                 }
                 return new PromiseCallbackCompletion() {
-                    private void reset() {
+                    @Override
+                    public void completed(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
                         if (previousContextMap != null) {
                             MDC.setContextMap(previousContextMap);
                         }
@@ -31,23 +32,8 @@ public class MDCPromiseTracker implements PromiseCompositionListener {
                             MDC.clear();
                         }
                     }
-
-                    @Override
-                    public void completed(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
-                        reset();
-                    }
-
-                    @Override
-                    public void exception(Promise<?> source, Promise<?> target, Object result, Throwable exception, Throwable callbackException) {
-                        reset();
-                    }
                 };
             }
         };
-    }
-
-    @Override
-    public void exception(Throwable exception) {
-
     }
 }

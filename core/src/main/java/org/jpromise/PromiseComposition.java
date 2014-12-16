@@ -11,11 +11,6 @@ public enum PromiseComposition implements PromiseCompositionListener {
         public PromiseCallbackListener composingCallback(Promise<?> source, Promise<?> target) {
             return composite.composingCallback(source, target);
         }
-
-        @Override
-        public void exception(Throwable exception) {
-            composite.exception(exception);
-        }
     };
 
     private static final Set<PromiseCompositionListener> listeners = new CopyOnWriteArraySet<PromiseCompositionListener>();
@@ -47,18 +42,9 @@ public enum PromiseComposition implements PromiseCompositionListener {
                         callbacks.put(listener, callback);
                     }
                 }
-                catch (Throwable exception) {
-                    listener.exception(exception);
-                }
+                catch (Throwable ignored) { }
             }
             return new ComposablePromiseCallbackListener(callbacks);
-        }
-
-        @Override
-        public void exception(Throwable exception) {
-            for (PromiseCompositionListener listener : listeners) {
-                listener.exception(exception);
-            }
         }
     }
 
@@ -81,9 +67,7 @@ public enum PromiseComposition implements PromiseCompositionListener {
                         completions.put(listener, completion);
                     }
                 }
-                catch (Throwable thrown) {
-                    listener.exception(thrown);
-                }
+                catch (Throwable ignored) { }
             }
             return new CompositePromiseCallbackCompletion(completions);
         }
@@ -103,23 +87,7 @@ public enum PromiseComposition implements PromiseCompositionListener {
                 try {
                     completion.completed(source, target, result, exception);
                 }
-                catch (Throwable callbackException) {
-                    completion.exception(source, target, result, exception, callbackException);
-                }
-            }
-        }
-
-        @Override
-        public void exception(Promise<?> source, Promise<?> target, Object result, Throwable exception, Throwable callbackException) {
-            for (Map.Entry<PromiseCompositionListener, PromiseCallbackCompletion> entry : completions.entrySet()) {
-                PromiseCompositionListener listener = entry.getKey();
-                PromiseCallbackCompletion completion = entry.getValue();
-                try {
-                    completion.exception(source, target, result, exception, callbackException);
-                }
-                catch (Throwable thrown) {
-                    listener.exception(thrown);
-                }
+                catch (Throwable ignore) { }
             }
         }
     }

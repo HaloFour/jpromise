@@ -39,13 +39,12 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
                                 completeComposedWithException(exception);
                                 break;
                         }
-                        completion.completed(promise, ContinuationPromise.this, result, exception);
                     }
                     catch (Throwable thrown) {
                         completeWithException(thrown);
-                        completion.exception(promise, ContinuationPromise.this, result, exception, thrown);
                     }
                     finally {
+                        completion.completed(promise, ContinuationPromise.this, result, exception);
                         callbackThread = null;
                     }
                 }

@@ -74,11 +74,6 @@ public class AsyncLocal<T> extends InheritableThreadLocal<T> {
             final AsyncLocalMap state = persistToMap();
             return new PersistedAsyncLocalState(state);
         }
-
-        @Override
-        public void exception(Throwable exception) {
-
-        }
     }
 
     private static class PersistedAsyncLocalState implements PromiseCallbackListener {
@@ -110,11 +105,6 @@ public class AsyncLocal<T> extends InheritableThreadLocal<T> {
 
         @Override
         public void completed(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
-            restoreFromMap(previous);
-        }
-
-        @Override
-        public void exception(Promise<?> source, Promise<?> target, Object result, Throwable exception, Throwable callbackException) {
             restoreFromMap(previous);
         }
     }

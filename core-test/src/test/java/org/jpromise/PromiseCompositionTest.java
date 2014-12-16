@@ -49,7 +49,6 @@ public class PromiseCompositionTest {
         verify(callback, times(1)).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
         composite.completed(promise1, promise2, SUCCESS1, null);
         verify(completion, times(1)).completed(promise1, promise2, SUCCESS1, null);
-        verify(completion, never()).exception(eq(promise1), eq(promise2), eq(SUCCESS1), isNull(Throwable.class), any(Throwable.class));
     }
 
     @Test
@@ -75,7 +74,6 @@ public class PromiseCompositionTest {
         verify(callback, times(2)).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
         composite.completed(promise1, promise2, SUCCESS1, null);
         verify(completion, times(2)).completed(promise1, promise2, SUCCESS1, null);
-        verify(completion, never()).exception(eq(promise1), eq(promise2), eq(SUCCESS1), isNull(Throwable.class), any(Throwable.class));
     }
 
     @Test
@@ -96,7 +94,6 @@ public class PromiseCompositionTest {
         PromiseCallbackCompletion composite = composedCallback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
         verify(callback, never()).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
         composite.completed(promise1, promise2, SUCCESS1, null);
-        verify(listener, times(1)).exception(exception);
         verify(closeable, never()).completed(promise1, promise2, SUCCESS1, null);
     }
 
@@ -119,7 +116,6 @@ public class PromiseCompositionTest {
         PromiseCallbackCompletion composite = composedCallback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
         verify(callback, times(1)).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
         composite.completed(promise1, promise2, SUCCESS1, null);
-        verify(listener, times(1)).exception(exception);
         verify(closeable, never()).completed(promise1, promise2, SUCCESS1, null);
     }
 
@@ -141,9 +137,7 @@ public class PromiseCompositionTest {
         verify(listener, times(1)).composingCallback(promise1, promise2);
         PromiseCallbackCompletion composite = composedCallback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
         verify(callback, times(1)).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
-        composite.exception(promise1, promise2, SUCCESS1, null, exception);
         verify(completion, never()).completed(promise1, promise2, SUCCESS1, null);
-        verify(completion, times(1)).exception(promise1, promise2, SUCCESS1, null, exception);
     }
 
     @Test
@@ -167,17 +161,5 @@ public class PromiseCompositionTest {
         verify(callback, times(1)).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
         composite.completed(promise1, promise2, SUCCESS1, null);
         verify(completion, times(1)).completed(promise1, promise2, SUCCESS1, null);
-        verify(completion, times(1)).exception(promise1, promise2, SUCCESS1, null, exception);
-    }
-
-    @Test
-    public void compositePropagatesException() {
-        PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
-        assertTrue(PromiseComposition.register(listener));
-        Throwable exception = new Throwable();
-
-        PromiseComposition.LISTENER.exception(exception);
-
-        verify(listener, times(1)).exception(exception);
     }
 }
