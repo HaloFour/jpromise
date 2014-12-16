@@ -20,6 +20,7 @@ public abstract class BoundedStreamOperator<V_IN, V_OUT> extends StreamOperator<
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected final void resolved(PromiseSubscriber<V_OUT> subscriber, V_IN result) throws Throwable {
         BoundedPromiseSubscriberImpl bounded = (BoundedPromiseSubscriberImpl) subscriber;
         bounded.increment();
@@ -27,6 +28,7 @@ public abstract class BoundedStreamOperator<V_IN, V_OUT> extends StreamOperator<
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected final void rejected(PromiseSubscriber<V_OUT> subscriber, Throwable exception) throws Throwable {
         BoundedPromiseSubscriberImpl bounded = (BoundedPromiseSubscriberImpl) subscriber;
         bounded.increment();
@@ -34,6 +36,7 @@ public abstract class BoundedStreamOperator<V_IN, V_OUT> extends StreamOperator<
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected final void complete(PromiseSubscriber<V_OUT> subscriber) throws Throwable {
         BoundedPromiseSubscriberImpl bounded = (BoundedPromiseSubscriberImpl) subscriber;
         bounded.complete();
