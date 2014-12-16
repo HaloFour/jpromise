@@ -454,7 +454,11 @@ public class PromiseManagerTest {
         final Promise<String> promise3 = Promise.resolved(SUCCESS3);
         final Promise<String> promise4 = Promise.resolved(SUCCESS4);
 
-        List<Promise<String>> promises = new ArrayList<Promise<String>>(Arrays.asList(promise1, promise2, promise3, promise4));
+        List<Promise<String>> promises = new ArrayList<Promise<String>>(4);
+        promises.add(promise1);
+        promises.add(promise2);
+        promises.add(promise3);
+        promises.add(promise4);
 
         Promise<Void> promise = PromiseManager.whenAllResolved(promises, callback)
                 .then(new OnResolved<Void>() {

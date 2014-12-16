@@ -713,6 +713,7 @@ public class PromiseTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void cancelPreventsComposingReturnedFuture() throws Throwable {
         Promise<String> promise1 = Promise.resolved(SUCCESS1);
         Executor executor = PromiseExecutors.CURRENT_THREAD;
@@ -734,6 +735,7 @@ public class PromiseTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void cancelPreventsComposedFutureCallback() throws Throwable {
         Deferred<String> deferred = Promise.defer();
         Promise<String> promise1 = Promise.resolved(SUCCESS1);
