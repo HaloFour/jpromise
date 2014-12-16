@@ -37,11 +37,11 @@ public class PromiseCollectors {
 
     public static <V> PromiseCollector<V, ?, V[]> toArray(final Class<V> resultClass, final int initialCapacity) {
         if (resultClass == null) throw new IllegalArgumentException(mustNotBeNull("resultClass"));
-        final ArrayList<V> list = new ArrayList<>(initialCapacity);
+        final ArrayList<V> list = new ArrayList<V>(initialCapacity);
         return new PromiseCollector<V, ArrayList<V>, V[]>() {
             @Override
             public ArrayList<V> getAccumulator() {
-                return new ArrayList<>(initialCapacity);
+                return new ArrayList<V>(initialCapacity);
             }
 
             @Override
@@ -109,7 +109,7 @@ public class PromiseCollectors {
         return toCollection(resultClass, new Callable<List<V>>() {
             @Override
             public List<V> call() throws Exception {
-                return new LinkedList<>();
+                return new LinkedList<V>();
             }
         });
     }
@@ -147,7 +147,7 @@ public class PromiseCollectors {
         return toCollection(resultClass, new Callable<Collection<V>>() {
             @Override
             public Collection<V> call() throws Exception {
-                return new LinkedList<>();
+                return new LinkedList<V>();
             }
         });
     }
@@ -191,7 +191,7 @@ public class PromiseCollectors {
         return toMap(new Callable<Map<MK, V>>() {
             @Override
             public Map<MK, V> call() throws Exception {
-                return new HashMap<>();
+                return new HashMap<MK, V>();
             }
         }, keyMapper, new OnResolvedFunction<V, V>() {
             @Override
@@ -205,7 +205,7 @@ public class PromiseCollectors {
         return toMap(new Callable<Map<MK, MV>>() {
             @Override
             public Map<MK, MV> call() throws Exception {
-                return new HashMap<>();
+                return new HashMap<MK, MV>();
             }
         }, keyMapper, valueMapper);
     }
@@ -269,12 +269,12 @@ public class PromiseCollectors {
     }
 
     public static <V, A, K> PromiseCollector<V, ?, Map<K, Set<V>>> groupingBy(Class<K> keyClass, Class<V> resultClass, OnResolvedFunction<V, K> keyMapper) {
-        Map<K, Set<V>> groupMap = new HashMap<>();
+        Map<K, Set<V>> groupMap = new HashMap<K, Set<V>>();
         return groupingBy(groupMap, keyMapper, PromiseCollectors.toSet(resultClass));
     }
 
     public static <V, A, K, C> PromiseCollector<V, ?, Map<K, C>> groupingBy(Class<K> keyClass, final OnResolvedFunction<V, K> keyMapper, final PromiseCollector<V, A, C> groupCollector) {
-        Map<K, C> groupMap = new HashMap<>();
+        Map<K, C> groupMap = new HashMap<K, C>();
         return groupingBy(groupMap, keyMapper, groupCollector);
     }
 

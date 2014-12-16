@@ -8,13 +8,44 @@ import org.jpromise.functions.OnResolved;
 import rx.Observable;
 import rx.Subscriber;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class PromiseObservable<V> extends Observable<V> {
     private final Iterable<Promise<V>> promises;
 
-    @SafeVarargs
-    public PromiseObservable(Promise<V>... promises) {
+    private static <V> Iterable<Promise<V>> toList(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4, Promise<V> promise5) {
+        List<Promise<V>> list = new ArrayList<Promise<V>>(5);
+        list.add(promise1);
+        list.add(promise2);
+        list.add(promise3);
+        list.add(promise4);
+        list.add(promise5);
+        return list;
+    }
+
+    public PromiseObservable(Promise<V> promise) {
+        this(toList(promise, null, null, null, null));
+    }
+
+    public PromiseObservable(Promise<V> promise1, Promise<V> promise2) {
+        this(toList(promise1, promise2, null, null, null));
+    }
+
+    public PromiseObservable(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3) {
+        this(toList(promise1, promise2, promise3, null, null));
+    }
+
+    public PromiseObservable(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4) {
+        this(toList(promise1, promise2, promise3, promise4, null));
+    }
+
+    public PromiseObservable(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4, Promise<V> promise5) {
+        this(toList(promise1, promise2, promise3, promise4, promise5));
+    }
+
+    public PromiseObservable(Promise<V>[] promises) {
         this(promises != null ? Arrays.asList(promises) : null, false);
     }
 

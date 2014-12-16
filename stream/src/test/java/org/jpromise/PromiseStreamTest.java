@@ -29,7 +29,7 @@ public class PromiseStreamTest {
     public static final Throwable EXCEPTION = new Exception(FAIL1);
 
     private PromiseStream<String> createStream(boolean includeRejection) {
-        List<Promise<String>> promises = new ArrayList<>(6);
+        List<Promise<String>> promises = new ArrayList<Promise<String>>(6);
         promises.add(resolveAfter(SUCCESS1, 10));
         promises.add(resolveAfter(SUCCESS2, 10));
         promises.add(resolveAfter(SUCCESS3, 10));

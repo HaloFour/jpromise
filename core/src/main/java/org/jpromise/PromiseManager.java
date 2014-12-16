@@ -3,7 +3,9 @@ package org.jpromise;
 import org.jpromise.functions.OnCompleted;
 import org.jpromise.functions.OnResolved;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
@@ -81,7 +83,7 @@ public class PromiseManager {
         if (future instanceof Promise) {
             return (Promise<V>)future;
         }
-        return new FuturePromise<>(executor, future);
+        return new FuturePromise<V>(executor, future);
     }
 
     public static <V> Promise<V> fromFuture(Future<V> future, long timeout, TimeUnit timeUnit) {
@@ -97,7 +99,7 @@ public class PromiseManager {
             promise.cancelAfter(true, timeout, timeUnit);
             return promise;
         }
-        return new FuturePromise<>(executor, future, timeout, timeUnit);
+        return new FuturePromise<V>(executor, future, timeout, timeUnit);
     }
 
     private static <V> void whenCompleted(Promise<V> promise, Executor executor, OnCompleted<V> action, final Deferred<Void> deferred, final AtomicInteger counter) {
@@ -227,8 +229,41 @@ public class PromiseManager {
         return deferred.promise();
     }
 
-    @SafeVarargs
-    public static <V> Promise<V> whenAnyCompleted(Promise<V>... promises) {
+    public static <V> Promise<V> whenAnyCompleted(Promise<V> promise1, Promise<V> promise2) {
+        List<Promise<V>> promises = new ArrayList<Promise<V>>(2);
+        promises.add(promise1);
+        promises.add(promise2);
+        return whenAnyCompleted(promises);
+    }
+
+    public static <V> Promise<V> whenAnyCompleted(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3) {
+        List<Promise<V>> promises = new ArrayList<Promise<V>>(3);
+        promises.add(promise1);
+        promises.add(promise2);
+        promises.add(promise3);
+        return whenAnyCompleted(promises);
+    }
+
+    public static <V> Promise<V> whenAnyCompleted(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4) {
+        List<Promise<V>> promises = new ArrayList<Promise<V>>(4);
+        promises.add(promise1);
+        promises.add(promise2);
+        promises.add(promise3);
+        promises.add(promise4);
+        return whenAnyCompleted(promises);
+    }
+
+    public static <V> Promise<V> whenAnyCompleted(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4, Promise<V> promise5) {
+        List<Promise<V>> promises = new ArrayList<Promise<V>>(5);
+        promises.add(promise1);
+        promises.add(promise2);
+        promises.add(promise3);
+        promises.add(promise4);
+        promises.add(promise5);
+        return whenAnyCompleted(promises);
+    }
+
+    public static <V> Promise<V> whenAnyCompleted(Promise<V>[] promises) {
         if (promises == null || promises.length == 0) {
             Deferred<V> deferred = Promise.defer();
             return deferred.promise();
@@ -267,8 +302,41 @@ public class PromiseManager {
         return deferred.promise();
     }
 
-    @SafeVarargs
-    public static <V> Promise<V> whenAnyResolved(Promise<V>... promises) {
+    public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2) {
+        List<Promise<V>> promises = new ArrayList<Promise<V>>(2);
+        promises.add(promise1);
+        promises.add(promise2);
+        return whenAnyResolved(promises);
+    }
+
+    public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3) {
+        List<Promise<V>> promises = new ArrayList<Promise<V>>(3);
+        promises.add(promise1);
+        promises.add(promise2);
+        promises.add(promise3);
+        return whenAnyResolved(promises);
+    }
+
+    public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4) {
+        List<Promise<V>> promises = new ArrayList<Promise<V>>(4);
+        promises.add(promise1);
+        promises.add(promise2);
+        promises.add(promise3);
+        promises.add(promise4);
+        return whenAnyResolved(promises);
+    }
+
+    public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4, Promise<V> promise5) {
+        List<Promise<V>> promises = new ArrayList<Promise<V>>(5);
+        promises.add(promise1);
+        promises.add(promise2);
+        promises.add(promise3);
+        promises.add(promise4);
+        promises.add(promise5);
+        return whenAnyResolved(promises);
+    }
+
+    public static <V> Promise<V> whenAnyResolved(Promise<V>[] promises) {
         if (promises == null || promises.length == 0) {
             Deferred<V> deferred = Promise.defer();
             return deferred.promise();

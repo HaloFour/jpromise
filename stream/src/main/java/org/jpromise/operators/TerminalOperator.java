@@ -23,7 +23,7 @@ public abstract class TerminalOperator<V, R> {
         if (operation == null) {
             throw new IllegalStateException(nullOperation());
         }
-        TerminalPromiseSubscriber<V, R> subscriber = new TerminalPromiseSubscriber<>(operation);
+        TerminalPromiseSubscriber<V, R> subscriber = new TerminalPromiseSubscriber<V, R>(operation);
         subscribe.subscribed(subscriber);
         return subscriber.promise();
     }

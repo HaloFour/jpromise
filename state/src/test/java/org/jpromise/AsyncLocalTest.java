@@ -10,7 +10,7 @@ import static org.junit.Assert.assertNotEquals;
 public class AsyncLocalTest {
     @Test
     public void stateFollowsThread() throws Throwable {
-        final AsyncLocal<String> local = new AsyncLocal<>();
+        final AsyncLocal<String> local = new AsyncLocal<String>();
         local.set("SUCCESS1");
         final Thread thread = Thread.currentThread();
 
@@ -30,7 +30,7 @@ public class AsyncLocalTest {
     @Test
     public void asyncLocalCleanUp() throws Throwable {
         AsyncLocal.list.clear();
-        AsyncLocal<String> local = new AsyncLocal<>();
+        AsyncLocal<String> local = new AsyncLocal<String>();
         assertEquals(1, AsyncLocal.list.size());
         local.finalize();
         assertEquals(0, AsyncLocal.list.size());

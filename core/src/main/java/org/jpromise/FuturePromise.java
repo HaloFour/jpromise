@@ -53,7 +53,7 @@ class FuturePromise<V> extends AbstractPromise<V> implements Runnable {
             }
             completeWithException(cause);
         }
-        catch (TimeoutException | InterruptedException exception) {
+        catch (Throwable exception) {
             completeWithException(exception);
         }
     }

@@ -2,14 +2,14 @@ package org.jpromise;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class AsyncLocal<T> extends InheritableThreadLocal<T> {
     static {
         PromiseComposition.register(new AsyncLocalPromiseComposingListener());
     }
 
-    static final ConcurrentLinkedDeque<WeakReference<AsyncLocal<?>>> list = new ConcurrentLinkedDeque<>();
+    static final LinkedBlockingDeque<WeakReference<AsyncLocal<?>>> list = new LinkedBlockingDeque<WeakReference<AsyncLocal<?>>>();
 
     public AsyncLocal() {
         list.add(new WeakReference<AsyncLocal<?>>(this));
@@ -40,7 +40,7 @@ public class AsyncLocal<T> extends InheritableThreadLocal<T> {
             }
             Object value = local.get();
             if (value != null) {
-                state.put(reference, new WeakReference<>(value));
+                state.put(reference, new WeakReference<Object>(value));
             }
         }
         return state;
@@ -91,7 +91,7 @@ public class AsyncLocal<T> extends InheritableThreadLocal<T> {
         }
 
         @Override
-        public AutoCloseable invokingPromiseCallback(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
+        public PromiseCallbackCompletion invokingPromiseCallback(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
             if (thread.equals(Thread.currentThread())) {
                 return null;
             }
@@ -101,7 +101,7 @@ public class AsyncLocal<T> extends InheritableThreadLocal<T> {
         }
     }
 
-    private static class RestoredAsyncLocalState implements AutoCloseable {
+    private static class RestoredAsyncLocalState implements PromiseCallbackCompletion {
         private final AsyncLocalMap previous;
 
         public RestoredAsyncLocalState(AsyncLocalMap previous) {
@@ -109,7 +109,12 @@ public class AsyncLocal<T> extends InheritableThreadLocal<T> {
         }
 
         @Override
-        public void close() throws Exception {
+        public void completed(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
+            restoreFromMap(previous);
+        }
+
+        @Override
+        public void exception(Promise<?> source, Promise<?> target, Object result, Throwable exception, Throwable callbackException) {
             restoreFromMap(previous);
         }
     }

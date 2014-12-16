@@ -37,7 +37,7 @@ public class PromiseTest {
 
     @Test
     public void pending() {
-        Deferred<String> deferred = new DeferredPromise<>();
+        Deferred<String> deferred = Promise.defer();
         Promise<String> promise = deferred.promise();
         assertEquals(PromiseState.PENDING, promise.state());
         assertFalse(promise.isResolved());
@@ -265,13 +265,13 @@ public class PromiseTest {
 
     @Test
     public void thenComposeFuture() throws Throwable {
-        final ForkJoinPool pool = new ForkJoinPool();
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
         Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
 
         Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
             @Override
             public Future<String> resolved(String result) throws Throwable {
-                return pool.submit(new Callable<String>() {
+                return executor.submit(new Callable<String>() {
                     @Override
                     public String call() throws Exception {
                         return SUCCESS2;

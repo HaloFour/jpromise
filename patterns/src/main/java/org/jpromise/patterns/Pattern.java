@@ -12,8 +12,6 @@ import org.jpromise.functions.OnResolvedFunction3;
 import org.jpromise.functions.OnResolvedFunction4;
 import org.jpromise.functions.OnResolvedFunction5;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -23,19 +21,19 @@ public class Pattern {
     }
 
     public static <V1, V2> Pattern2<V1, V2> of(V1 first, V2 second) {
-        return new Pattern2<>(first, second);
+        return new Pattern2<V1, V2>(first, second);
     }
 
     public static <V1, V2, V3> Pattern3<V1, V2, V3> of(V1 first, V2 second, V3 third) {
-        return new Pattern3<>(first, second, third);
+        return new Pattern3<V1, V2, V3>(first, second, third);
     }
 
     public static <V1, V2, V3, V4> Pattern4<V1, V2, V3, V4> of(V1 first, V2 second, V3 third, V4 fourth) {
-        return new Pattern4<>(first, second, third, fourth);
+        return new Pattern4<V1, V2, V3, V4>(first, second, third, fourth);
     }
 
     public static <V1, V2, V3, V4, V5> Pattern5<V1, V2, V3, V4, V5> of(V1 first, V2 second, V3 third, V4 fourth, V5 fifth) {
-        return new Pattern5<>(first, second, third, fourth, fifth);
+        return new Pattern5<V1, V2, V3, V4, V5>(first, second, third, fourth, fifth);
     }
 
     public static <V1, V2> Promise<Pattern2<V1, V2>> join(final Promise<V1> first, final Promise<V2> second) {
@@ -43,7 +41,7 @@ public class Pattern {
                 .thenApply(new OnResolvedFunction<Void, Pattern2<V1, V2>>() {
                     @Override
                     public Pattern2<V1, V2> resolved(Void result) throws Throwable {
-                        return new Pattern2<>(getResult(first), getResult(second));
+                        return new Pattern2<V1, V2>(getResult(first), getResult(second));
                     }
                 });
     }
@@ -53,7 +51,7 @@ public class Pattern {
                 .thenApply(new OnResolvedFunction<Void, Pattern3<V1, V2, V3>>() {
                     @Override
                     public Pattern3<V1, V2, V3> resolved(Void result) throws Throwable {
-                        return new Pattern3<>(getResult(first), getResult(second), getResult(third));
+                        return new Pattern3<V1, V2, V3>(getResult(first), getResult(second), getResult(third));
                     }
                 });
     }
@@ -63,7 +61,7 @@ public class Pattern {
                 .thenApply(new OnResolvedFunction<Void, Pattern4<V1, V2, V3, V4>>() {
                     @Override
                     public Pattern4<V1, V2, V3, V4> resolved(Void result) throws Throwable {
-                        return new Pattern4<>(getResult(first), getResult(second), getResult(third), getResult(fourth));
+                        return new Pattern4<V1, V2, V3, V4>(getResult(first), getResult(second), getResult(third), getResult(fourth));
                     }
                 });
     }
@@ -73,7 +71,7 @@ public class Pattern {
                 .thenApply(new OnResolvedFunction<Void, Pattern5<V1, V2, V3, V4, V5>>() {
                     @Override
                     public Pattern5<V1, V2, V3, V4, V5> resolved(Void result) throws Throwable {
-                        return new Pattern5<>(getResult(first), getResult(second), getResult(third), getResult(fourth), getResult(fifth));
+                        return new Pattern5<V1, V2, V3, V4, V5>(getResult(first), getResult(second), getResult(third), getResult(fourth), getResult(fifth));
                     }
                 });
     }

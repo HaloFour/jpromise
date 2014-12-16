@@ -19,7 +19,7 @@ public class TakeOperator<V> extends StreamOperator<V, V> {
 
     @Override
     public void subscribed(PromiseSubscriber<V> subscriber) {
-        super.subscribed(new TakeSubscriber<>(subscriber, count));
+        super.subscribed(new TakeSubscriber<V>(subscriber, count));
     }
 
     private static class TakeSubscriber<V> implements PromiseSubscriber<V> {
@@ -55,7 +55,8 @@ public class TakeOperator<V> extends StreamOperator<V, V> {
                 remaining -= 1;
                 complete = (remaining == 0);
             }
-            try (OutstandingOperation operation = tracker.start()) {
+            OutstandingOperation operation = tracker.start();
+            try {
                 switch (state) {
                     case RESOLVED:
                         parent.resolved(result);
@@ -64,6 +65,9 @@ public class TakeOperator<V> extends StreamOperator<V, V> {
                         parent.rejected(exception);
                         break;
                 }
+            }
+            finally {
+                operation.complete();
             }
             if (complete) {
                 tracker.complete(new Runnable() {

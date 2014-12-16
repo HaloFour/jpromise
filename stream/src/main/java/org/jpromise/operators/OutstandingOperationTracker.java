@@ -16,7 +16,7 @@ public final class OutstandingOperationTracker {
             private final AtomicBoolean closed = new AtomicBoolean(false);
 
             @Override
-            public void close() {
+            public void complete() {
                 if (closed.compareAndSet(false, true)) {
                     end();
                 }

@@ -1,9 +1,6 @@
 package org.jpromise;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
@@ -21,7 +18,7 @@ public enum PromiseComposition implements PromiseCompositionListener {
         }
     };
 
-    private static final Set<PromiseCompositionListener> listeners = new CopyOnWriteArraySet<>();
+    private static final Set<PromiseCompositionListener> listeners = new CopyOnWriteArraySet<PromiseCompositionListener>();
     private static final CompositePromiseCompositionListener composite = new CompositePromiseCompositionListener(listeners);
 
     public static boolean register(PromiseCompositionListener listener) {
@@ -42,12 +39,12 @@ public enum PromiseComposition implements PromiseCompositionListener {
 
         @Override
         public PromiseCallbackListener composingCallback(Promise<?> source, Promise<?> target) {
-            List<PromiseCallbackListener> callbacks = new ArrayList<>(listeners.size());
+            Map<PromiseCompositionListener, PromiseCallbackListener> callbacks = new HashMap<PromiseCompositionListener, PromiseCallbackListener>(listeners.size());
             for (PromiseCompositionListener listener : listeners) {
                 try {
                     PromiseCallbackListener callback = listener.composingCallback(source, target);
                     if (callback != null) {
-                        callbacks.add(callback);
+                        callbacks.put(listener, callback);
                     }
                 }
                 catch (Throwable exception) {
@@ -66,42 +63,63 @@ public enum PromiseComposition implements PromiseCompositionListener {
     }
 
     private static class ComposablePromiseCallbackListener implements PromiseCallbackListener {
-        private final List<PromiseCallbackListener> callbacks;
+        private final Map<PromiseCompositionListener, PromiseCallbackListener> callbacks;
 
-        public ComposablePromiseCallbackListener(List<PromiseCallbackListener> callbacks) {
+        public ComposablePromiseCallbackListener(Map<PromiseCompositionListener, PromiseCallbackListener> callbacks) {
             this.callbacks = callbacks;
         }
 
         @Override
-        public AutoCloseable invokingPromiseCallback(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
-            List<AutoCloseable> closeables = new ArrayList<>(callbacks.size());
-            for (PromiseCallbackListener callback : callbacks) {
+        public PromiseCallbackCompletion invokingPromiseCallback(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
+            Map<PromiseCompositionListener, PromiseCallbackCompletion> completions = new HashMap<PromiseCompositionListener, PromiseCallbackCompletion>(callbacks.size());
+            for (Map.Entry<PromiseCompositionListener, PromiseCallbackListener> entry : callbacks.entrySet()) {
+                PromiseCompositionListener listener = entry.getKey();
+                PromiseCallbackListener callback = entry.getValue();
                 try {
-                    AutoCloseable closeable = callback.invokingPromiseCallback(source, target, result, exception);
-                    if (closeable != null) {
-                        closeables.add(closeable);
+                    PromiseCallbackCompletion completion = callback.invokingPromiseCallback(source, target, result, exception);
+                    if (completion != null) {
+                        completions.put(listener, completion);
                     }
                 }
-                catch (Throwable ignored) { }
+                catch (Throwable thrown) {
+                    listener.exception(thrown);
+                }
             }
-            return new CompositeAutoCloseable(closeables);
+            return new CompositePromiseCallbackCompletion(completions);
         }
     }
 
-    private static class CompositeAutoCloseable implements AutoCloseable {
-        private final List<AutoCloseable> closeables;
+    private static class CompositePromiseCallbackCompletion implements PromiseCallbackCompletion {
+        private final Map<PromiseCompositionListener, PromiseCallbackCompletion> completions;
 
-        public CompositeAutoCloseable(List<AutoCloseable> closeables) {
-            this.closeables = closeables;
+        public CompositePromiseCallbackCompletion(Map<PromiseCompositionListener, PromiseCallbackCompletion> completions) {
+            this.completions = completions;
         }
 
         @Override
-        public void close() throws Exception {
-            for (AutoCloseable closeable : closeables) {
+        public void completed(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
+            for (Map.Entry<PromiseCompositionListener, PromiseCallbackCompletion> entry : completions.entrySet()) {
+                PromiseCallbackCompletion completion = entry.getValue();
                 try {
-                    closeable.close();
+                    completion.completed(source, target, result, exception);
                 }
-                catch (Throwable ignored) { }
+                catch (Throwable callbackException) {
+                    completion.exception(source, target, result, exception, callbackException);
+                }
+            }
+        }
+
+        @Override
+        public void exception(Promise<?> source, Promise<?> target, Object result, Throwable exception, Throwable callbackException) {
+            for (Map.Entry<PromiseCompositionListener, PromiseCallbackCompletion> entry : completions.entrySet()) {
+                PromiseCompositionListener listener = entry.getKey();
+                PromiseCallbackCompletion completion = entry.getValue();
+                try {
+                    completion.exception(source, target, result, exception, callbackException);
+                }
+                catch (Throwable thrown) {
+                    listener.exception(thrown);
+                }
             }
         }
     }

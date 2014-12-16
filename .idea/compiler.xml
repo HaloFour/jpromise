@@ -34,14 +34,14 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="completable" target="1.8" />
-      <module name="core" target="1.7" />
-      <module name="core-test" target="1.7" />
-      <module name="jpromise" target="1.7" />
-      <module name="patterns" target="1.7" />
-      <module name="rx" target="1.7" />
-      <module name="slf4j" target="1.7" />
-      <module name="state" target="1.7" />
-      <module name="stream" target="1.7" />
+      <module name="core" target="1.6" />
+      <module name="core-test" target="1.6" />
+      <module name="jpromise" target="1.6" />
+      <module name="patterns" target="1.6" />
+      <module name="rx" target="1.6" />
+      <module name="slf4j" target="1.6" />
+      <module name="state" target="1.6" />
+      <module name="stream" target="1.6" />
     </bytecodeTargetLevel>
   </component>
 </project>

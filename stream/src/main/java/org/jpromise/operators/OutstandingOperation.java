@@ -1,5 +1,5 @@
 package org.jpromise.operators;
 
-public interface OutstandingOperation extends AutoCloseable {
-    void close();
+public interface OutstandingOperation {
+    void complete();
 }
