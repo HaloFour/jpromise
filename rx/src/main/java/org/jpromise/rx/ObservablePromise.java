@@ -5,8 +5,6 @@ import rx.Observable;
 import rx.Subscription;
 import rx.functions.Action1;
 
-import java.util.Objects;
-
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
 public class ObservablePromise<V> extends AbstractPromise<V> {

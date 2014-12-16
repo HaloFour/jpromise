@@ -20,25 +20,29 @@ public abstract class StreamOperator<V_IN, V_OUT> implements OnSubscribe<V_OUT> 
 
             @Override
             public void resolved(V_IN result) {
-                try (OutstandingOperation operation = tracker.start()) {
-                    try {
-                        StreamOperator.this.resolved(subscriber, result);
-                    }
-                    catch (Throwable exception) {
-                        subscriber.rejected(exception);
-                    }
+                OutstandingOperation operation = tracker.start();
+                try {
+                    StreamOperator.this.resolved(subscriber, result);
+                }
+                catch (Throwable exception) {
+                    subscriber.rejected(exception);
+                }
+                finally {
+                    operation.complete();
                 }
             }
 
             @Override
             public void rejected(Throwable exception) {
-                try (OutstandingOperation operation = tracker.start()) {
-                    try {
-                        StreamOperator.this.rejected(subscriber, exception);
-                    }
-                    catch (Throwable error) {
-                        subscriber.rejected(error);
-                    }
+                OutstandingOperation operation = tracker.start();
+                try {
+                    StreamOperator.this.rejected(subscriber, exception);
+                }
+                catch (Throwable error) {
+                    subscriber.rejected(error);
+                }
+                finally {
+                    operation.complete();
                 }
             }
 

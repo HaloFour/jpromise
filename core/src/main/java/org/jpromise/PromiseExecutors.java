@@ -1,7 +1,7 @@
 package org.jpromise;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 
 public enum PromiseExecutors implements Executor {
     CURRENT_THREAD {
@@ -48,6 +48,6 @@ public enum PromiseExecutors implements Executor {
         DEFAULT_FUTURE_EXECUTOR = ExecutorResolver.resolveBySetting(DEFAULT_FUTURE_EXECUTOR_KEY, NEW_THREAD);
     }
 
-    private final static ForkJoinPool pool = new ForkJoinPool();
+    private final static Executor pool = Executors.newCachedThreadPool();
 }
 

@@ -28,7 +28,8 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
                     if (cancelled) {
                         return;
                     }
-                    try (AutoCloseable ignored = callback.invokingPromiseCallback(promise, ContinuationPromise.this, result, exception)) {
+                    PromiseCallbackCompletion completion = callback.invokingPromiseCallback(promise, ContinuationPromise.this, result, exception);
+                    try {
                         callbackThread = Thread.currentThread();
                         switch (promise.state()) {
                             case RESOLVED:
@@ -38,9 +39,11 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
                                 completeComposedWithException(exception);
                                 break;
                         }
+                        completion.completed(promise, ContinuationPromise.this, result, exception);
                     }
                     catch (Throwable thrown) {
                         completeWithException(thrown);
+                        completion.exception(promise, ContinuationPromise.this, result, exception, thrown);
                     }
                     finally {
                         callbackThread = null;
@@ -83,7 +86,7 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
                 promise = (Promise<V_OUT>) future;
             }
             else {
-                promise = new FuturePromise<>(PromiseExecutors.NEW_THREAD, future);
+                promise = new FuturePromise<V_OUT>(PromiseExecutors.NEW_THREAD, future);
             }
             completeWithPromise(promise);
         }

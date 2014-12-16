@@ -15,7 +15,7 @@ public class CollectOperator<V, A, R> extends TerminalOperator<V, R> {
 
     @Override
     protected TerminalOperation<V, R> operation() {
-        return new CollectorOperation<>(collector);
+        return new CollectorOperation<V, A, R>(collector);
     }
 
     private static class CollectorOperation<V, A, R> implements TerminalOperation<V, R> {

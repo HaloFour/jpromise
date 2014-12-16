@@ -1,4 +1,4 @@
-org.jpromise - Composable Promise Library for Java 7
+org.jpromise - Composable Promise Library for Java 6
 ========
 
 Purpose of this project is to bring a comprehensive asynchronous library to Java loosely based on
@@ -42,7 +42,7 @@ Promise<String> promise = PromiseManager.fromFuture(future);
 
 // Creating a promise from an rx.Observable<T>
 Observable<String> observable = Observable.from(new String[] { "Hello World!" });
-Promise<String> promise = new ObservablePromise(observable);
+Promise<String> promise = new ObservablePromise<String>(observable);
 
 // Creating a promise from a CompletionStage
 CompletableFuture<String> future = new CompletableFuture<>();
@@ -60,42 +60,66 @@ the returned promise is rejected with that exception.
 ```java
 Promise<String> promise1 = Promise.resolved("Hello World!");
 
+// Calls the callback when the promise resolves passing the result of the promise.  When the callback
+// completes the returned promise will resolve with the same result.  However, if the callback throws
+// an exception the returned promise will be rejected with that exception.
 Promise<String> promise2 = promise1.then(new OnResolved<String>() {
     @Override public void resolved(String result) {
         System.out.println(result);
     }
 });
 
+// Calls the callback when the promise resolves passing the result of the promise.  The callback can
+// then synchronously transform the result into a new value of any type.  The returned promise will
+// be resolved with that transformed value when the callback returns.  If the callback throws an
+// exception the returned promise will be rejected with that exception.
 Promise<String> promise3 = promise2.thenApply(new OnResolvedFunction<String, String>() {
     @Override public String resolved(String result) {
         return new StringBuilder(result).reverse().toString();
     }
 });
 
+// Calls the callback when the promise resolves passing the result of the promise.  The callback
+// can then return any Future representing an asynchronous operation, including another Promise.
+// The promise returned by this method will be resolved or rejected with the same result as that
+// returned Future.
 Promise<String> promise4 = promise3.thenCompose(new OnResolvedFunction<String, Future<String>>() {
     @Override public Future<String> resolved(String result) {
         return Promise.resolved("Goodbye world!");
     }
 });
 
+// Calls the callback when the promise is rejected passing the exception.  When the callback completes
+// the returned promise will be rejected with the same exception.  If the callback throws an exception the
+// returned promise will be rejected with that exception.
 Promise<String> promise5 = promise4.whenRejected(new OnRejected<Throwable>() {
     @Override public void rejected(Throwable exception) {
         System.err.println(exception.toString());
     }
 });
 
+// Calls the callback when the promise is rejected passing the exception.  The callback can then
+// synchronously resolve to a value of the original promise type.  The returned promise will be
+// resolved with that new value when the callback returns.  If the callback throws an
+// exception the returned promise will be rejected with that exception.
 Promise<String> promise6 = promise5.withHandler(new OnRejectedHandler<Throwable, String>() {
     @Override public String handle(Throwable exception) {
         return "Oops, this oughta fix it.";
     }
 });
 
+// Calls the callback when the promise is rejected passing the exception.  The callback can then
+// return a Future of the original promise type representing an asynchronous operation.  The promise
+// returned by this method will be resolved or rejected with the same result as that returned Future.
 Promise<String> promise7 = promise6.withFallback(new OnRejectedHandler<Throwable, Future<String>>() {
     @Override public Future<String> handle(Throwable exception) {
         return Promise.resolved("Got a good value from somewhere else.");
     }
 });
 
+// Calls the callback when the promise is completed with either a resolution or a rejection.  When
+// the callback completes the returned promise will be resolved or rejected with the same result.
+// If the callback throws an exception the returned promise will be rejected with that exception.
 Promise<String> promise8 = promise7.whenCompleted(new OnCompleted<String>() {
     @Override public void completed(Promise<String> promise, String result, Throwable exception) {
         switch (promise.state()) {

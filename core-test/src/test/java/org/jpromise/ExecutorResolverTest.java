@@ -7,7 +7,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.junit.Assert.*;
 
@@ -48,43 +48,68 @@ public class ExecutorResolverTest {
 
     @Test
     public void resolveCommonPool() throws Throwable {
-        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, PromiseExecutors.COMMON_POOL_KEY)) {
+        String previous = null;
+        try {
+            previous = setProperty(PROPERTY_KEY, PromiseExecutors.COMMON_POOL_KEY);
             Executor executor = ExecutorResolver.resolveBySetting(PROPERTY_KEY, null);
             assertEquals(PromiseExecutors.COMMON_POOL, executor);
+        }
+        finally {
+            resetProperty(PROPERTY_KEY, previous);
         }
     }
 
     @Test
     public void resolveCurrentThread() throws Throwable {
-        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, PromiseExecutors.CURRENT_THREAD_KEY)) {
+        String previous = null;
+        try {
+            previous = setProperty(PROPERTY_KEY, PromiseExecutors.CURRENT_THREAD_KEY);
             Executor executor = ExecutorResolver.resolveBySetting(PROPERTY_KEY, null);
             assertEquals(PromiseExecutors.CURRENT_THREAD, executor);
+        }
+        finally {
+            resetProperty(PROPERTY_KEY, previous);
         }
     }
 
     @Test
     public void resolveNewThread() throws Throwable {
-        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, PromiseExecutors.NEW_THREAD_KEY)) {
+        String previous = null;
+        try {
+            previous = setProperty(PROPERTY_KEY, PromiseExecutors.NEW_THREAD_KEY);
             Executor executor = ExecutorResolver.resolveBySetting(PROPERTY_KEY, null);
             assertEquals(PromiseExecutors.NEW_THREAD, executor);
+        }
+        finally {
+            resetProperty(PROPERTY_KEY, previous);
         }
     }
 
     @Test
     public void resolveByClassName() throws Throwable {
-        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, "java.util.concurrent.ForkJoinPool")) {
+        String previous = null;
+        try {
+            previous = setProperty(PROPERTY_KEY, "org.jpromise.CurrentThreadExecutor");
             Executor executor = ExecutorResolver.resolveBySetting(PROPERTY_KEY, null);
             assertNotNull(executor);
-            assertTrue(ForkJoinPool.class.isAssignableFrom(executor.getClass()));
+            assertTrue(Executor.class.isAssignableFrom(executor.getClass()));
+        }
+        finally {
+            resetProperty(PROPERTY_KEY, previous);
         }
     }
 
     @Test
     public void resolveByClassNameThrows() throws Throwable {
-        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, "java.util.concurrent.ForkJoinFool")) {
+        String previous = null;
+        try {
+            previous = setProperty(PROPERTY_KEY, "org.jpromise.CurrentThreadExecutar");
             Executor executor = ExecutorResolver.resolveBySetting(PROPERTY_KEY, PromiseExecutors.COMMON_POOL);
             assertNotNull(executor);
             assertEquals(PromiseExecutors.COMMON_POOL, executor);
+        }
+        finally {
+            resetProperty(PROPERTY_KEY, previous);
         }
     }
 
@@ -110,17 +135,26 @@ public class ExecutorResolverTest {
 
     @Test
     public void resolveByFieldName() throws Throwable {
-        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, "org.jpromise.ExecutorResolverTest#executorField")) {
+        String previous = null;
+        try {
+            previous = setProperty(PROPERTY_KEY, "org.jpromise.ExecutorResolverTest#executorField");
             Executor executor = ExecutorResolver.resolveBySetting(PROPERTY_KEY, null);
             assertEquals(PromiseExecutors.COMMON_POOL, executor);
+        }
+        finally {
+            resetProperty(PROPERTY_KEY, previous);
         }
     }
 
     @Test
     public void resolveByMethodName() throws Throwable {
-        try (AutoCloseable ignore = setProperty(PROPERTY_KEY, "org.jpromise.ExecutorResolverTest#executorMethod()")) {
+        String previous = setProperty(PROPERTY_KEY, "org.jpromise.ExecutorResolverTest#executorMethod()");
+        try {
             Executor executor = ExecutorResolver.resolveBySetting(PROPERTY_KEY, null);
             assertEquals(PromiseExecutors.COMMON_POOL, executor);
+        }
+        finally {
+            resetProperty(PROPERTY_KEY, previous);
         }
     }
 
@@ -154,20 +188,19 @@ public class ExecutorResolverTest {
         Executor ignored = ExecutorResolver.resolveByName("org.jpromise.ExecutorResolverTest#nonExecutorField");
     }
 
-    private static AutoCloseable setProperty(final String key, String value) {
-        final String previous = System.getProperty(key);
+    private static String setProperty(String key, String value) {
+        String previous = System.getProperty(key);
         System.setProperty(key, value);
-        return new AutoCloseable() {
-            @Override
-            public void close() throws Exception {
-                if (previous != null) {
-                    System.setProperty(key, previous);
-                }
-                else {
-                    System.clearProperty(key);
-                }
-            }
-        };
+        return previous;
+    }
+
+    private void resetProperty(String key, String previous) {
+        if (previous != null) {
+            System.setProperty(key, previous);
+        }
+        else {
+            System.clearProperty(key);
+        }
     }
 
     public static Executor executorMethod() {

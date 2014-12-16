@@ -19,13 +19,15 @@ public class ExecutorResolver {
         if (settingValue == null || settingValue.length() == 0) {
             return defaultExecutor;
         }
-        switch (settingValue.toLowerCase(ENGLISH)) {
-            case PromiseExecutors.COMMON_POOL_KEY:
-                return PromiseExecutors.COMMON_POOL;
-            case PromiseExecutors.CURRENT_THREAD_KEY:
-                return PromiseExecutors.CURRENT_THREAD;
-            case PromiseExecutors.NEW_THREAD_KEY:
-                return PromiseExecutors.NEW_THREAD;
+        String lowerValue = settingValue.toLowerCase(ENGLISH);
+        if (lowerValue.equals(PromiseExecutors.COMMON_POOL_KEY)) {
+            return PromiseExecutors.COMMON_POOL;
+        }
+        else if (lowerValue.equals(PromiseExecutors.CURRENT_THREAD_KEY)) {
+            return PromiseExecutors.CURRENT_THREAD;
+        }
+        else if (lowerValue.equals(PromiseExecutors.NEW_THREAD_KEY)) {
+            return PromiseExecutors.NEW_THREAD;
         }
         Executor executor = null;
         try {

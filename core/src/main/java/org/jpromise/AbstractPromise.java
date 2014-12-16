@@ -11,7 +11,7 @@ import static org.jpromise.util.MessageUtil.mustNotBeNull;
 public abstract class AbstractPromise<V> extends Promise<V> {
     private final Object lock = new Object();
     private final CountDownLatch latch = new CountDownLatch(1);
-    private final List<Continuation<V>> callbacks = new LinkedList<>();
+    private final List<Continuation<V>> callbacks = new LinkedList<Continuation<V>>();
     private PromiseState state = PromiseState.PENDING;
     private V result;
     private Throwable exception;
