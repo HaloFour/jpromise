@@ -8,7 +8,7 @@ import static org.jpromise.util.MessageUtil.mustNotBeNull;
 public abstract class StreamOperator<V_IN, V_OUT> implements OnSubscribe<V_OUT> {
     private final OnSubscribe<V_IN> parent;
 
-    public StreamOperator(OnSubscribe<V_IN> parent) {
+    protected StreamOperator(OnSubscribe<V_IN> parent) {
         if (parent == null) throw new IllegalArgumentException(mustNotBeNull("parent"));
         this.parent = parent;
     }

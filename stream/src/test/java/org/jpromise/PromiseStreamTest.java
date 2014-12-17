@@ -1,6 +1,7 @@
 package org.jpromise;
 
 import junit.framework.AssertionFailedError;
+import org.jpromise.functions.OnRejectedHandler;
 import org.jpromise.functions.OnResolvedFunction;
 import org.jpromise.operators.TerminalOperation;
 import org.jpromise.operators.TerminalOperator;
@@ -8,16 +9,19 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.jpromise.PromiseHelpers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 public class PromiseStreamTest {
     public static final String SUCCESS1 = "SUCCESS1";
@@ -26,7 +30,7 @@ public class PromiseStreamTest {
     public static final String SUCCESS4 = "SUCCESS4";
     public static final String SUCCESS5 = "SUCCESS5";
     public static final String FAIL1 = "FAIL1";
-    public static final Throwable EXCEPTION = new Exception(FAIL1);
+    public static final Throwable EXCEPTION = new ArithmeticException(FAIL1);
 
     private PromiseStream<String> createStream(boolean includeRejection) {
         List<Promise<String>> promises = new ArrayList<Promise<String>>(6);
@@ -51,7 +55,10 @@ public class PromiseStreamTest {
             throw new AssertionFailedError(String.format("String \"%s\" not contained within the array because it is null.", expected));
         }
         for (String value : array) {
-            if (value.equals(value)) {
+            if (expected == null && value == null) {
+                return;
+            }
+            if (expected != null && expected.equals(value)) {
                 return;
             }
         }
@@ -65,13 +72,166 @@ public class PromiseStreamTest {
     }
 
     @Test
+    public void from1() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.from(Promise.resolved(SUCCESS1));
+        Promise<List<String>> promise = stream.toList(String.class);
+        List<String> result = assertResolves(promise);
+        assertEquals(1, result.size());
+        assertTrue(result.contains(SUCCESS1));
+    }
+
+    @Test
+    public void from2() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.from(
+                Promise.resolved(SUCCESS1),
+                Promise.resolved(SUCCESS2)
+        );
+        Promise<List<String>> promise = stream.toList(String.class);
+        List<String> result = assertResolves(promise);
+        assertEquals(2, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+    }
+
+    @Test
+    public void from3() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.from(
+                Promise.resolved(SUCCESS1),
+                Promise.resolved(SUCCESS2),
+                Promise.resolved(SUCCESS3)
+        );
+        Promise<List<String>> promise = stream.toList(String.class);
+        List<String> result = assertResolves(promise);
+        assertEquals(3, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+        assertTrue(result.contains(SUCCESS3));
+    }
+
+    @Test
+    public void from4() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.from(
+                Promise.resolved(SUCCESS1),
+                Promise.resolved(SUCCESS2),
+                Promise.resolved(SUCCESS3),
+                Promise.resolved(SUCCESS4)
+        );
+        Promise<List<String>> promise = stream.toList(String.class);
+        List<String> result = assertResolves(promise);
+        assertEquals(4, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+        assertTrue(result.contains(SUCCESS3));
+        assertTrue(result.contains(SUCCESS4));
+    }
+
+    @Test
+    public void from5() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.from(
+                Promise.resolved(SUCCESS1),
+                Promise.resolved(SUCCESS2),
+                Promise.resolved(SUCCESS3),
+                Promise.resolved(SUCCESS4),
+                Promise.resolved(SUCCESS5)
+        );
+        Promise<List<String>> promise = stream.toList(String.class);
+        List<String> result = assertResolves(promise);
+        assertEquals(5, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+        assertTrue(result.contains(SUCCESS3));
+        assertTrue(result.contains(SUCCESS4));
+        assertTrue(result.contains(SUCCESS5));
+    }
+
+    private Promise<String>[] makeArray(Promise<String>... promises) {
+        return promises;
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void fromArray() throws Throwable {
+        Promise<String>[] array = makeArray(Promise.resolved(SUCCESS1),
+                Promise.resolved(SUCCESS2),
+                Promise.resolved(SUCCESS3),
+                Promise.resolved(SUCCESS4),
+                Promise.resolved(SUCCESS5)
+        );
+
+        PromiseStream<String> stream = PromiseStream.from(array);
+        Promise<List<String>> promise = stream.toList(String.class);
+        List<String> result = assertResolves(promise);
+        assertEquals(5, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+        assertTrue(result.contains(SUCCESS3));
+        assertTrue(result.contains(SUCCESS4));
+        assertTrue(result.contains(SUCCESS5));
+    }
+
+    @Test
+    public void fromNull() throws Throwable {
+        Iterable<Promise<String>> iterable = null;
+        PromiseStream<String> stream = PromiseStream.from(iterable);
+        Promise<List<String>> promise = stream.toList(String.class);
+        List<String> result = assertResolves(promise);
+        assertEquals(0, result.size());
+    }
+
+    @Test
     public void toArray() throws Throwable {
         PromiseStream<String> stream = createStream(false);
         Promise<String[]> promise = stream.toArray(String.class);
 
         String[] result = assertResolves(promise);
 
-        assertContainsAll(new String[] { SUCCESS1, SUCCESS2, SUCCESS3, SUCCESS4, SUCCESS5 }, result);
+        assertContainsAll(new String[]{
+                        SUCCESS1,
+                        SUCCESS2,
+                        SUCCESS3,
+                        SUCCESS4,
+                        SUCCESS5},
+                result);
+    }
+
+    @Test
+    public void toArrayWithInitialCapacity() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Promise<String[]> promise = stream.toArray(String.class, 5);
+
+        String[] result = assertResolves(promise);
+
+        assertContainsAll(new String[]{
+                        SUCCESS1,
+                        SUCCESS2,
+                        SUCCESS3,
+                        SUCCESS4,
+                        SUCCESS5},
+                result);
+    }
+
+    @Test
+    public void toArrayWithFactory() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+
+        Callable<String[]> factory = new Callable<String[]>() {
+            @Override
+            public String[] call() throws Exception {
+                return new String[5];
+            }
+        };
+
+        Promise<String[]> promise = stream.collect(PromiseCollectors.toArray(String.class, factory));
+
+        String[] result = assertResolves(promise);
+
+        assertContainsAll(new String[]{
+                        SUCCESS1,
+                        SUCCESS2,
+                        SUCCESS3,
+                        SUCCESS4,
+                        SUCCESS5},
+                result);
     }
 
     @Test
@@ -82,9 +242,61 @@ public class PromiseStreamTest {
     }
 
     @Test
+    public void collectToExistingArray() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Promise<String[]> promise = stream.collect(PromiseCollectors.toArray(new String[5]));
+        String[] result = assertResolves(promise);
+
+        assertContainsAll(new String[]{
+                        SUCCESS1,
+                        SUCCESS2,
+                        SUCCESS3,
+                        SUCCESS4,
+                        SUCCESS5},
+                result);
+    }
+
+    @Test
     public void toList() throws Throwable {
         PromiseStream<String> stream = createStream(false);
         Promise<List<String>> promise = stream.toList(String.class);
+
+        List<String> result = assertResolves(promise);
+        assertEquals(5, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+        assertTrue(result.contains(SUCCESS3));
+        assertTrue(result.contains(SUCCESS4));
+        assertTrue(result.contains(SUCCESS5));
+    }
+
+    @Test
+    public void toExistingList() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        List<String> list = new ArrayList<String>();
+        Promise<List<String>> promise = stream.toList(list);
+
+        List<String> result = assertResolves(promise);
+        assertEquals(5, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+        assertTrue(result.contains(SUCCESS3));
+        assertTrue(result.contains(SUCCESS4));
+        assertTrue(result.contains(SUCCESS5));
+    }
+
+    @Test
+    public void toListWithFactory() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+
+        Callable<List<String>> factory =new Callable<List<String>>() {
+            @Override
+            public List<String> call() throws Exception {
+                return new ArrayList<String>();
+            }
+        };
+
+        Promise<List<String>> promise = stream.collect(PromiseCollectors.toList(String.class, factory));
 
         List<String> result = assertResolves(promise);
         assertEquals(5, result.size());
@@ -110,9 +322,62 @@ public class PromiseStreamTest {
     }
 
     @Test
+    public void toExistingSet() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Set<String> set = new HashSet<String>();
+        Promise<Set<String>> promise = stream.toSet(set);
+
+        Set<String> result = assertResolves(promise);
+        assertEquals(5, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+        assertTrue(result.contains(SUCCESS3));
+        assertTrue(result.contains(SUCCESS4));
+        assertTrue(result.contains(SUCCESS5));
+    }
+
+    @Test
+    public void toSetFromFactory() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+
+        Callable<Set<String>> factory = new Callable<Set<String>>() {
+            @Override
+            public Set<String> call() throws Exception {
+                return new HashSet<String>();
+            }
+        };
+
+        Promise<Set<String>> promise = stream.collect(PromiseCollectors.toSet(String.class, factory));
+
+        Set<String> result = assertResolves(promise);
+        assertEquals(5, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+        assertTrue(result.contains(SUCCESS3));
+        assertTrue(result.contains(SUCCESS4));
+        assertTrue(result.contains(SUCCESS5));
+    }
+
+
+    @Test
     public void toCollection() throws Throwable {
         PromiseStream<String> stream = createStream(false);
         Promise<Collection<String>> promise = stream.toCollection(String.class);
+
+        Collection<String> result = assertResolves(promise);
+        assertEquals(5, result.size());
+        assertTrue(result.contains(SUCCESS1));
+        assertTrue(result.contains(SUCCESS2));
+        assertTrue(result.contains(SUCCESS3));
+        assertTrue(result.contains(SUCCESS4));
+        assertTrue(result.contains(SUCCESS5));
+    }
+
+    @Test
+    public void toExistingCollection() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Collection<String> collection = new ArrayList<String>();
+        Promise<Collection<String>> promise = stream.toCollection(collection);
 
         Collection<String> result = assertResolves(promise);
         assertEquals(5, result.size());
@@ -177,6 +442,61 @@ public class PromiseStreamTest {
     }
 
     @Test
+    public void toExistingMap() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Map<String, String> map = new HashMap<String, String>();
+        Promise<Map<String, String>> promise = stream.toMap(map, new OnResolvedFunction<String, String>() {
+            @Override
+            public String resolved(String result) throws Throwable {
+                return result;
+            }
+        });
+
+        Map<String, String> result = assertResolves(promise);
+        assertEquals(5, result.size());
+        assertTrue(result.containsKey(SUCCESS1));
+        assertTrue(result.containsKey(SUCCESS2));
+        assertTrue(result.containsKey(SUCCESS3));
+        assertTrue(result.containsKey(SUCCESS4));
+        assertTrue(result.containsKey(SUCCESS5));
+        assertEquals(SUCCESS1, result.get(SUCCESS1));
+        assertEquals(SUCCESS2, result.get(SUCCESS2));
+        assertEquals(SUCCESS3, result.get(SUCCESS3));
+        assertEquals(SUCCESS4, result.get(SUCCESS4));
+        assertEquals(SUCCESS5, result.get(SUCCESS5));
+    }
+
+    @Test
+    public void toExistingMapWithValueMapper() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Map<String, String> map = new HashMap<String, String>();
+        Promise<Map<String, String>> promise = stream.toMap(map, new OnResolvedFunction<String, String>() {
+            @Override
+            public String resolved(String result) throws Throwable {
+                return result;
+            }
+        }, new OnResolvedFunction<String, String>() {
+            @Override
+            public String resolved(String result) throws Throwable {
+                return reverse(result);
+            }
+        });
+
+        Map<String, String> result = assertResolves(promise);
+        assertEquals(5, result.size());
+        assertTrue(result.containsKey(SUCCESS1));
+        assertTrue(result.containsKey(SUCCESS2));
+        assertTrue(result.containsKey(SUCCESS3));
+        assertTrue(result.containsKey(SUCCESS4));
+        assertTrue(result.containsKey(SUCCESS5));
+        assertEquals(reverse(SUCCESS1), result.get(SUCCESS1));
+        assertEquals(reverse(SUCCESS2), result.get(SUCCESS2));
+        assertEquals(reverse(SUCCESS3), result.get(SUCCESS3));
+        assertEquals(reverse(SUCCESS4), result.get(SUCCESS4));
+        assertEquals(reverse(SUCCESS5), result.get(SUCCESS5));
+    }
+
+    @Test
     public void rejects() throws Throwable {
         PromiseStream<String> stream = createStream(true);
         Promise<String[]> promise = stream.toArray(String.class);
@@ -206,6 +526,28 @@ public class PromiseStreamTest {
 
         String[] result = assertResolves(promise);
         assertContainsAll(new String[]{SUCCESS1, SUCCESS2, SUCCESS3, SUCCESS4, SUCCESS5}, result);
+    }
+
+    @Test
+    public void filterRejectedDoesNotHandle() throws Throwable {
+        PromiseStream<String> stream = createStream(true);
+        Promise<String[]> promise = stream.filterRejected(new OnRejectedHandler<Throwable, Boolean>() {
+            @Override
+            public Boolean handle(Throwable exception) throws Throwable {
+                return false;
+            }
+        }).toArray(String.class);
+
+        assertRejects(EXCEPTION, promise);
+    }
+
+    @Test
+    public void typedFilterRejectedMismatch() throws Throwable {
+        PromiseStream<String> stream = createStream(true);
+        Promise<String[]> promise = stream.filterRejected(IllegalArgumentException.class)
+                .toArray(String.class);
+
+        assertRejects(EXCEPTION, promise);
     }
 
     @Test
@@ -288,6 +630,59 @@ public class PromiseStreamTest {
     }
 
     @Test
+    public void composeWithNullPromise() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Promise<String[]> promise = stream.compose(new OnResolvedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> resolved(String result) throws Throwable {
+                if (SUCCESS3.equals(result)) {
+                    return null;
+                }
+                return resolveAfter(result, 10);
+            }
+        }).toArray(String.class);
+
+        String[] result = assertResolves(promise);
+        assertEquals(5, result.length);
+        assertContainsAll(new String[]{
+                SUCCESS1,
+                SUCCESS2,
+                null,
+                SUCCESS4,
+                SUCCESS5
+        }, result);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void composeWithRejectedPromise() throws Throwable {
+        final Throwable exception = new Throwable();
+        OnRejectedHandler<Throwable, Boolean> handler = mock(OnRejectedHandler.class);
+        when(handler.handle(eq(exception))).thenReturn(true);
+
+        PromiseStream<String> stream = createStream(false);
+        Promise<String[]> promise = stream.compose(new OnResolvedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> resolved(String result) throws Throwable {
+                if (SUCCESS3.equals(result)) {
+                    return rejectAfter(exception, 10);
+                }
+                return resolveAfter(result, 10);
+            }
+        }).filterRejected(handler).toArray(String.class);
+
+        String[] result = assertResolves(promise);
+        assertEquals(4, result.length);
+        assertContainsAll(new String[]{
+                SUCCESS1,
+                SUCCESS2,
+                SUCCESS4,
+                SUCCESS5
+        }, result);
+        verify(handler, times(1)).handle(exception);
+    }
+
+    @Test
     public void groupingBy() throws Throwable {
         PromiseStream<String> stream = createStream(false);
         Promise<Map<Integer, Set<String>>> promise = stream.collect(PromiseCollectors.groupingBy(Integer.class, String.class,
@@ -344,6 +739,23 @@ public class PromiseStreamTest {
         assertEquals(3, result.length);
     }
 
+    @Test
+    public void takeSmallerCount() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Promise<String[]> promise = stream.take(10).toArray(String.class);
+
+        String[] result = assertResolves(promise);
+        assertEquals(5, result.length);
+    }
+
+    @Test
+    public void takeWithRejected() throws Throwable {
+        PromiseStream<String> stream = createStream(true);
+        Promise<String[]> promise = stream.take(6).toArray(String.class);
+
+        assertRejects(EXCEPTION, promise);
+    }
+
     @Test(expected = IllegalStateException.class)
     public void nullOperationFails() throws Throwable {
         @SuppressWarnings("unchecked")
@@ -371,5 +783,21 @@ public class PromiseStreamTest {
         promise = stream.collect(collector);
 
         assertRejects(IllegalStateException.class, promise);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void PromiseCollectorsCannotBeCreated() throws Throwable {
+        Class<PromiseCollectors> promiseCollectorsClass = PromiseCollectors.class;
+        Constructor<?>[] constructors = promiseCollectorsClass.getDeclaredConstructors();
+        assertEquals(1, constructors.length);
+        Constructor<?> constructor = constructors[0];
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        constructor.setAccessible(true);
+        try {
+            constructor.newInstance();
+        }
+        catch (InvocationTargetException exception) {
+            throw exception.getCause();
+        }
     }
 }

@@ -29,7 +29,9 @@ public class PromiseCollectors {
         }
     }
 
-    private PromiseCollectors() { }
+    private PromiseCollectors() {
+        throw new IllegalStateException();
+    }
 
     public static <V> PromiseCollector<V, ?, V[]> toArray(Class<V> resultClass) {
         return toArray(resultClass, 0);

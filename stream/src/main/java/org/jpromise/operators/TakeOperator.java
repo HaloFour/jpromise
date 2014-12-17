@@ -49,9 +49,7 @@ public class TakeOperator<V> extends StreamOperator<V, V> {
             }
             boolean complete = false;
             synchronized (lock) {
-                if (remaining == 0) {
-                    return;
-                }
+                if (remaining == 0) return;
                 remaining -= 1;
                 complete = (remaining == 0);
             }
@@ -85,9 +83,7 @@ public class TakeOperator<V> extends StreamOperator<V, V> {
                 return;
             }
             synchronized (lock) {
-                if (remaining == 0) {
-                    return;
-                }
+                if (remaining == 0) return;
                 remaining = 0;
             }
             tracker.complete(new Runnable() {
