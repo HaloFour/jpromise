@@ -542,6 +542,19 @@ public class PromiseStreamTest {
     }
 
     @Test
+    public void filterRejectedThrows() throws Throwable {
+        PromiseStream<String> stream = createStream(true);
+        Promise<String[]> promise = stream.filterRejected(new OnRejectedHandler<Throwable, Boolean>() {
+            @Override
+            public Boolean handle(Throwable exception) throws Throwable {
+                throw exception;
+            }
+        }).toArray(String.class);
+
+        assertRejects(EXCEPTION, promise);
+    }
+
+    @Test
     public void typedFilterRejectedMismatch() throws Throwable {
         PromiseStream<String> stream = createStream(true);
         Promise<String[]> promise = stream.filterRejected(IllegalArgumentException.class)
@@ -583,6 +596,22 @@ public class PromiseStreamTest {
                 reverse(SUCCESS4),
                 reverse(SUCCESS5)
         }, result);
+    }
+
+    @Test
+    public void mapThrows() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Promise<String[]> promise = stream.map(new OnResolvedFunction<String, String>() {
+            @Override
+            public String resolved(String result) throws Throwable {
+                if (SUCCESS3.equals(result)) {
+                    throw EXCEPTION;
+                }
+                return reverse(result);
+            }
+        }).toArray(String.class);
+
+        assertRejects(EXCEPTION, promise);
     }
 
     @Test
