@@ -4,7 +4,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 public class PromiseCompositionTest {
@@ -36,17 +35,17 @@ public class PromiseCompositionTest {
         Promise<String> promise2 = Promise.resolved(SUCCESS2);
 
         PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
-        PromiseCallbackListener callback = mock(PromiseCallbackListener.class);
-        PromiseCallbackCompletion completion = mock(PromiseCallbackCompletion.class);
-        when(listener.composingCallback(promise1, promise2)).thenReturn(callback);
-        when(callback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null)).thenReturn(completion);
+        PromiseContinuationListener callback = mock(PromiseContinuationListener.class);
+        PromiseContinuationCompletion completion = mock(PromiseContinuationCompletion.class);
+        when(listener.composingContinuation(promise1, promise2)).thenReturn(callback);
+        when(callback.invokingContinuation(promise1, promise2, SUCCESS1, null)).thenReturn(completion);
 
         PromiseComposition.register(listener);
 
-        PromiseCallbackListener composedCallback = PromiseComposition.LISTENER.composingCallback(promise1, promise2);
-        verify(listener, times(1)).composingCallback(promise1, promise2);
-        PromiseCallbackCompletion composite = composedCallback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
-        verify(callback, times(1)).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
+        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        verify(listener, times(1)).composingContinuation(promise1, promise2);
+        PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
+        verify(callback, times(1)).invokingContinuation(promise1, promise2, SUCCESS1, null);
         composite.completed(promise1, promise2, SUCCESS1, null);
         verify(completion, times(1)).completed(promise1, promise2, SUCCESS1, null);
     }
@@ -58,20 +57,20 @@ public class PromiseCompositionTest {
 
         PromiseCompositionListener listener1 = mock(PromiseCompositionListener.class);
         PromiseCompositionListener listener2 = mock(PromiseCompositionListener.class);
-        PromiseCallbackListener callback = mock(PromiseCallbackListener.class);
-        PromiseCallbackCompletion completion = mock(PromiseCallbackCompletion.class);
-        when(listener1.composingCallback(promise1, promise2)).thenReturn(callback);
-        when(listener2.composingCallback(promise1, promise2)).thenReturn(callback);
-        when(callback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null)).thenReturn(completion);
+        PromiseContinuationListener callback = mock(PromiseContinuationListener.class);
+        PromiseContinuationCompletion completion = mock(PromiseContinuationCompletion.class);
+        when(listener1.composingContinuation(promise1, promise2)).thenReturn(callback);
+        when(listener2.composingContinuation(promise1, promise2)).thenReturn(callback);
+        when(callback.invokingContinuation(promise1, promise2, SUCCESS1, null)).thenReturn(completion);
 
         PromiseComposition.register(listener1);
         PromiseComposition.register(listener2);
 
-        PromiseCallbackListener composedCallback = PromiseComposition.LISTENER.composingCallback(promise1, promise2);
-        verify(listener1, times(1)).composingCallback(promise1, promise2);
-        verify(listener2, times(1)).composingCallback(promise1, promise2);
-        PromiseCallbackCompletion composite = composedCallback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
-        verify(callback, times(2)).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
+        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        verify(listener1, times(1)).composingContinuation(promise1, promise2);
+        verify(listener2, times(1)).composingContinuation(promise1, promise2);
+        PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
+        verify(callback, times(2)).invokingContinuation(promise1, promise2, SUCCESS1, null);
         composite.completed(promise1, promise2, SUCCESS1, null);
         verify(completion, times(2)).completed(promise1, promise2, SUCCESS1, null);
     }
@@ -83,16 +82,16 @@ public class PromiseCompositionTest {
         Throwable exception = new RuntimeException();
 
         PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
-        PromiseCallbackListener callback = mock(PromiseCallbackListener.class);
-        PromiseCallbackCompletion closeable = mock(PromiseCallbackCompletion.class);
-        when(listener.composingCallback(promise1, promise2)).thenThrow(exception);
+        PromiseContinuationListener callback = mock(PromiseContinuationListener.class);
+        PromiseContinuationCompletion closeable = mock(PromiseContinuationCompletion.class);
+        when(listener.composingContinuation(promise1, promise2)).thenThrow(exception);
 
         PromiseComposition.register(listener);
 
-        PromiseCallbackListener composedCallback = PromiseComposition.LISTENER.composingCallback(promise1, promise2);
-        verify(listener, times(1)).composingCallback(promise1, promise2);
-        PromiseCallbackCompletion composite = composedCallback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
-        verify(callback, never()).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
+        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        verify(listener, times(1)).composingContinuation(promise1, promise2);
+        PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
+        verify(callback, never()).invokingContinuation(promise1, promise2, SUCCESS1, null);
         composite.completed(promise1, promise2, SUCCESS1, null);
         verify(closeable, never()).completed(promise1, promise2, SUCCESS1, null);
     }
@@ -104,17 +103,17 @@ public class PromiseCompositionTest {
         Throwable exception = new RuntimeException();
 
         PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
-        PromiseCallbackListener callback = mock(PromiseCallbackListener.class);
-        PromiseCallbackCompletion closeable = mock(PromiseCallbackCompletion.class);
-        when(listener.composingCallback(promise1, promise2)).thenReturn(callback);
-        when(callback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null)).thenThrow(exception);
+        PromiseContinuationListener callback = mock(PromiseContinuationListener.class);
+        PromiseContinuationCompletion closeable = mock(PromiseContinuationCompletion.class);
+        when(listener.composingContinuation(promise1, promise2)).thenReturn(callback);
+        when(callback.invokingContinuation(promise1, promise2, SUCCESS1, null)).thenThrow(exception);
 
         PromiseComposition.register(listener);
 
-        PromiseCallbackListener composedCallback = PromiseComposition.LISTENER.composingCallback(promise1, promise2);
-        verify(listener, times(1)).composingCallback(promise1, promise2);
-        PromiseCallbackCompletion composite = composedCallback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
-        verify(callback, times(1)).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
+        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        verify(listener, times(1)).composingContinuation(promise1, promise2);
+        PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
+        verify(callback, times(1)).invokingContinuation(promise1, promise2, SUCCESS1, null);
         composite.completed(promise1, promise2, SUCCESS1, null);
         verify(closeable, never()).completed(promise1, promise2, SUCCESS1, null);
     }
@@ -126,17 +125,17 @@ public class PromiseCompositionTest {
         Throwable exception = new RuntimeException();
 
         PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
-        PromiseCallbackListener callback = mock(PromiseCallbackListener.class);
-        PromiseCallbackCompletion completion = mock(PromiseCallbackCompletion.class);
-        when(listener.composingCallback(promise1, promise2)).thenReturn(callback);
-        when(callback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null)).thenReturn(completion);
+        PromiseContinuationListener callback = mock(PromiseContinuationListener.class);
+        PromiseContinuationCompletion completion = mock(PromiseContinuationCompletion.class);
+        when(listener.composingContinuation(promise1, promise2)).thenReturn(callback);
+        when(callback.invokingContinuation(promise1, promise2, SUCCESS1, null)).thenReturn(completion);
 
         PromiseComposition.register(listener);
 
-        PromiseCallbackListener composedCallback = PromiseComposition.LISTENER.composingCallback(promise1, promise2);
-        verify(listener, times(1)).composingCallback(promise1, promise2);
-        PromiseCallbackCompletion composite = composedCallback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
-        verify(callback, times(1)).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
+        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        verify(listener, times(1)).composingContinuation(promise1, promise2);
+        PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
+        verify(callback, times(1)).invokingContinuation(promise1, promise2, SUCCESS1, null);
         verify(completion, never()).completed(promise1, promise2, SUCCESS1, null);
     }
 
@@ -147,18 +146,18 @@ public class PromiseCompositionTest {
         Throwable exception = new RuntimeException();
 
         PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
-        PromiseCallbackListener callback = mock(PromiseCallbackListener.class);
-        PromiseCallbackCompletion completion = mock(PromiseCallbackCompletion.class);
-        when(listener.composingCallback(promise1, promise2)).thenReturn(callback);
-        when(callback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null)).thenReturn(completion);
+        PromiseContinuationListener callback = mock(PromiseContinuationListener.class);
+        PromiseContinuationCompletion completion = mock(PromiseContinuationCompletion.class);
+        when(listener.composingContinuation(promise1, promise2)).thenReturn(callback);
+        when(callback.invokingContinuation(promise1, promise2, SUCCESS1, null)).thenReturn(completion);
         doThrow(exception).when(completion).completed(promise1, promise2, SUCCESS1, null);
 
         PromiseComposition.register(listener);
 
-        PromiseCallbackListener composedCallback = PromiseComposition.LISTENER.composingCallback(promise1, promise2);
-        verify(listener, times(1)).composingCallback(promise1, promise2);
-        PromiseCallbackCompletion composite = composedCallback.invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
-        verify(callback, times(1)).invokingPromiseCallback(promise1, promise2, SUCCESS1, null);
+        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        verify(listener, times(1)).composingContinuation(promise1, promise2);
+        PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
+        verify(callback, times(1)).invokingContinuation(promise1, promise2, SUCCESS1, null);
         composite.completed(promise1, promise2, SUCCESS1, null);
         verify(completion, times(1)).completed(promise1, promise2, SUCCESS1, null);
     }

@@ -1,8 +1,8 @@
 package org.jpromise.slf4j;
 
 import org.jpromise.Promise;
-import org.jpromise.PromiseCallbackCompletion;
-import org.jpromise.PromiseCallbackListener;
+import org.jpromise.PromiseContinuationCompletion;
+import org.jpromise.PromiseContinuationListener;
 import org.jpromise.PromiseCompositionListener;
 import org.slf4j.MDC;
 
@@ -10,11 +10,11 @@ import java.util.Map;
 
 public class MDCPromiseTracker implements PromiseCompositionListener {
     @Override
-    public PromiseCallbackListener composingCallback(Promise<?> source, Promise<?> target) {
+    public PromiseContinuationListener composingContinuation(Promise<?> source, Promise<?> target) {
         final Map<String, String> contextMap = MDC.getCopyOfContextMap();
-        return new PromiseCallbackListener() {
+        return new PromiseContinuationListener() {
             @Override
-            public PromiseCallbackCompletion invokingPromiseCallback(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
+            public PromiseContinuationCompletion invokingContinuation(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
                 final Map<String, String> previousContextMap = MDC.getCopyOfContextMap();
                 if (contextMap != null) {
                     MDC.setContextMap(contextMap);
@@ -22,7 +22,7 @@ public class MDCPromiseTracker implements PromiseCompositionListener {
                 else {
                     MDC.clear();
                 }
-                return new PromiseCallbackCompletion() {
+                return new PromiseContinuationCompletion() {
                     @Override
                     public void completed(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
                         if (previousContextMap != null) {

@@ -8,14 +8,14 @@ import java.util.concurrent.Future;
 
 abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> implements Continuation<V_IN> {
     private final Executor executor;
-    private final PromiseCallbackListener callback;
+    private final PromiseContinuationListener callback;
     private Promise<V_OUT> composed;
     private Thread callbackThread;
     private boolean cancelled;
 
     protected ContinuationPromise(Promise<V_IN> promise, Executor executor) {
         this.executor = executor;
-        this.callback = PromiseComposition.LISTENER.composingCallback(promise, this);
+        this.callback = PromiseComposition.LISTENER.composingContinuation(promise, this);
     }
 
     @Override
@@ -30,7 +30,7 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
                     if (cancelled) {
                         return;
                     }
-                    PromiseCallbackCompletion completion = callback.invokingPromiseCallback(promise, ContinuationPromise.this, result, exception);
+                    PromiseContinuationCompletion completion = callback.invokingContinuation(promise, ContinuationPromise.this, result, exception);
                     try {
                         callbackThread = Thread.currentThread();
                         switch (promise.state()) {

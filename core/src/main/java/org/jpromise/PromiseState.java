@@ -1,5 +1,19 @@
 package org.jpromise;
 
+/**
+ * Indicates the current state of the {@link org.jpromise.Promise}.
+ */
 public enum PromiseState {
-    PENDING, RESOLVED, REJECTED
+    /**
+     * Specifies that the {@link org.jpromise.Promise} is not completed.
+     */
+    PENDING,
+    /**
+     * Specifies that the {@link org.jpromise.Promise} has resolved successfully.
+     */
+    RESOLVED,
+    /**
+     * Specifies that the {@link org.jpromise.Promise} has been rejected.
+     */
+    REJECTED
 }

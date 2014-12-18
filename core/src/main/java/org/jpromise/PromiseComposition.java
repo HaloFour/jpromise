@@ -8,8 +8,8 @@ import static org.jpromise.util.MessageUtil.mustNotBeNull;
 public enum PromiseComposition implements PromiseCompositionListener {
     LISTENER {
         @Override
-        public PromiseCallbackListener composingCallback(Promise<?> source, Promise<?> target) {
-            return composite.composingCallback(source, target);
+        public PromiseContinuationListener composingContinuation(Promise<?> source, Promise<?> target) {
+            return composite.composingContinuation(source, target);
         }
     };
 
@@ -33,57 +33,57 @@ public enum PromiseComposition implements PromiseCompositionListener {
         }
 
         @Override
-        public PromiseCallbackListener composingCallback(Promise<?> source, Promise<?> target) {
-            Map<PromiseCompositionListener, PromiseCallbackListener> callbacks = new HashMap<PromiseCompositionListener, PromiseCallbackListener>(listeners.size());
+        public PromiseContinuationListener composingContinuation(Promise<?> source, Promise<?> target) {
+            Map<PromiseCompositionListener, PromiseContinuationListener> callbacks = new HashMap<PromiseCompositionListener, PromiseContinuationListener>(listeners.size());
             for (PromiseCompositionListener listener : listeners) {
                 try {
-                    PromiseCallbackListener callback = listener.composingCallback(source, target);
+                    PromiseContinuationListener callback = listener.composingContinuation(source, target);
                     if (callback != null) {
                         callbacks.put(listener, callback);
                     }
                 }
                 catch (Throwable ignored) { }
             }
-            return new ComposablePromiseCallbackListener(callbacks);
+            return new ComposablePromiseContinuationListener(callbacks);
         }
     }
 
-    private static class ComposablePromiseCallbackListener implements PromiseCallbackListener {
-        private final Map<PromiseCompositionListener, PromiseCallbackListener> callbacks;
+    private static class ComposablePromiseContinuationListener implements PromiseContinuationListener {
+        private final Map<PromiseCompositionListener, PromiseContinuationListener> callbacks;
 
-        public ComposablePromiseCallbackListener(Map<PromiseCompositionListener, PromiseCallbackListener> callbacks) {
+        public ComposablePromiseContinuationListener(Map<PromiseCompositionListener, PromiseContinuationListener> callbacks) {
             this.callbacks = callbacks;
         }
 
         @Override
-        public PromiseCallbackCompletion invokingPromiseCallback(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
-            Map<PromiseCompositionListener, PromiseCallbackCompletion> completions = new HashMap<PromiseCompositionListener, PromiseCallbackCompletion>(callbacks.size());
-            for (Map.Entry<PromiseCompositionListener, PromiseCallbackListener> entry : callbacks.entrySet()) {
+        public PromiseContinuationCompletion invokingContinuation(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
+            Map<PromiseCompositionListener, PromiseContinuationCompletion> completions = new HashMap<PromiseCompositionListener, PromiseContinuationCompletion>(callbacks.size());
+            for (Map.Entry<PromiseCompositionListener, PromiseContinuationListener> entry : callbacks.entrySet()) {
                 PromiseCompositionListener listener = entry.getKey();
-                PromiseCallbackListener callback = entry.getValue();
+                PromiseContinuationListener callback = entry.getValue();
                 try {
-                    PromiseCallbackCompletion completion = callback.invokingPromiseCallback(source, target, result, exception);
+                    PromiseContinuationCompletion completion = callback.invokingContinuation(source, target, result, exception);
                     if (completion != null) {
                         completions.put(listener, completion);
                     }
                 }
                 catch (Throwable ignored) { }
             }
-            return new CompositePromiseCallbackCompletion(completions);
+            return new CompositePromiseContinuationCompletion(completions);
         }
     }
 
-    private static class CompositePromiseCallbackCompletion implements PromiseCallbackCompletion {
-        private final Map<PromiseCompositionListener, PromiseCallbackCompletion> completions;
+    private static class CompositePromiseContinuationCompletion implements PromiseContinuationCompletion {
+        private final Map<PromiseCompositionListener, PromiseContinuationCompletion> completions;
 
-        public CompositePromiseCallbackCompletion(Map<PromiseCompositionListener, PromiseCallbackCompletion> completions) {
+        public CompositePromiseContinuationCompletion(Map<PromiseCompositionListener, PromiseContinuationCompletion> completions) {
             this.completions = completions;
         }
 
         @Override
         public void completed(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
-            for (Map.Entry<PromiseCompositionListener, PromiseCallbackCompletion> entry : completions.entrySet()) {
-                PromiseCallbackCompletion completion = entry.getValue();
+            for (Map.Entry<PromiseCompositionListener, PromiseContinuationCompletion> entry : completions.entrySet()) {
+                PromiseContinuationCompletion completion = entry.getValue();
                 try {
                     completion.completed(source, target, result, exception);
                 }

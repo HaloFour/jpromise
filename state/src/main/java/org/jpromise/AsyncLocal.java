@@ -70,13 +70,13 @@ public class AsyncLocal<T> extends InheritableThreadLocal<T> {
 
     private static class AsyncLocalPromiseComposingListener implements PromiseCompositionListener {
         @Override
-        public PromiseCallbackListener composingCallback(Promise<?> source, Promise<?> target) {
+        public PromiseContinuationListener composingContinuation(Promise<?> source, Promise<?> target) {
             final AsyncLocalMap state = persistToMap();
             return new PersistedAsyncLocalState(state);
         }
     }
 
-    private static class PersistedAsyncLocalState implements PromiseCallbackListener {
+    private static class PersistedAsyncLocalState implements PromiseContinuationListener {
         private final AsyncLocalMap state;
         private final Thread thread;
 
@@ -86,7 +86,7 @@ public class AsyncLocal<T> extends InheritableThreadLocal<T> {
         }
 
         @Override
-        public PromiseCallbackCompletion invokingPromiseCallback(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
+        public PromiseContinuationCompletion invokingContinuation(Promise<?> source, Promise<?> target, Object result, Throwable exception) {
             if (thread.equals(Thread.currentThread())) {
                 return null;
             }
@@ -96,7 +96,7 @@ public class AsyncLocal<T> extends InheritableThreadLocal<T> {
         }
     }
 
-    private static class RestoredAsyncLocalState implements PromiseCallbackCompletion {
+    private static class RestoredAsyncLocalState implements PromiseContinuationCompletion {
         private final AsyncLocalMap previous;
 
         public RestoredAsyncLocalState(AsyncLocalMap previous) {
