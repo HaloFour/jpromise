@@ -15,27 +15,70 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
+/**
+ * Utility methods for creating new promises and synchronizing the results of multiple promises.
+ */
 public class PromiseManager {
     private PromiseManager() {
         throw new IllegalStateException();
     }
 
-    public static <Void> Promise<Void> create(Runnable runnable) {
+    /**
+     * Creates a new promise for the specified operation that is scheduled on the default creation
+     * {@link java.util.concurrent.Executor}.
+     * @see org.jpromise.PromiseExecutors#DEFAULT_CREATION_EXECUTOR
+     * @param runnable The operation that the promise represents.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the operation.
+     */
+    public static Promise<Void> create(Runnable runnable) {
         return create(PromiseExecutors.DEFAULT_CREATION_EXECUTOR, runnable);
     }
 
+    /**
+     * Creates a new promise for the specified operation that is scheduled on the default creation
+     * {@link java.util.concurrent.Executor} and that will be resolved with the specified value
+     * upon completion.
+     * @param runnable The operation that the promise represents.
+     * @param result The result that will be used to resolve the promise when the operation completes.
+     * @param <V> The type of the promise result.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the operation.
+     */
     public static <V> Promise<V> create(Runnable runnable, V result) {
         return create(PromiseExecutors.DEFAULT_CREATION_EXECUTOR, runnable, result);
     }
 
+    /**
+     * Creates a new promise for the specified operation that is scheduled on the default creation
+     * {@link java.util.concurrent.Executor}.
+     * @param callable The operation that the promise represents.
+     * @param <V> The return type of the {@link java.util.concurrent.Callable} operation.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the operation.
+     */
     public static <V> Promise<V> create(Callable<V> callable) {
         return create(PromiseExecutors.DEFAULT_CREATION_EXECUTOR, callable);
     }
 
-    public static <Void> Promise<Void> create(Executor executor, Runnable runnable) {
+    /**
+     * Creates a new promise for the specified operation that is scheduled on the specified
+     * {@link java.util.concurrent.Executor}.
+     * @param executor The {@link java.util.concurrent.Executor} on which the operation is scheduled.
+     * @param runnable The operation that the promise represents.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the operation.
+     */
+    public static Promise<Void> create(Executor executor, Runnable runnable) {
         return create(executor, runnable, null);
     }
 
+    /**
+     * Creates a new promise for the specified operation that is scheduled on the specified
+     * {@link java.util.concurrent.Executor} and that will be resolved with the specified value
+     * upon completion.
+     * @param executor The {@link java.util.concurrent.Executor} on which the operation is scheduled.
+     * @param runnable The operation that the promise represents.
+     * @param result The result that will be used to resolve the promise when the operation completes.
+     * @param <V> The type of the promise result.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the operation.
+     */
     public static <V> Promise<V> create(Executor executor, final Runnable runnable, final V result) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (runnable == null) throw new IllegalArgumentException(mustNotBeNull("runnable"));
@@ -55,6 +98,14 @@ public class PromiseManager {
         return deferred.promise();
     }
 
+    /**
+     * Creates a new promise for the specified operation that is scheduled on the specified
+     * {@link java.util.concurrent.Executor}.
+     * @param executor The {@link java.util.concurrent.Executor} on which the operation is scheduled.
+     * @param callable The operation that the promise represents.
+     * @param <V> The return type of the {@link java.util.concurrent.Callable} operation.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the operation.
+     */
     public static <V> Promise<V> create(Executor executor, final Callable<V> callable) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (callable == null) throw new IllegalArgumentException(mustNotBeNull("callable"));
@@ -73,10 +124,26 @@ public class PromiseManager {
         return deferred.promise();
     }
 
+    /**
+     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance.
+     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
+     * @param <V> The result type of the future.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
+     */
     public static <V> Promise<V> fromFuture(Future<V> future) {
         return fromFuture(PromiseExecutors.DEFAULT_FUTURE_EXECUTOR, future);
     }
 
+    /**
+     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance
+     * using the specified {@link java.util.concurrent.Executor} to block on the operation if it is not already
+     * completed.
+     * @param executor The {@link java.util.concurrent.Executor} which will be used to block on the {@code future}
+     *                 until it is completed.
+     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
+     * @param <V> The result type of the future.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
+     */
     public static <V> Promise<V> fromFuture(Executor executor, Future<V> future) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
@@ -86,10 +153,31 @@ public class PromiseManager {
         return new FuturePromise<V>(executor, future);
     }
 
+    /**
+     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance
+     * that will wait for up until the specified duration until its completion.
+     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
+     * @param timeout The maximum amount of time to wait for the {@code future} to complete.
+     * @param timeUnit The unit of time for the {@code timeout} argument.
+     * @param <V> The result type of the future.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
+     */
     public static <V> Promise<V> fromFuture(Future<V> future, long timeout, TimeUnit timeUnit) {
         return fromFuture(PromiseExecutors.DEFAULT_FUTURE_EXECUTOR, future, timeout, timeUnit);
     }
 
+    /**
+     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance
+     * that will wait for up until the specified duration until its completion using the specified
+     * {@link java.util.concurrent.Executor} to block on the operation if it is not already completed.
+     * @param executor The {@link java.util.concurrent.Executor} which will be used to block on the {@code future}
+     *                 until it is completed.
+     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
+     * @param timeout The maximum amount of time to wait for the {@code future} to complete.
+     * @param timeUnit The unit of time for the {@code timeout} argument.
+     * @param <V> The result type of the future.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
+     */
     public static <V> Promise<V> fromFuture(Executor executor, Future<V> future, long timeout, TimeUnit timeUnit) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
@@ -116,6 +204,12 @@ public class PromiseManager {
         });
     }
 
+    /**
+     * Returns a {@link org.jpromise.Promise} representing the completion of all of the specified promises.  Any of
+     * the specified promises that are rejected are counted towards the completed promises.
+     * @param promises The array of promises.
+     * @return A new {@link org.jpromise.Promise} that represents the completion of all of the specified {@code promises}.
+     */
     public static Promise<Void> whenAllCompleted(Promise<?>... promises) {
         if (promises == null || promises.length == 0) {
             return Promise.resolved(null);
@@ -123,15 +217,41 @@ public class PromiseManager {
         return whenAllCompleted(Arrays.asList(promises));
     }
 
+    /**
+     * Returns a {@link org.jpromise.Promise} representing the completion of all of the specified promises.  Any of
+     * the specified promises that are rejected are counted towards the completed promises.
+     * @param promises The collection of promises.
+     * @return A new {@link org.jpromise.Promise} that represents the completion of all of the specified {@code promises}.
+     */
     @SuppressWarnings("unchecked")
     public static Promise<Void> whenAllCompleted(Iterable<? extends Promise<?>> promises) {
         return whenAllCompletedImpl((Iterable)promises, null, null);
     }
 
+    /**
+     * Returns a {@link org.jpromise.Promise} representing the completion of all of the specified promises after the
+     * specified action is performed.
+     * @param promises The collection of promises.
+     * @param action The action to perform with the result of each of the promises as they are completed.
+     * @param <V> The result type of the promises.
+     * @return A new {@link org.jpromise.Promise} that represents the completion of all of the specified {@code promises}
+     * after the specified action is performed.
+     */
     public static <V> Promise<Void> whenAllCompleted(Iterable<? extends Promise<V>> promises, OnCompleted<V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
         return whenAllCompletedImpl(promises, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
+
+    /**
+     * Returns a {@link org.jpromise.Promise} representing the completion of all of the specified promises after the
+     * specified action is performed using the specified {@link java.util.concurrent.Executor}.
+     * @param promises The collection of promises.
+     * @param executor The {@link java.util.concurrent.Executor} on which to schedule the {@code action}.
+     * @param action The action to perform with the result of each of the promises as they are completed.
+     * @param <V> The result type of the promises.
+     * @return A new {@link org.jpromise.Promise} that represents the completion of all of the specified {@code promises}
+     * after the specified action is performed.
+     */
     public static <V> Promise<Void> whenAllCompleted(Iterable<? extends Promise<V>> promises, Executor executor, OnCompleted<V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
@@ -182,6 +302,12 @@ public class PromiseManager {
         });
     }
 
+    /**
+     * Returns a {@link org.jpromise.Promise} representing the successful resolution of the specified promises.  If any
+     * of the specified promises is rejected then the returned promise immediately rejects with the same exception.
+     * @param promises The array of promises.
+     * @return A new {@link org.jpromise.Promise} that represents the resolution of all of the specified {@code promises}.
+     */
     public static Promise<Void> whenAllResolved(Promise<?>... promises) {
         if (promises == null || promises.length == 0) {
             return Promise.resolved(null);
@@ -189,23 +315,49 @@ public class PromiseManager {
         return whenAllResolved(Arrays.asList(promises));
     }
 
+    /**
+     * Returns a {@link org.jpromise.Promise} representing the successful resolution of the specified promises.  If any
+     * of the specified promises is rejected then the returned promise immediately rejects with the same exception.
+     * @param promises The collection of promises.
+     * @return A new {@link org.jpromise.Promise} that represents the resolution of all of the specified {@code promises}.
+     */
     @SuppressWarnings("unchecked")
     public static Promise<Void> whenAllResolved(Iterable<? extends Promise<?>> promises) {
         return whenAllResolvedImpl((Iterable)promises, null, null);
     }
 
+    /**
+     * Returns a {@link org.jpromise.Promise} representing the successful resolution of the specified promises after
+     * the specified action is performed.  If any of the specified promises is rejected then the returned promise
+     * immediately rejects with the same exception.
+     * @param promises The collection of promises.
+     * @param action The action to perform with the result of each of the promises as they are resolved.
+     * @param <V> The result type of the promises.
+     * @return A new {@link org.jpromise.Promise} that represents the resolution of all of the specified {@code promises}
+     * after the specified action is performed.
+     */
     public static <V> Promise<Void> whenAllResolved(Iterable<? extends Promise<V>> promises, OnResolved<? super V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
         return whenAllResolvedImpl(promises, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
-
+    /**
+     * Returns a {@link org.jpromise.Promise} representing the successful resolution of the specified promises after
+     * the specified action is performed using the specified {@link java.util.concurrent.Executor}.  If any of the
+     * specified promises is rejected then the returned promise immediately rejects with the same exception.
+     * @param promises The collection of promises.
+     * @param executor The {@link java.util.concurrent.Executor} on which to schedule the {@code action}.
+     * @param action The action to perform with the result of each of the promises as they are resolved.
+     * @param <V> The result type of the promises.
+     * @return A new {@link org.jpromise.Promise} that represents the resolution of all of the specified {@code promises}
+     * after the specified action is performed.
+     */
     public static <V> Promise<Void> whenAllResolved(Iterable<? extends Promise<V>> promises, Executor executor, OnResolved<? super V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         return whenAllResolvedImpl(promises, executor, action);
     }
 
-    public static <V> Promise<Void> whenAllResolvedImpl(Iterable<? extends Promise<V>> promises, Executor executor, OnResolved<? super V> action) {
+    private static <V> Promise<Void> whenAllResolvedImpl(Iterable<? extends Promise<V>> promises, Executor executor, OnResolved<? super V> action) {
         if (promises == null) {
             return Promise.resolved(null);
         }

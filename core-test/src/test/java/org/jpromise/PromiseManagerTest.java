@@ -133,7 +133,7 @@ public class PromiseManagerTest {
         doNothing().when(executor).execute(any(Runnable.class));
 
         final RuntimeException exception = new RuntimeException();
-        Promise<String> promise = PromiseManager.create(executor, new Runnable() {
+        Promise<Void> promise = PromiseManager.create(executor, new Runnable() {
             @Override
             public void run() {
                 throw exception;
