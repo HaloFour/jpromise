@@ -381,6 +381,14 @@ public class PromiseManager {
         return deferred.promise();
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed propagating the result or rejection of the first
+     * of the specified promises that are completed.
+     * @param promise1 The first promise.
+     * @param promise2 The second promise.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the completion of the first of the completed promises.
+     */
     public static <V> Promise<V> whenAnyCompleted(Promise<V> promise1, Promise<V> promise2) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(2);
         promises.add(promise1);
@@ -388,6 +396,15 @@ public class PromiseManager {
         return whenAnyCompleted(promises);
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed propagating the result or rejection of the first
+     * of the specified promises that are completed.
+     * @param promise1 The first promise.
+     * @param promise2 The second promise.
+     * @param promise3 The third promise.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the completion of the first of the completed promises.
+     */
     public static <V> Promise<V> whenAnyCompleted(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(3);
         promises.add(promise1);
@@ -396,6 +413,16 @@ public class PromiseManager {
         return whenAnyCompleted(promises);
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed propagating the result or rejection of the first
+     * of the specified promises that are completed.
+     * @param promise1 The first promise.
+     * @param promise2 The second promise.
+     * @param promise3 The third promise.
+     * @param promise4 The fourth promise.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the completion of the first of the completed promises.
+     */
     public static <V> Promise<V> whenAnyCompleted(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(4);
         promises.add(promise1);
@@ -405,6 +432,17 @@ public class PromiseManager {
         return whenAnyCompleted(promises);
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed propagating the result or rejection of the first
+     * of the specified promises that are completed.
+     * @param promise1 The first promise.
+     * @param promise2 The second promise.
+     * @param promise3 The third promise.
+     * @param promise4 The fourth promise.
+     * @param promise5 The fifth promise.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the completion of the first of the completed promises.
+     */
     public static <V> Promise<V> whenAnyCompleted(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4, Promise<V> promise5) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(5);
         promises.add(promise1);
@@ -414,7 +452,14 @@ public class PromiseManager {
         promises.add(promise5);
         return whenAnyCompleted(promises);
     }
-
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed propagating the result or rejection of the first
+     * of the specified promises that are completed.
+     * @param promises The collection of promises.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the completion of the first of the completed
+     * {@code promises}.
+     */
     public static <V> Promise<V> whenAnyCompleted(Promise<V>[] promises) {
         if (promises == null || promises.length == 0) {
             Deferred<V> deferred = Promise.defer();
@@ -423,6 +468,14 @@ public class PromiseManager {
         return whenAnyCompleted(Arrays.asList(promises));
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed propagating the result or rejection of the first
+     * of the specified promises that are completed.
+     * @param promises The collection of promises.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the completion of the first of the completed
+     * {@code promises}.
+     */
     public static <V> Promise<V> whenAnyCompleted(Iterable<? extends Promise<V>> promises) {
         final Deferred<V> deferred = Promise.defer();
         if (promises == null) {
@@ -454,6 +507,14 @@ public class PromiseManager {
         return deferred.promise();
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
+     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * @param promise1 The first promise.
+     * @param promise2 The second promise.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved promises.
+     */
     public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(2);
         promises.add(promise1);
@@ -461,6 +522,15 @@ public class PromiseManager {
         return whenAnyResolved(promises);
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
+     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * @param promise1 The first promise.
+     * @param promise2 The second promise.
+     * @param promise3 The third promise.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved promises.
+     */
     public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(3);
         promises.add(promise1);
@@ -469,6 +539,16 @@ public class PromiseManager {
         return whenAnyResolved(promises);
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
+     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * @param promise1 The first promise.
+     * @param promise2 The second promise.
+     * @param promise3 The third promise.
+     * @param promise4 The fourth promise.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved promises.
+     */
     public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(4);
         promises.add(promise1);
@@ -478,6 +558,17 @@ public class PromiseManager {
         return whenAnyResolved(promises);
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
+     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * @param promise1 The first promise.
+     * @param promise2 The second promise.
+     * @param promise3 The third promise.
+     * @param promise4 The fourth promise.
+     * @param promise5 The fifth promise.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved promises.
+     */
     public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4, Promise<V> promise5) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(5);
         promises.add(promise1);
@@ -488,6 +579,14 @@ public class PromiseManager {
         return whenAnyResolved(promises);
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
+     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * @param promises The array of promises.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved
+     * {@code promises}.
+     */
     public static <V> Promise<V> whenAnyResolved(Promise<V>[] promises) {
         if (promises == null || promises.length == 0) {
             Deferred<V> deferred = Promise.defer();
@@ -496,6 +595,14 @@ public class PromiseManager {
         return whenAnyResolved(Arrays.asList(promises));
     }
 
+    /**
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
+     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * @param promises The collection of promises.
+     * @param <V> The result type of the promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved
+     * {@code promises}.
+     */
     public static <V> Promise<V> whenAnyResolved(Iterable<? extends Promise<V>> promises) {
         final Deferred<V> deferred = Promise.defer();
         if (promises == null) {
