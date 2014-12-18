@@ -28,6 +28,7 @@ public class ObservablePromiseTest {
     private static final String SUCCESS2 = "SUCCESS2";
     private static final String SUCCESS3 = "SUCCESS3";
     private static final String SUCCESS4 = "SUCCESS4";
+    private static final String SUCCESS5 = "SUCCESS5";
 
     @Test
     public void fromObservable() throws Throwable {
@@ -106,7 +107,55 @@ public class ObservablePromiseTest {
     }
 
     @Test
-    public void toObservableMany() throws Throwable {
+    public void toObservable1() throws Throwable {
+        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+
+        BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1)
+                .toList()
+                .toBlocking();
+
+        List<String> list = observable.single();
+
+        assertEquals(1, list.size());
+        assertTrue(list.contains(SUCCESS1));
+    }
+
+    @Test
+    public void toObservable2() throws Throwable {
+        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+
+        BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1, promise2)
+                .toList()
+                .toBlocking();
+
+        List<String> list = observable.single();
+
+        assertEquals(2, list.size());
+        assertTrue(list.contains(SUCCESS1));
+        assertTrue(list.contains(SUCCESS2));
+    }
+
+    @Test
+    public void toObservable3() throws Throwable {
+        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        Promise<String> promise3 = Promise.resolved(SUCCESS3);
+
+        BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1, promise2, promise3)
+                .toList()
+                .toBlocking();
+
+        List<String> list = observable.single();
+
+        assertEquals(3, list.size());
+        assertTrue(list.contains(SUCCESS1));
+        assertTrue(list.contains(SUCCESS2));
+        assertTrue(list.contains(SUCCESS3));
+    }
+
+    @Test
+    public void toObservable4() throws Throwable {
         Promise<String> promise1 = Promise.resolved(SUCCESS1);
         Promise<String> promise2 = Promise.resolved(SUCCESS2);
         Promise<String> promise3 = Promise.resolved(SUCCESS3);
@@ -123,6 +172,53 @@ public class ObservablePromiseTest {
         assertTrue(list.contains(SUCCESS2));
         assertTrue(list.contains(SUCCESS3));
         assertTrue(list.contains(SUCCESS4));
+    }
+
+    @Test
+    public void toObservable5() throws Throwable {
+        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        Promise<String> promise3 = Promise.resolved(SUCCESS3);
+        Promise<String> promise4 = Promise.resolved(SUCCESS4);
+        Promise<String> promise5 = Promise.resolved(SUCCESS5);
+
+        BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1, promise2, promise3, promise4, promise5)
+                .toList()
+                .toBlocking();
+
+        List<String> list = observable.single();
+
+        assertEquals(5, list.size());
+        assertTrue(list.contains(SUCCESS1));
+        assertTrue(list.contains(SUCCESS2));
+        assertTrue(list.contains(SUCCESS3));
+        assertTrue(list.contains(SUCCESS4));
+        assertTrue(list.contains(SUCCESS5));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void toObservableFromArray() throws Throwable {
+        Promise<String>[] array = (Promise<String>[])new Promise[] {
+                Promise.resolved(SUCCESS1),
+                Promise.resolved(SUCCESS2),
+                Promise.resolved(SUCCESS3),
+                Promise.resolved(SUCCESS4),
+                Promise.resolved(SUCCESS5)
+        };
+
+        BlockingObservable<List<String>> observable = new PromiseObservable<String>(array)
+                .toList()
+                .toBlocking();
+
+        List<String> list = observable.single();
+
+        assertEquals(5, list.size());
+        assertTrue(list.contains(SUCCESS1));
+        assertTrue(list.contains(SUCCESS2));
+        assertTrue(list.contains(SUCCESS3));
+        assertTrue(list.contains(SUCCESS4));
+        assertTrue(list.contains(SUCCESS5));
     }
 
     @Test

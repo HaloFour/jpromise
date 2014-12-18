@@ -12,6 +12,10 @@ import java.util.concurrent.TimeoutException;
 import static org.junit.Assert.*;
 
 public class PromiseHelpers {
+    private PromiseHelpers() {
+        throw new IllegalStateException();
+    }
+
     private static class PromiseResult<R> {
         public R result;
         public Throwable reason;
