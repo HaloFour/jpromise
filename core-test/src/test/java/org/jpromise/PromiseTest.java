@@ -6,7 +6,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.*;
 
@@ -201,6 +203,76 @@ public class PromiseTest {
     }
 
     @Test
+    public void thenComposeAlreadyResolved() throws Throwable {
+        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> resolved(String d) {
+                return Promise.resolved(SUCCESS2);
+            }
+        });
+
+        assertResolves(SUCCESS1, promise1);
+        assertResolves(SUCCESS2, promise2);
+    }
+
+    @Test
+    public void thenComposeAlreadyRejected() throws Throwable {
+        final Exception exception = new Exception();
+        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> resolved(String d) {
+                return Promise.rejected(exception);
+            }
+        });
+
+        assertResolves(SUCCESS1, promise1);
+        assertRejects(exception, promise2);
+    }
+
+    @Test
+    public void thenComposeAlreadyRejectedWithEmptyExecutionException() throws Throwable {
+        final ExecutionException exception = new ExecutionException(null);
+        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        final Promise<String> promise3 = mock(Promise.class);
+        when(promise3.isDone()).thenReturn(true);
+        when(promise3.get()).thenThrow(exception);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> resolved(String d) {
+                return promise3;
+            }
+        });
+
+        assertResolves(SUCCESS1, promise1);
+        assertRejects(exception, promise2);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void thenComposeAlreadyRejectedWithInterruptedException() throws Throwable {
+        final InterruptedException exception = new InterruptedException();
+        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        final Promise<String> promise3 = mock(Promise.class);
+        when(promise3.isDone()).thenReturn(true);
+        when(promise3.get()).thenThrow(exception);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> resolved(String d) {
+                return promise3;
+            }
+        });
+
+        assertResolves(SUCCESS1, promise1);
+        assertRejects(exception, promise2);
+    }
+
+    @Test
     public void thenComposeRejected() throws Throwable {
         Exception exception = new Exception();
         Promise<String> promise1 = rejectAfter(exception, 10);
@@ -282,6 +354,8 @@ public class PromiseTest {
 
         assertResolves(SUCCESS1, promise1);
         assertResolves(SUCCESS2, promise2);
+
+        executor.shutdown();
     }
 
     @Test
@@ -582,9 +656,10 @@ public class PromiseTest {
     @Test
     public void fallbackWithWithExecutor() throws Throwable {
         Throwable exception = new Exception();
+        Deferred<String> deferred = Promise.defer();
         @SuppressWarnings("unchecked")
         OnRejectedHandler<Throwable, Future<String>> callback = mock(OnRejectedHandler.class);
-        when(callback.handle(exception)).thenReturn(Promise.resolved(SUCCESS1));
+        when(callback.handle(exception)).thenReturn(deferred.promise());
         Executor executor = mock(Executor.class);
 
         Promise<String> promise1 = rejectAfter(exception, 10);
@@ -599,6 +674,8 @@ public class PromiseTest {
         runnable.run();
 
         verify(callback, times(1)).handle(exception);
+        deferred.resolve(SUCCESS1);
+
         verify(executor, times(1)).execute(captor.capture());
         runnable = captor.getValue();
         runnable.run();

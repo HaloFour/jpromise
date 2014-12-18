@@ -1,6 +1,8 @@
 package org.jpromise;
 
 import org.jpromise.functions.OnCompleted;
+
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
@@ -97,6 +99,23 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
         }
         if (promise == null) {
             complete(null);
+        }
+        else if (promise.isDone()) {
+            try {
+                complete(promise.get());
+            }
+            catch (ExecutionException exception) {
+                Throwable cause = exception.getCause();
+                if (cause != null) {
+                    completeWithException(cause);
+                }
+                else {
+                    completeWithException(exception);
+                }
+            }
+            catch (Throwable exception) {
+                completeWithException(exception);
+            }
         }
         else {
             composed = promise;
