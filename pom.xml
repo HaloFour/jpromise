@@ -18,6 +18,7 @@
         <module>state</module>
         <module>completable</module>
         <module>all</module>
+        <module>ws.rs</module>
     </modules>
 
     <properties>
@@ -71,6 +72,11 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>javax.ws.rs-api</artifactId>
+                <version>2.0.1</version>
+            </dependency>
             <dependency>
                 <groupId>io.reactivex</groupId>
                 <artifactId>rxjava</artifactId>

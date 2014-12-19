@@ -30,6 +30,7 @@
         <module name="slf4j" />
         <module name="state" />
         <module name="stream" />
+        <module name="ws.rs" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -43,6 +44,7 @@
       <module name="slf4j" target="1.6" />
       <module name="state" target="1.6" />
       <module name="stream" target="1.6" />
+      <module name="ws.rs" target="1.6" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

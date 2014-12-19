@@ -12,6 +12,7 @@
       <module fileurl="file://$PROJECT_DIR$/slf4j/slf4j.iml" filepath="$PROJECT_DIR$/slf4j/slf4j.iml" />
       <module fileurl="file://$PROJECT_DIR$/state/state.iml" filepath="$PROJECT_DIR$/state/state.iml" />
       <module fileurl="file://$PROJECT_DIR$/stream/stream.iml" filepath="$PROJECT_DIR$/stream/stream.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ws.rs/ws.rs.iml" filepath="$PROJECT_DIR$/ws.rs/ws.rs.iml" />
     </modules>
   </component>
 </project>
