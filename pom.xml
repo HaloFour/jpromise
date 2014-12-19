@@ -17,6 +17,7 @@
         <module>slf4j</module>
         <module>state</module>
         <module>completable</module>
+        <module>all</module>
     </modules>
 
     <properties>
@@ -56,6 +57,17 @@
             <dependency>
                 <groupId>org.jpromise</groupId>
                 <artifactId>jpromise-core-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jpromise</groupId>
+                <artifactId>jpromise-patterns</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jpromise</groupId>
+                <artifactId>jpromise-stream</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
