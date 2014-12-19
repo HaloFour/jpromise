@@ -1,7 +1,18 @@
 package org.jpromise.patterns;
 
+/**
+ * Represents the result of two completed asynchronous operations.
+ * @param <V1> The type of the first result.
+ * @param <V2> The type of the second result.
+ */
 public class Pattern2<V1, V2> {
+    /**
+     * The first result.
+     */
     public final V1 item1;
+    /**
+     * The second result.
+     */
     public final V2 item2;
 
     Pattern2(V1 item1, V2 item2) {
@@ -9,6 +20,11 @@ public class Pattern2<V1, V2> {
         this.item2 = item2;
     }
 
+    /**
+     * Gets the result at the specified index.
+     * @param index The 0-based index of the result.
+     * @return The result at the specified index.
+     */
     public Object get(int index) {
         switch (index) {
             case 0:
@@ -20,11 +36,20 @@ public class Pattern2<V1, V2> {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public String toString() {
         return String.format("( %s, %s )", item1, item2);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param o {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -37,6 +62,10 @@ public class Pattern2<V1, V2> {
 
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         int result = item1 != null ? item1.hashCode() : 0;
