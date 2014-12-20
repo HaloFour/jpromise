@@ -234,6 +234,7 @@ public class PromiseTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void thenComposeAlreadyRejectedWithEmptyExecutionException() throws Throwable {
         final ExecutionException exception = new ExecutionException(null);
         Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
