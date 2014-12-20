@@ -2,7 +2,7 @@ package org.jpromise;
 
 import java.util.concurrent.*;
 
-class FuturePromise<V> extends AbstractPromise<V> implements Runnable {
+class FuturePromise<V> extends AbstractPromise<V> {
     private final Future<V> future;
     private final Long timeout;
     private final TimeUnit timeUnit;
@@ -22,11 +22,12 @@ class FuturePromise<V> extends AbstractPromise<V> implements Runnable {
     }
 
     private void start(Executor executor) {
+        FuturePromiseRunnable runnable = new FuturePromiseRunnable();
         if (future.isDone()) {
-            this.run();
+            runnable.run();
         }
         else {
-            executor.execute(this);
+            executor.execute(runnable);
         }
     }
 
@@ -36,25 +37,27 @@ class FuturePromise<V> extends AbstractPromise<V> implements Runnable {
                 && completeWithException(new CancellationException());
     }
 
-    @Override
-    public void run() {
-        try {
-            if (timeout == null) {
-                complete(future.get());
+    private class FuturePromiseRunnable implements Runnable {
+        @Override
+        public void run() {
+            try {
+                if (timeout == null) {
+                    complete(future.get());
+                }
+                else {
+                    complete(future.get(timeout, timeUnit));
+                }
             }
-            else {
-                complete(future.get(timeout, timeUnit));
+            catch (ExecutionException exception) {
+                Throwable cause = exception.getCause();
+                if (cause == null) {
+                    cause = exception;
+                }
+                completeWithException(cause);
             }
-        }
-        catch (ExecutionException exception) {
-            Throwable cause = exception.getCause();
-            if (cause == null) {
-                cause = exception;
+            catch (Throwable exception) {
+                completeWithException(exception);
             }
-            completeWithException(cause);
-        }
-        catch (Throwable exception) {
-            completeWithException(exception);
         }
     }
 }
