@@ -14,30 +14,30 @@ public abstract class PromiseStream<V> {
 
     public <V_APPLIED> PromiseStream<V_APPLIED> map(final OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return new ComposedPromiseStream<V, V_APPLIED>(this, new MapOperator<V, V_APPLIED>(function));
+        return translate(new MapOperator<V, V_APPLIED>(function));
     }
 
     public <V_APPLIED> PromiseStream<V_APPLIED> flatMap(final OnResolvedFunction<? super V, ? extends Iterable<? extends V_APPLIED>> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return new ComposedPromiseStream<V, V_APPLIED>(this, new FlatMapOperator<V, V_APPLIED>(function));
+        return translate(new FlatMapOperator<V, V_APPLIED>(function));
     }
 
     public <V_COMPOSED> PromiseStream<V_COMPOSED> compose(final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return new ComposedPromiseStream<V, V_COMPOSED>(this, new ComposeOperator<V, V_COMPOSED>(function));
+        return translate(new ComposeOperator<V, V_COMPOSED>(function));
     }
 
     public PromiseStream<V> filter(final OnResolvedFunction<V, Boolean> predicate) {
         if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
-        return new ComposedPromiseStream<V, V>(this, new FilterOperator<V>(predicate));
+        return lift(new FilterOperator<V>(predicate));
     }
 
     public PromiseStream<V> filterNulls() {
-        return new ComposedPromiseStream<V, V>(this, new FilterNullOperator<V>());
+        return lift(new FilterNullOperator<V>());
     }
 
     public PromiseStream<V> filterRejected() {
-        return new ComposedPromiseStream<V, V>(this, new FilterRejectedOperator<V, Throwable>(Throwable.class));
+        return lift(new FilterRejectedOperator<V, Throwable>(Throwable.class));
     }
 
     public PromiseStream<V> filterRejected(OnRejectedHandler<Throwable, Boolean> predicate) {
@@ -46,17 +46,27 @@ public abstract class PromiseStream<V> {
 
     public <E extends Throwable> PromiseStream<V> filterRejected(Class<E> exceptionClass) {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
-        return new ComposedPromiseStream<V, V>(this, new FilterRejectedOperator<V, E>(exceptionClass));
+        return lift(new FilterRejectedOperator<V, E>(exceptionClass));
     }
 
     public <E extends Throwable> PromiseStream<V> filterRejected(final Class<E> exceptionClass, final OnRejectedHandler<? super E, Boolean> predicate) {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
         if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
-        return new ComposedPromiseStream<V, V>(this, new FilterRejectedOperator<V, E>(exceptionClass, predicate));
+        return lift(new FilterRejectedOperator<V, E>(exceptionClass, predicate));
     }
 
     public PromiseStream<V> take(int count) {
-        return new ComposedPromiseStream<V, V>(this, new TakeOperator<V>(count));
+        return lift(new TakeOperator<V>(count));
+    }
+
+    public PromiseStream<V> lift(StreamOperator<V, V> operator) {
+        if (operator == null) throw new IllegalArgumentException(mustNotBeNull("operator"));
+        return new ComposedPromiseStream<V, V>(this, operator);
+    }
+
+    public <V_OUT> PromiseStream<V_OUT> translate(StreamOperator<V, V_OUT> operator) {
+        if (operator == null) throw new IllegalArgumentException(mustNotBeNull("operator"));
+        return new ComposedPromiseStream<V, V_OUT>(this, operator);
     }
 
     public Promise<List<V>> toList(Class<V> resultClass) {
@@ -114,6 +124,11 @@ public abstract class PromiseStream<V> {
     public <A, R> Promise<R> collect(PromiseCollector<V, A, R> collector) {
         if (collector == null) throw new IllegalArgumentException(mustNotBeNull("collector"));
         CollectOperator<V, A, R> operator = new CollectOperator<V, A, R>(collector);
+        return terminate(operator);
+    }
+
+    public <R> Promise<R> terminate(TerminalOperator<V, R> operator) {
+        if (operator == null) throw new IllegalArgumentException(mustNotBeNull("operator"));
         return operator.subscribe(this);
     }
 
