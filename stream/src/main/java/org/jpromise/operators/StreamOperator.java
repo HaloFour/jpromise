@@ -1,21 +1,10 @@
 package org.jpromise.operators;
 
-import org.jpromise.OnSubscribe;
 import org.jpromise.PromiseSubscriber;
 
-import static org.jpromise.util.MessageUtil.mustNotBeNull;
-
-public abstract class StreamOperator<V_IN, V_OUT> implements OnSubscribe<V_OUT> {
-    private final OnSubscribe<V_IN> parent;
-
-    protected StreamOperator(OnSubscribe<V_IN> parent) {
-        if (parent == null) throw new IllegalArgumentException(mustNotBeNull("parent"));
-        this.parent = parent;
-    }
-
-    @Override
-    public void subscribed(final PromiseSubscriber<V_OUT> subscriber) {
-        parent.subscribed(new PromiseSubscriber<V_IN>() {
+public abstract class StreamOperator<V_IN, V_OUT> {
+    public PromiseSubscriber<V_IN> subscribe(final PromiseSubscriber<? super V_OUT> subscriber) {
+        return new PromiseSubscriber<V_IN>() {
             private final OutstandingOperationTracker tracker = new OutstandingOperationTracker();
 
             @Override
@@ -61,16 +50,16 @@ public abstract class StreamOperator<V_IN, V_OUT> implements OnSubscribe<V_OUT> 
                     }
                 });
             }
-        });
+        };
     }
 
-    protected abstract void resolved(PromiseSubscriber<V_OUT> subscriber, V_IN result) throws Throwable;
+    protected abstract void resolved(PromiseSubscriber<? super V_OUT> subscriber, V_IN result) throws Throwable;
 
-    protected void rejected(PromiseSubscriber<V_OUT> subscriber, Throwable exception) throws Throwable {
+    protected void rejected(PromiseSubscriber<? super V_OUT> subscriber, Throwable exception) throws Throwable {
         subscriber.rejected(exception);
     }
 
-    protected void complete(PromiseSubscriber<V_OUT> subscriber) throws Throwable {
+    protected void complete(PromiseSubscriber<? super V_OUT> subscriber) throws Throwable {
         subscriber.complete();
     }
 }

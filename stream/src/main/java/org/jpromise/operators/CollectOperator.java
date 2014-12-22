@@ -1,6 +1,5 @@
 package org.jpromise.operators;
 
-import org.jpromise.OnSubscribe;
 import org.jpromise.PromiseCollector;
 
 import static org.jpromise.util.MessageUtil.*;
@@ -8,8 +7,8 @@ import static org.jpromise.util.MessageUtil.*;
 public class CollectOperator<V, A, R> extends TerminalOperator<V, R> {
     private final PromiseCollector<V, A, R> collector;
 
-    public CollectOperator(OnSubscribe<V> subscribe, PromiseCollector<V, A, R> collector) {
-        super(subscribe);
+    public CollectOperator(PromiseCollector<V, A, R> collector) {
+        if (collector == null) throw new IllegalArgumentException(mustNotBeNull("collector"));
         this.collector = collector;
     }
 

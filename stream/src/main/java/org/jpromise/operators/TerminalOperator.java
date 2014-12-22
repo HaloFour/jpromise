@@ -1,8 +1,8 @@
 package org.jpromise.operators;
 
 import org.jpromise.Deferred;
-import org.jpromise.OnSubscribe;
 import org.jpromise.Promise;
+import org.jpromise.PromiseStream;
 import org.jpromise.PromiseSubscriber;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -10,21 +10,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.jpromise.util.MessageUtil.nullOperation;
 
 public abstract class TerminalOperator<V, R> {
-    private final OnSubscribe<V> subscribe;
-
-    protected TerminalOperator(OnSubscribe<V> subscribe) {
-        this.subscribe = subscribe;
-    }
 
     protected abstract TerminalOperation<V, R> operation();
 
-    public final Promise<R> subscribe() {
+    public final Promise<R> subscribe(PromiseStream<V> stream) {
         TerminalOperation<V, R> operation = operation();
         if (operation == null) {
             throw new IllegalStateException(nullOperation());
         }
         TerminalPromiseSubscriber<V, R> subscriber = new TerminalPromiseSubscriber<V, R>(operation);
-        subscribe.subscribed(subscriber);
+        stream.subscribe(subscriber);
         return subscriber.promise();
     }
 

@@ -1,34 +1,32 @@
 package org.jpromise.operators;
 
-import org.jpromise.OnSubscribe;
 import org.jpromise.PromiseState;
 import org.jpromise.PromiseSubscriber;
 
 public class TakeOperator<V> extends StreamOperator<V, V> {
     private final int count;
 
-    public TakeOperator(OnSubscribe<V> parent, int count) {
-        super(parent);
+    public TakeOperator(int count) {
         this.count = count;
     }
 
     @Override
-    protected void resolved(PromiseSubscriber<V> subscriber, V result) throws Throwable {
+    protected void resolved(PromiseSubscriber<? super V> subscriber, V result) throws Throwable {
         subscriber.resolved(result);
     }
 
     @Override
-    public void subscribed(PromiseSubscriber<V> subscriber) {
-        super.subscribed(new TakeSubscriber<V>(subscriber, count));
+    public PromiseSubscriber<V> subscribe(PromiseSubscriber<? super V> subscriber) {
+        return super.subscribe(new TakeSubscriber<V>(subscriber, count));
     }
 
     private static class TakeSubscriber<V> implements PromiseSubscriber<V> {
         private final Object lock = new Object();
         private final OutstandingOperationTracker tracker = new OutstandingOperationTracker();
-        private final PromiseSubscriber<V> parent;
+        private final PromiseSubscriber<? super V> parent;
         private int remaining;
 
-        public TakeSubscriber(PromiseSubscriber<V> parent, int remaining) {
+        public TakeSubscriber(PromiseSubscriber<? super V> parent, int remaining) {
             this.parent = parent;
             this.remaining = remaining;
         }

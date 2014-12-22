@@ -786,24 +786,23 @@ public class PromiseStreamTest {
     }
 
     @Test(expected = IllegalStateException.class)
+    @SuppressWarnings("unchecked")
     public void nullOperationFails() throws Throwable {
-        @SuppressWarnings("unchecked")
-        OnSubscribe<String> subscribe = mock(OnSubscribe.class);
-        TerminalOperator<String, String> operator = new TerminalOperator<String, String>(subscribe) {
+        TerminalOperator<String, String> operator = new TerminalOperator<String, String>() {
             @Override
             protected TerminalOperation<String, String> operation() {
                 return null;
             }
         };
 
-        Promise<String> ignore = operator.subscribe();
+        PromiseStream<String> stream = mock(PromiseStream.class);
+
+        Promise<String> ignore = operator.subscribe(stream);
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void nullAccumulatorFails() throws Throwable {
-        @SuppressWarnings("unchecked")
-        OnSubscribe<String> subscribe = mock(OnSubscribe.class);
-        @SuppressWarnings("unchecked")
         PromiseCollector<String, String, String> collector = mock(PromiseCollector.class);
         when(collector.getAccumulator()).thenReturn(null);
 

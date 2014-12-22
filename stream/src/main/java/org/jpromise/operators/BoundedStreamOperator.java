@@ -1,27 +1,19 @@
 package org.jpromise.operators;
 
-import org.jpromise.OnSubscribe;
 import org.jpromise.PromiseSubscriber;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.jpromise.util.MessageUtil.mustNotBeNull;
-
 public abstract class BoundedStreamOperator<V_IN, V_OUT> extends StreamOperator<V_IN, V_OUT> {
-    public BoundedStreamOperator(OnSubscribe<V_IN> parent) {
-        super(parent);
-    }
-
     @Override
-    public final void subscribed(PromiseSubscriber<V_OUT> subscriber) {
-        if (subscriber == null) throw new IllegalArgumentException(mustNotBeNull("subscriber"));
-        BoundedPromiseSubscriberImpl bounded = new BoundedPromiseSubscriberImpl(subscriber);
-        super.subscribed(bounded);
+    public PromiseSubscriber<V_IN> subscribe(final PromiseSubscriber<? super V_OUT> subscriber) {
+        BoundedPromiseSubscriberImpl impl = new BoundedPromiseSubscriberImpl(subscriber);
+        return super.subscribe(new BoundedPromiseSubscriberImpl(subscriber));
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected final void resolved(PromiseSubscriber<V_OUT> subscriber, V_IN result) throws Throwable {
+    protected final void resolved(PromiseSubscriber<? super V_OUT> subscriber, V_IN result) throws Throwable {
         BoundedPromiseSubscriberImpl bounded = (BoundedPromiseSubscriberImpl) subscriber;
         bounded.increment();
         this.resolved(bounded, result);
@@ -29,7 +21,7 @@ public abstract class BoundedStreamOperator<V_IN, V_OUT> extends StreamOperator<
 
     @Override
     @SuppressWarnings("unchecked")
-    protected final void rejected(PromiseSubscriber<V_OUT> subscriber, Throwable exception) throws Throwable {
+    protected final void rejected(PromiseSubscriber<? super V_OUT> subscriber, Throwable exception) throws Throwable {
         BoundedPromiseSubscriberImpl bounded = (BoundedPromiseSubscriberImpl) subscriber;
         bounded.increment();
         this.rejected(bounded, exception);
@@ -37,7 +29,7 @@ public abstract class BoundedStreamOperator<V_IN, V_OUT> extends StreamOperator<
 
     @Override
     @SuppressWarnings("unchecked")
-    protected final void complete(PromiseSubscriber<V_OUT> subscriber) throws Throwable {
+    protected final void complete(PromiseSubscriber<? super V_OUT> subscriber) throws Throwable {
         BoundedPromiseSubscriberImpl bounded = (BoundedPromiseSubscriberImpl) subscriber;
         bounded.complete();
     }
@@ -49,10 +41,10 @@ public abstract class BoundedStreamOperator<V_IN, V_OUT> extends StreamOperator<
     }
 
     private class BoundedPromiseSubscriberImpl implements BoundedPromiseSubscriber<V_OUT> {
-        private final PromiseSubscriber<V_OUT> parent;
+        private final PromiseSubscriber<? super V_OUT> parent;
         private final AtomicLong counter = new AtomicLong(1);
 
-        public BoundedPromiseSubscriberImpl(PromiseSubscriber<V_OUT> parent) {
+        public BoundedPromiseSubscriberImpl(PromiseSubscriber<? super V_OUT> parent) {
             this.parent = parent;
         }
 

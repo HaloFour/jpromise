@@ -1,6 +1,5 @@
 package org.jpromise.operators;
 
-import org.jpromise.OnSubscribe;
 import org.jpromise.functions.OnResolvedFunction;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
@@ -8,8 +7,7 @@ import static org.jpromise.util.MessageUtil.mustNotBeNull;
 public class FilterOperator<V> extends BoundedStreamOperator<V, V> {
     private final OnResolvedFunction<V, Boolean> predicate;
 
-    public FilterOperator(OnSubscribe<V> parent, OnResolvedFunction<V, Boolean> predicate) {
-        super(parent);
+    public FilterOperator(OnResolvedFunction<V, Boolean> predicate) {
         if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
         this.predicate = predicate;
     }

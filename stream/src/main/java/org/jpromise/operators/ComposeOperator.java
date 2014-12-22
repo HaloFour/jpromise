@@ -1,6 +1,5 @@
 package org.jpromise.operators;
 
-import org.jpromise.OnSubscribe;
 import org.jpromise.Promise;
 import org.jpromise.PromiseManager;
 import org.jpromise.functions.OnCompleted;
@@ -13,8 +12,7 @@ import static org.jpromise.util.MessageUtil.mustNotBeNull;
 public class ComposeOperator<V_IN, V_COMPOSED> extends BoundedStreamOperator<V_IN, V_COMPOSED> {
     private final OnResolvedFunction<? super V_IN, ? extends Future<V_COMPOSED>> function;
 
-    public ComposeOperator(OnSubscribe<V_IN> subscriber, OnResolvedFunction<? super V_IN, ? extends Future<V_COMPOSED>> function) {
-        super(subscriber);
+    public ComposeOperator(OnResolvedFunction<? super V_IN, ? extends Future<V_COMPOSED>> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
         this.function = function;
     }

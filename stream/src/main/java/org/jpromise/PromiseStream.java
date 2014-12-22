@@ -9,47 +9,35 @@ import java.util.concurrent.Future;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
-public class PromiseStream<V> {
-    private final OnSubscribe<V> subscribe;
-
-    private PromiseStream(Promise<V>[] promises) {
-        this(promises != null ? Arrays.asList(promises) : null);
-    }
-
-    private PromiseStream(final Iterable<Promise<V>> promises) {
-        this(new PromiseSource<V>(promises));
-    }
-
-    private PromiseStream(OnSubscribe<V> subscribe) {
-        this.subscribe = subscribe;
-    }
+public abstract class PromiseStream<V> {
+    public abstract Promise<Void> subscribe(PromiseSubscriber<? super V> subscriber);
 
     public <V_APPLIED> PromiseStream<V_APPLIED> map(final OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return new PromiseStream<V_APPLIED>(new MapOperator<V, V_APPLIED>(subscribe, function));
+        return new ComposedPromiseStream<V, V_APPLIED>(this, new MapOperator<V, V_APPLIED>(function));
     }
 
     public <V_APPLIED> PromiseStream<V_APPLIED> flatMap(final OnResolvedFunction<? super V, ? extends Iterable<? extends V_APPLIED>> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return new PromiseStream<V_APPLIED>(new FlatMapOperator<V, V_APPLIED>(subscribe, function));
+        return new ComposedPromiseStream<V, V_APPLIED>(this, new FlatMapOperator<V, V_APPLIED>(function));
     }
 
     public <V_COMPOSED> PromiseStream<V_COMPOSED> compose(final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
-        return new PromiseStream<V_COMPOSED>(new ComposeOperator<V, V_COMPOSED>(subscribe, function));
+        return new ComposedPromiseStream<V, V_COMPOSED>(this, new ComposeOperator<V, V_COMPOSED>(function));
     }
 
     public PromiseStream<V> filter(final OnResolvedFunction<V, Boolean> predicate) {
         if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
-        return new PromiseStream<V>(new FilterOperator<V>(subscribe, predicate));
+        return new ComposedPromiseStream<V, V>(this, new FilterOperator<V>(predicate));
     }
 
     public PromiseStream<V> filterNulls() {
-        return new PromiseStream<V>(new FilterNullOperator<V>(subscribe));
+        return new ComposedPromiseStream<V, V>(this, new FilterNullOperator<V>());
     }
 
     public PromiseStream<V> filterRejected() {
-        return new PromiseStream<V>(new FilterRejectedOperator<V, Throwable>(subscribe, Throwable.class));
+        return new ComposedPromiseStream<V, V>(this, new FilterRejectedOperator<V, Throwable>(Throwable.class));
     }
 
     public PromiseStream<V> filterRejected(OnRejectedHandler<Throwable, Boolean> predicate) {
@@ -58,17 +46,17 @@ public class PromiseStream<V> {
 
     public <E extends Throwable> PromiseStream<V> filterRejected(Class<E> exceptionClass) {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
-        return new PromiseStream<V>(new FilterRejectedOperator<V, E>(subscribe, exceptionClass));
+        return new ComposedPromiseStream<V, V>(this, new FilterRejectedOperator<V, E>(exceptionClass));
     }
 
     public <E extends Throwable> PromiseStream<V> filterRejected(final Class<E> exceptionClass, final OnRejectedHandler<? super E, Boolean> predicate) {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
         if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
-        return new PromiseStream<V>(new FilterRejectedOperator<V, E>(subscribe, exceptionClass, predicate));
+        return new ComposedPromiseStream<V, V>(this, new FilterRejectedOperator<V, E>(exceptionClass, predicate));
     }
 
     public PromiseStream<V> take(int count) {
-        return new PromiseStream<V>(new TakeOperator<V>(subscribe, count));
+        return new ComposedPromiseStream<V, V>(this, new TakeOperator<V>(count));
     }
 
     public Promise<List<V>> toList(Class<V> resultClass) {
@@ -125,21 +113,21 @@ public class PromiseStream<V> {
 
     public <A, R> Promise<R> collect(PromiseCollector<V, A, R> collector) {
         if (collector == null) throw new IllegalArgumentException(mustNotBeNull("collector"));
-        CollectOperator<V, A, R> operator = new CollectOperator<V, A, R>(subscribe, collector);
-        return operator.subscribe();
+        CollectOperator<V, A, R> operator = new CollectOperator<V, A, R>(collector);
+        return operator.subscribe(this);
     }
 
     public static <V> PromiseStream<V> from(Promise<V> promise1) {
         List<Promise<V>> list = new ArrayList<Promise<V>>(1);
         list.add(promise1);
-        return new PromiseStream<V>(list);
+        return new PromiseSource<V>(list);
     }
 
     public static <V> PromiseStream<V> from(Promise<V> promise1, Promise<V> promise2) {
         List<Promise<V>> list = new ArrayList<Promise<V>>(2);
         list.add(promise1);
         list.add(promise2);
-        return new PromiseStream<V>(list);
+        return new PromiseSource<V>(list);
     }
 
     public static <V> PromiseStream<V> from(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3) {
@@ -147,7 +135,7 @@ public class PromiseStream<V> {
         list.add(promise1);
         list.add(promise2);
         list.add(promise3);
-        return new PromiseStream<V>(list);
+        return new PromiseSource<V>(list);
     }
 
     public static <V> PromiseStream<V> from(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4) {
@@ -156,7 +144,7 @@ public class PromiseStream<V> {
         list.add(promise2);
         list.add(promise3);
         list.add(promise4);
-        return new PromiseStream<V>(list);
+        return new PromiseSource<V>(list);
     }
 
     public static <V> PromiseStream<V> from(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4, Promise<V> promise5) {
@@ -166,14 +154,14 @@ public class PromiseStream<V> {
         list.add(promise3);
         list.add(promise4);
         list.add(promise5);
-        return new PromiseStream<V>(list);
+        return new PromiseSource<V>(list);
     }
 
     public static <V> PromiseStream<V> from(Promise<V>[] promises) {
-        return new PromiseStream<V>(promises);
+        return new PromiseSource<V>(promises);
     }
 
     public static <V> PromiseStream<V> from(Iterable<Promise<V>> promises) {
-        return new PromiseStream<V>(promises);
+        return new PromiseSource<V>(promises);
     }
 }

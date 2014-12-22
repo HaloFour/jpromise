@@ -1,6 +1,5 @@
 package org.jpromise.operators;
 
-import org.jpromise.OnSubscribe;
 import org.jpromise.functions.OnRejectedHandler;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
@@ -9,8 +8,8 @@ public class FilterRejectedOperator<V, E extends Throwable> extends BoundedStrea
     private final Class<E> exceptionClass;
     private final OnRejectedHandler<? super E, Boolean> predicate;
 
-    public FilterRejectedOperator(OnSubscribe<V> parent, Class<E> exceptionClass) {
-        this(parent, exceptionClass, new OnRejectedHandler<E, Boolean>() {
+    public FilterRejectedOperator(Class<E> exceptionClass) {
+        this(exceptionClass, new OnRejectedHandler<E, Boolean>() {
             @Override
             public Boolean handle(E exception) throws Throwable {
                 return true;
@@ -18,8 +17,7 @@ public class FilterRejectedOperator<V, E extends Throwable> extends BoundedStrea
         });
     }
 
-    public FilterRejectedOperator(OnSubscribe<V> parent, Class<E> exceptionClass, OnRejectedHandler<? super E, Boolean> predicate) {
-        super(parent);
+    public FilterRejectedOperator(Class<E> exceptionClass, OnRejectedHandler<? super E, Boolean> predicate) {
         if (exceptionClass == null) throw new IllegalArgumentException(mustNotBeNull("exceptionClass"));
         if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
         this.exceptionClass = exceptionClass;
