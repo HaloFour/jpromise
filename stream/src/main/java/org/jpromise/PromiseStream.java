@@ -6,6 +6,7 @@ import org.jpromise.operators.*;
 
 import java.util.*;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
@@ -57,6 +58,15 @@ public abstract class PromiseStream<V> {
 
     public PromiseStream<V> take(int count) {
         return lift(new TakeOperator<V>(count));
+    }
+
+    public PromiseStream<V> takeUntil(long timeout, TimeUnit timeUnit) {
+        return takeUntil(Promise.delay(timeout, timeUnit));
+    }
+
+    public <V2> PromiseStream<V> takeUntil(Promise<V2> promise) {
+        if (promise == null) throw new IllegalArgumentException(mustNotBeNull("promise"));
+        return lift(new TakeUntilOperator<V, V2>(promise));
     }
 
     public PromiseStream<V> lift(StreamOperator<V, V> operator) {

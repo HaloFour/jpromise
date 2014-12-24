@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.jpromise.PromiseHelpers.*;
@@ -783,6 +784,62 @@ public class PromiseStreamTest {
         Promise<String[]> promise = stream.take(6).toArray(String.class);
 
         assertRejects(EXCEPTION, promise);
+    }
+
+    @Test
+    public void takeDuring() throws Throwable {
+        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise2 = resolveAfter(SUCCESS2, 10);
+        Promise<String> promise3 = resolveAfter(SUCCESS3, 10);
+        Promise<String> promise4 = resolveAfter(SUCCESS4, 1000);
+        Promise<String> promise5 = resolveAfter(SUCCESS5, 1000);
+
+        PromiseStream<String> stream = PromiseStream.from(promise1, promise2, promise3, promise4, promise5)
+                .takeUntil(100, TimeUnit.MILLISECONDS);
+
+        Promise<String[]> promise = stream.toArray(String.class);
+
+        String[] result = assertResolves(promise);
+
+        assertContainsAll(new String[] {
+                SUCCESS1, SUCCESS2, SUCCESS3
+        }, result);
+    }
+
+    @Test
+    public void takeDuringWithRejected() throws Throwable {
+        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise2 = resolveAfter(SUCCESS2, 10);
+        Promise<String> promise3 = rejectAfter(EXCEPTION, 10);
+        Promise<String> promise4 = resolveAfter(SUCCESS4, 1000);
+        Promise<String> promise5 = resolveAfter(SUCCESS5, 1000);
+
+        PromiseStream<String> stream = PromiseStream.from(promise1, promise2, promise3, promise4, promise5)
+                .takeUntil(100, TimeUnit.MILLISECONDS);
+
+        Promise<String[]> promise = stream.toArray(String.class);
+
+        assertRejects(EXCEPTION, promise);
+    }
+
+    @Test
+    public void takeDuringCompleteBeforeTimeout() throws Throwable {
+        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise2 = resolveAfter(SUCCESS2, 10);
+        Promise<String> promise3 = resolveAfter(SUCCESS3, 10);
+        Promise<String> promise4 = resolveAfter(SUCCESS4, 10);
+        Promise<String> promise5 = resolveAfter(SUCCESS5, 10);
+
+        PromiseStream<String> stream = PromiseStream.from(promise1, promise2, promise3, promise4, promise5)
+                .takeUntil(1000, TimeUnit.MILLISECONDS);
+
+        Promise<String[]> promise = stream.toArray(String.class);
+
+        String[] result = assertResolves(promise);
+
+        assertContainsAll(new String[] {
+                SUCCESS1, SUCCESS2, SUCCESS3, SUCCESS4, SUCCESS5
+        }, result);
     }
 
     @Test(expected = IllegalStateException.class)

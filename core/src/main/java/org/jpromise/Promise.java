@@ -7,6 +7,8 @@ import java.util.TimerTask;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.jpromise.util.MessageUtil.mustNotBeNull;
+
 /**
  * A {@link org.jpromise.Promise} represents the asynchronous result of an operation.  Methods are provided to check if
  * the computation is complete, to register operations to be performed upon completion, to wait for its completion, and
@@ -428,5 +430,24 @@ public abstract class Promise<V> implements Future<V> {
      */
     public static <V> Promise<V> rejected(Class<V> resultClass, Throwable exception) {
         return rejected(exception);
+    }
+
+    /**
+     * Returns a new {@link org.jpromise.Promise} that will be resolved when the timeout expires.
+     * @param timeout The amount of time to wait.
+     * @param timeUnit The time unit of the {@code timeout} argument.
+     * @return A promise that will be resolved when the timeout expires.
+     */
+    public static Promise<Void> delay(long timeout, TimeUnit timeUnit) {
+        if (timeUnit == null) throw new IllegalArgumentException(mustNotBeNull("timeUnit"));
+        Timer timer = new Timer();
+        final Deferred<Void> deferred = Promise.defer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                deferred.resolve(null);
+            }
+        }, timeUnit.toMillis(timeout));
+        return deferred.promise();
     }
 }
