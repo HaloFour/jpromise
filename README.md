@@ -28,9 +28,10 @@ Promise<String> promise3 = deferred.promise();
 // later
 deferred.resolve("Hello World!");
 
-// Creating a promise from a Callable
+// Creating a promise from a Callable using the specified Executor
 ForkJoinPool mainPool = ...;
-Promise<String> promise4 = PromiseManager.create(mainPool, new Callable<String>() {
+PromiseService service = new ExecutorPromiseService(mainPool);
+Promise<String> promise4 = service.submit(new Callable<String>() {
     @Override public String call() {
         return "Hello World!";
     }

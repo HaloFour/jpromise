@@ -4,6 +4,9 @@ import java.util.concurrent.Callable;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
+/**
+ * Provides default implementation of {@link org.jpromise.PromiseService} execution methods.
+ */
 public abstract class AbstractPromiseService implements PromiseService {
     /**
      * {@inheritDoc}
@@ -65,5 +68,10 @@ public abstract class AbstractPromiseService implements PromiseService {
         return this.submit(task, null);
     }
 
+    /**
+     * Must be overridden by implementers to supply the method through which the commands are scheduled
+     * and executed.
+     * @param task The command to be executed.
+     */
     protected abstract void execute(Runnable task);
 }

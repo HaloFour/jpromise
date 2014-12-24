@@ -21,6 +21,10 @@ public class ExecutorPromiseService extends AbstractPromiseService {
         this.executor = executor;
     }
 
+    /**
+     * Schedules the specified command using the supplied {@link java.util.concurrent.Executor}.
+     * @param task The command to be executed.
+     */
     @Override
     protected void execute(Runnable task) {
         executor.execute(task);
