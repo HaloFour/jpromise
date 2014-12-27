@@ -1,9 +1,6 @@
 package org.jpromise.operators;
 
-import org.jpromise.Deferred;
-import org.jpromise.Promise;
-import org.jpromise.PromiseStream;
-import org.jpromise.PromiseSubscriber;
+import org.jpromise.*;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -24,7 +21,7 @@ public abstract class TerminalOperator<V, R> {
     }
 
     private static class TerminalPromiseSubscriber<V, R> implements PromiseSubscriber<V> {
-        private final Deferred<R> deferred = Promise.defer();
+        private final Deferred<R> deferred = Promises.defer();
         private final Promise<R> promise = deferred.promise();
         private final TerminalOperation<V, R> operation;
         private final AtomicBoolean first = new AtomicBoolean(true);

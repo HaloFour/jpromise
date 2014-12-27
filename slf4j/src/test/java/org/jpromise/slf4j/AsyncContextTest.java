@@ -3,6 +3,7 @@ package org.jpromise.slf4j;
 import org.jpromise.Promise;
 import org.jpromise.PromiseComposition;
 import org.jpromise.PromiseExecutors;
+import org.jpromise.Promises;
 import org.jpromise.functions.OnResolved;
 import org.junit.Test;
 import org.slf4j.MDC;
@@ -24,7 +25,7 @@ public class AsyncContextTest {
         MDC.put(KEY1, VALUE1);
         final Thread thread = Thread.currentThread();
 
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
 
         Promise<String> promise2 = promise1.then(PromiseExecutors.NEW_THREAD, new OnResolved<String>() {
             @Override

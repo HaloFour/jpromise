@@ -24,193 +24,6 @@ public class PromiseTest {
     private static final String FAIL1 = "FAIL1";
 
     @Test
-    public void defer() throws Throwable {
-        Deferred<String> deferred = Promise.defer();
-        Promise<String> promise = deferred.promise();
-        assertFalse(promise.isDone());
-    }
-
-    @Test
-    public void deferWithType() throws Throwable {
-        Deferred<String> deferred = Promise.defer(String.class);
-        Promise<String> promise = deferred.promise();
-        assertFalse(promise.isDone());
-    }
-
-    @Test
-    public void pending() {
-        Deferred<String> deferred = Promise.defer();
-        Promise<String> promise = deferred.promise();
-        assertEquals(PromiseState.PENDING, promise.state());
-        assertFalse(promise.isResolved());
-        assertFalse(promise.isRejected());
-        assertFalse(promise.isDone());
-        assertFalse(promise.isCancelled());
-        assertEquals(promise.toString(), "[PENDING]");
-    }
-
-    @Test
-    public void resolved() throws Throwable {
-        Promise<String> promise = Promise.resolved(SUCCESS1);
-
-        assertResolves(SUCCESS1, promise);
-        assertEquals("[RESOLVED]: SUCCESS1", promise.toString());
-    }
-
-    @Test
-    public void resolvedVoid() throws Throwable {
-        Promise<Void> promise = Promise.resolved();
-        assertResolves(promise);
-    }
-
-    @Test
-    public void rejected() throws Throwable {
-        Exception exception = new Exception(FAIL1);
-        Promise<String> promise = Promise.rejected(exception);
-
-        assertRejects(exception, promise);
-        assertEquals("[REJECTED]: " + exception.toString(), promise.toString());
-    }
-
-    @Test
-    public void typedRejected() throws Throwable {
-        Exception exception = new Exception(FAIL1);
-        Promise<String> promise = Promise.rejected(String.class, exception);
-
-        assertRejects(exception, promise);
-        assertEquals("[REJECTED]: " + exception.toString(), promise.toString());
-    }
-
-
-
-    @Test
-    public void fromFutureDone() throws Throwable {
-        @SuppressWarnings("unchecked")
-        Future<String> future = mock(Future.class);
-        when(future.isDone()).thenReturn(true);
-        when(future.get()).thenReturn(SUCCESS1);
-
-        Promise<String> promise = Promise.fromFuture(future);
-
-        assertResolves(SUCCESS1, promise);
-    }
-
-    @Test
-    public void fromFutureWithPromiseReturnsSelf() throws Throwable {
-        Future<String> future = Promise.resolved(SUCCESS1);
-
-        Promise<String> promise = Promise.fromFuture(future);
-
-        assertEquals(future, promise);
-        assertResolves(SUCCESS1, promise);
-    }
-
-    @Test
-    public void fromFutureWithPromiseAndTimeOutReturnsSelf() throws Throwable {
-        Future<String> future = Promise.resolved(SUCCESS1);
-
-        Promise<String> promise = Promise.fromFuture(future);
-
-        assertEquals(future, promise);
-        assertResolves(SUCCESS1, promise);
-    }
-
-    @Test
-    public void fromFutureWithPromiseAndTimeOutEnforcesTimeout() throws Throwable {
-        Future<String> future = resolveAfter(SUCCESS1, 1000);
-
-        Promise<String> promise = Promise.fromFuture(future, 10, TimeUnit.MILLISECONDS);
-
-        assertEquals(future, promise);
-        assertRejects(CancellationException.class, promise);
-    }
-
-    @Test
-    public void fromFutureCompletesEventually() throws Throwable {
-        @SuppressWarnings("unchecked")
-        Future<String> future = mock(Future.class);
-        when(future.isDone()).thenReturn(false);
-        when(future.get()).thenReturn(SUCCESS1);
-
-        Promise<String> promise = Promise.fromFuture(future);
-
-        assertResolves(SUCCESS1, promise);
-    }
-
-    @Test
-    public void fromFutureThrows() throws Throwable {
-        @SuppressWarnings("unchecked")
-        Future<String> future = mock(Future.class);
-        when(future.isDone()).thenReturn(false);
-        Exception exception = new Exception();
-        when(future.get()).thenThrow(new ExecutionException(exception));
-
-        Promise<String> promise = Promise.fromFuture(future);
-
-        assertRejects(exception, promise);
-    }
-
-    @Test
-    public void fromFutureThrowsWithoutCause() throws Throwable {
-        @SuppressWarnings("unchecked")
-        Future<String> future = mock(Future.class);
-        when(future.isDone()).thenReturn(false);
-        ExecutionException exception = new ExecutionException(null);
-        when(future.get()).thenThrow(exception);
-
-        Promise<String> promise = Promise.fromFuture(future);
-
-        assertRejects(exception, promise);
-    }
-
-    @Test
-    public void fromFutureThrowsEventually() throws Throwable {
-        @SuppressWarnings("unchecked")
-        Future<String> future = mock(Future.class);
-        when(future.isDone()).thenReturn(false);
-        Exception exception = new Exception();
-        when(future.get()).thenThrow(new ExecutionException(exception));
-
-        Promise<String> promise = Promise.fromFuture(future);
-
-        assertRejects(exception, promise);
-    }
-
-    @Test
-    public void fromFutureTimesOut() throws Throwable {
-        @SuppressWarnings("unchecked")
-        Future<String> future = mock(Future.class);
-        when(future.isDone()).thenReturn(false);
-        TimeoutException exception = new TimeoutException();
-        when(future.get(anyLong(), any(TimeUnit.class))).thenThrow(exception);
-
-        Promise<String> promise = Promise.fromFuture(future, 10, TimeUnit.MILLISECONDS);
-
-        assertRejects(exception, promise);
-    }
-
-    @Test
-    public void fromFutureCancelled() throws Throwable {
-        @SuppressWarnings("unchecked")
-        Future<String> future = mock(Future.class);
-        when(future.isDone()).thenReturn(false);
-        when(future.cancel(anyBoolean())).thenReturn(true);
-        when(future.get()).thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) throws Throwable {
-                Thread.sleep(1000);
-                return SUCCESS1;
-            }
-        });
-
-        Promise<String> promise = Promise.fromFuture(future);
-        assertTrue(promise.cancel(true));
-
-        assertRejects(CancellationException.class, promise);
-        verify(future).cancel(true);
-    }
-
-    @Test
     public void resolves() throws Throwable {
         Promise<String> promise = resolveAfter(SUCCESS1, 100);
 
@@ -338,7 +151,7 @@ public class PromiseTest {
         Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
             @Override
             public Future<String> resolved(String d) {
-                return Promise.resolved(SUCCESS2);
+                return Promises.resolved(SUCCESS2);
             }
         });
 
@@ -354,7 +167,7 @@ public class PromiseTest {
         Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
             @Override
             public Future<String> resolved(String d) {
-                return Promise.rejected(exception);
+                return Promises.rejected(exception);
             }
         });
 
@@ -491,7 +304,7 @@ public class PromiseTest {
     @Test
     public void whenRejectedPromise() throws Throwable {
         Exception exception = new TimeoutException();
-        Promise<String> promise1 = Promise.rejected(exception);
+        Promise<String> promise1 = Promises.rejected(exception);
 
         @SuppressWarnings("unchecked")
         OnRejected<Throwable> callback = mock(OnRejected.class);
@@ -505,7 +318,7 @@ public class PromiseTest {
     @Test
     public void typedWhenRejected() throws Throwable {
         Exception exception = new TimeoutException();
-        Promise<String> promise1 = Promise.rejected(exception);
+        Promise<String> promise1 = Promises.rejected(exception);
 
         @SuppressWarnings("unchecked")
         OnRejected<Throwable> callback = mock(OnRejected.class);
@@ -521,7 +334,7 @@ public class PromiseTest {
     @Test
     public void typedWhenRejectedMismatch() throws Throwable {
         Exception exception = new TimeoutException();
-        Promise<String> promise1 = Promise.rejected(exception);
+        Promise<String> promise1 = Promises.rejected(exception);
 
         @SuppressWarnings("unchecked")
         OnRejected<Throwable> callback = mock(OnRejected.class);
@@ -551,7 +364,7 @@ public class PromiseTest {
     public void whenRejectedThrows() throws Throwable {
         Exception exception1 = new TimeoutException();
         final Exception exception2 = new IllegalArgumentException();
-        Promise<String> promise1 = Promise.rejected(exception1);
+        Promise<String> promise1 = Promises.rejected(exception1);
 
         Promise<String> promise2 = promise1.whenRejected(new OnRejected<Throwable>() {
             @Override
@@ -786,7 +599,7 @@ public class PromiseTest {
     @Test
     public void fallbackWithWithExecutor() throws Throwable {
         Throwable exception = new Exception();
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         @SuppressWarnings("unchecked")
         OnRejectedHandler<Throwable, Future<String>> callback = mock(OnRejectedHandler.class);
         when(callback.handle(exception)).thenReturn(deferred.promise());
@@ -873,7 +686,7 @@ public class PromiseTest {
 
     @Test
     public void cancelCompleted() throws Throwable {
-        Promise<String> promise = Promise.resolved(SUCCESS1);
+        Promise<String> promise = Promises.resolved(SUCCESS1);
         assertFalse(promise.cancel(true));
         assertResolves(SUCCESS1, promise);
         assertFalse(promise.isCancelled());
@@ -884,7 +697,7 @@ public class PromiseTest {
         @SuppressWarnings("unchecked")
         OnResolved<String> callback = mock(OnResolved.class);
 
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         Promise<String> promise1 = deferred.promise();
         Promise<String> promise2 = promise1.then(callback);
 
@@ -902,7 +715,7 @@ public class PromiseTest {
         @SuppressWarnings("unchecked")
         OnResolved<String> callback = mock(OnResolved.class);
 
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         Promise<String> promise1 = deferred.promise();
         Promise<String> promise2 = promise1.then(executor, callback);
 
@@ -922,10 +735,10 @@ public class PromiseTest {
     @Test
     @SuppressWarnings("unchecked")
     public void cancelPreventsComposingReturnedFuture() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Executor executor = PromiseExecutors.CURRENT_THREAD;
 
-        final Promise<String> promise3 = spy(Promise.resolved(SUCCESS2));
+        final Promise<String> promise3 = spy(Promises.resolved(SUCCESS2));
 
         ContinuationPromise<String, String> promise2 = new ContinuationPromise<String, String>(promise1, executor) {
             @Override
@@ -944,8 +757,8 @@ public class PromiseTest {
     @Test
     @SuppressWarnings("unchecked")
     public void cancelPreventsComposedFutureCallback() throws Throwable {
-        Deferred<String> deferred = Promise.defer();
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Deferred<String> deferred = Promises.defer();
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Executor executor = PromiseExecutors.CURRENT_THREAD;
         final Promise<String> promise3 = spy(deferred.promise());
 
@@ -973,7 +786,7 @@ public class PromiseTest {
     public void cancelInterruptsCallbackThread() throws Throwable {
         final CountDownLatch latch1 = new CountDownLatch(1);
         final CountDownLatch latch2 = new CountDownLatch(1);
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         class Closure {
             public Throwable exception;
         }
@@ -1005,7 +818,7 @@ public class PromiseTest {
 
     @Test
     public void cancelChained() throws Throwable {
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         Promise<String> promise1 = deferred.promise();
 
         @SuppressWarnings("unchecked")
@@ -1023,7 +836,7 @@ public class PromiseTest {
 
     @Test
     public void cancelComposedCancelsPromise() throws Throwable {
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         Promise<String> promise1 = deferred.promise();
 
         @SuppressWarnings("unchecked")
@@ -1048,7 +861,7 @@ public class PromiseTest {
 
     @Test
     public void cancelComposedAlreadyComplete() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = promise1.then(PromiseExecutors.CURRENT_THREAD, new OnResolved<String>() {
             @Override
             public void resolved(String result) throws Throwable {
@@ -1081,7 +894,7 @@ public class PromiseTest {
 
     @Test
     public void cancelAfterAlreadyCompleted() throws Throwable {
-        Promise<String> promise = Promise.resolved(SUCCESS1);
+        Promise<String> promise = Promises.resolved(SUCCESS1);
         Promise<Boolean> cancel = promise.cancelAfter(true, 5000, TimeUnit.MILLISECONDS);
 
         assertResolves(false, cancel);
@@ -1097,14 +910,14 @@ public class PromiseTest {
 
     @Test
     public void getNow() throws Throwable {
-        Promise<String> promise = Promise.resolved(SUCCESS1);
+        Promise<String> promise = Promises.resolved(SUCCESS1);
         String result = promise.getNow(SUCCESS2);
         assertEquals(SUCCESS1, result);
     }
 
     @Test
     public void getNowDefaultValue() throws Throwable {
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
         String result = promise.getNow(SUCCESS1);
         assertEquals(SUCCESS1, result);
@@ -1113,13 +926,13 @@ public class PromiseTest {
     @Test(expected = ExecutionException.class)
     public void getNowRejected() throws Throwable {
         Throwable exception = new Throwable();
-        Promise<String> promise = Promise.rejected(exception);
+        Promise<String> promise = Promises.rejected(exception);
         String ignored = promise.getNow(SUCCESS1);
     }
 
     @Test(expected = CancellationException.class)
     public void getNowCancelled() throws Throwable {
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
         promise.cancel(true);
         String ignored = promise.getNow(SUCCESS1);
@@ -1127,7 +940,7 @@ public class PromiseTest {
 
     @Test
     public void getNowInterrupted() throws Throwable {
-        Promise<String> promise = Promise.resolved(SUCCESS1);
+        Promise<String> promise = Promises.resolved(SUCCESS1);
         Promise<String> spy = spy(promise);
 
         InterruptedException exception = new InterruptedException();
@@ -1151,7 +964,7 @@ public class PromiseTest {
 
     @Test(expected = InterruptedException.class)
     public void getInterrupted() throws Throwable {
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
 
         final Thread current = Thread.currentThread();
@@ -1191,7 +1004,7 @@ public class PromiseTest {
 
     @Test(expected = InterruptedException.class)
     public void getTimedInterrupted() throws Throwable {
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
 
         final Thread current = Thread.currentThread();

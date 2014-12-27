@@ -75,7 +75,7 @@ public class PromiseStreamTest {
 
     @Test
     public void from1() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.from(Promise.resolved(SUCCESS1));
+        PromiseStream<String> stream = PromiseStream.from(Promises.resolved(SUCCESS1));
         Promise<List<String>> promise = stream.toList(String.class);
         List<String> result = assertResolves(promise);
         assertEquals(1, result.size());
@@ -85,8 +85,8 @@ public class PromiseStreamTest {
     @Test
     public void from2() throws Throwable {
         PromiseStream<String> stream = PromiseStream.from(
-                Promise.resolved(SUCCESS1),
-                Promise.resolved(SUCCESS2)
+                Promises.resolved(SUCCESS1),
+                Promises.resolved(SUCCESS2)
         );
         Promise<List<String>> promise = stream.toList(String.class);
         List<String> result = assertResolves(promise);
@@ -98,9 +98,9 @@ public class PromiseStreamTest {
     @Test
     public void from3() throws Throwable {
         PromiseStream<String> stream = PromiseStream.from(
-                Promise.resolved(SUCCESS1),
-                Promise.resolved(SUCCESS2),
-                Promise.resolved(SUCCESS3)
+                Promises.resolved(SUCCESS1),
+                Promises.resolved(SUCCESS2),
+                Promises.resolved(SUCCESS3)
         );
         Promise<List<String>> promise = stream.toList(String.class);
         List<String> result = assertResolves(promise);
@@ -113,10 +113,10 @@ public class PromiseStreamTest {
     @Test
     public void from4() throws Throwable {
         PromiseStream<String> stream = PromiseStream.from(
-                Promise.resolved(SUCCESS1),
-                Promise.resolved(SUCCESS2),
-                Promise.resolved(SUCCESS3),
-                Promise.resolved(SUCCESS4)
+                Promises.resolved(SUCCESS1),
+                Promises.resolved(SUCCESS2),
+                Promises.resolved(SUCCESS3),
+                Promises.resolved(SUCCESS4)
         );
         Promise<List<String>> promise = stream.toList(String.class);
         List<String> result = assertResolves(promise);
@@ -130,11 +130,11 @@ public class PromiseStreamTest {
     @Test
     public void from5() throws Throwable {
         PromiseStream<String> stream = PromiseStream.from(
-                Promise.resolved(SUCCESS1),
-                Promise.resolved(SUCCESS2),
-                Promise.resolved(SUCCESS3),
-                Promise.resolved(SUCCESS4),
-                Promise.resolved(SUCCESS5)
+                Promises.resolved(SUCCESS1),
+                Promises.resolved(SUCCESS2),
+                Promises.resolved(SUCCESS3),
+                Promises.resolved(SUCCESS4),
+                Promises.resolved(SUCCESS5)
         );
         Promise<List<String>> promise = stream.toList(String.class);
         List<String> result = assertResolves(promise);
@@ -153,11 +153,11 @@ public class PromiseStreamTest {
     @Test
     @SuppressWarnings("unchecked")
     public void fromArray() throws Throwable {
-        Promise<String>[] array = makeArray(Promise.resolved(SUCCESS1),
-                Promise.resolved(SUCCESS2),
-                Promise.resolved(SUCCESS3),
-                Promise.resolved(SUCCESS4),
-                Promise.resolved(SUCCESS5)
+        Promise<String>[] array = makeArray(Promises.resolved(SUCCESS1),
+                Promises.resolved(SUCCESS2),
+                Promises.resolved(SUCCESS3),
+                Promises.resolved(SUCCESS4),
+                Promises.resolved(SUCCESS5)
         );
 
         PromiseStream<String> stream = PromiseStream.from(array);
@@ -523,8 +523,8 @@ public class PromiseStreamTest {
 
     @Test
     public void filterNulls() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        Promise<String> promise2 = Promise.resolved(null);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise2 = Promises.resolved(null);
         PromiseStream<String> stream = PromiseStream.from(promise1, promise2);
 
         Promise<String[]> promise = stream.filterNulls()
@@ -879,7 +879,7 @@ public class PromiseStreamTest {
         PromiseCollector<String, String, String> collector = mock(PromiseCollector.class);
         when(collector.getAccumulator()).thenReturn(null);
 
-        Promise<String> promise = Promise.resolved(SUCCESS1);
+        Promise<String> promise = Promises.resolved(SUCCESS1);
         PromiseStream<String> stream = PromiseStream.from(promise);
         promise = stream.collect(collector);
 

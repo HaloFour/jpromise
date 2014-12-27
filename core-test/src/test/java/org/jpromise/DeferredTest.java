@@ -10,7 +10,7 @@ public class DeferredTest {
 
     @Test
     public void resolve() throws Exception {
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
         assertFalse(promise.isDone());
         assertTrue(deferred.resolve(SUCCESS1));
@@ -19,7 +19,7 @@ public class DeferredTest {
 
     @Test
     public void reject() throws Exception {
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
         Exception exception = new Exception();
         assertFalse(promise.isDone());
@@ -29,14 +29,14 @@ public class DeferredTest {
 
     @Test
     public void resolveAlreadyCompletedReturnsFalse() throws Exception {
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         deferred.resolve(SUCCESS1);
         assertFalse(deferred.resolve(SUCCESS1));
     }
 
     @Test
     public void rejectAlreadyCompletedReturnsFalse() throws Exception {
-        Deferred<String> deferred = Promise.defer();
+        Deferred<String> deferred = Promises.defer();
         deferred.resolve(SUCCESS1);
         Exception exception = new Exception();
         assertFalse(deferred.reject(exception));

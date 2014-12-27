@@ -14,7 +14,7 @@ public class AsyncLocalTest {
         local.set("SUCCESS1");
         final Thread thread = Thread.currentThread();
 
-        Promise<String> promise = Promise.resolved("SUCCESS1");
+        Promise<String> promise = Promises.resolved("SUCCESS1");
         promise.then(PromiseExecutors.NEW_THREAD, new OnResolved<String>() {
             @Override
             public void resolved(String result) throws Throwable {

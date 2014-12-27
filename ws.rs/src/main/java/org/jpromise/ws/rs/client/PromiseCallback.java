@@ -2,6 +2,7 @@ package org.jpromise.ws.rs.client;
 
 import org.jpromise.Deferred;
 import org.jpromise.Promise;
+import org.jpromise.Promises;
 
 import javax.ws.rs.client.InvocationCallback;
 
@@ -11,7 +12,7 @@ import javax.ws.rs.client.InvocationCallback;
  *                   or the anticipated response entity type.
  */
 public abstract class PromiseCallback<RESPONSE> implements InvocationCallback<RESPONSE> {
-    private final Deferred<RESPONSE> deferred = Promise.defer();
+    private final Deferred<RESPONSE> deferred = Promises.defer();
     /**
      * The {@link org.jpromise.Promise} representing the completion of the asynchronous process.
      */

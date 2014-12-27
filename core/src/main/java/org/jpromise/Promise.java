@@ -18,37 +18,31 @@ import static org.jpromise.util.MessageUtil.mustNotBeNull;
  * task completed normally or was cancelled. Once a computation has completed, the computation cannot be cancelled.
  * @param <V> The result type of the promise.
  */
-public abstract class Promise<V> implements Future<V> {
+public interface Promise<V> extends Future<V> {
     /**
      * Gets the current state of the promise.
      * @see org.jpromise.PromiseState
      * @return The current state of the promise.
      */
-    public abstract PromiseState state();
+    PromiseState state();
 
     /**
      * Gets whether the promise has completed.
      * @return {@code true} if the promise has completed; otherwise, {@code false}.
      */
-    public boolean isDone() {
-        return this.state() != PromiseState.PENDING;
-    }
+    boolean isDone();
 
     /**
      * Gets whether the promise has resolved successfully.
      * @return {@code true} if the promise has resolved successfully; otherwise, {@code false}.
      */
-    public boolean isResolved() {
-        return this.state() == PromiseState.RESOLVED;
-    }
+    boolean isResolved();
 
     /**
      * Gets whether the promise has been rejected.
      * @return {@code true} if the promise has been rejected; otherwise, {@code false}.
      */
-    public boolean isRejected() {
-        return this.state() == PromiseState.REJECTED;
-    }
+    boolean isRejected();
 
     /**
      * Returns the result of the promise if it has resolved successfully or throws an exception if the promise
@@ -58,24 +52,7 @@ public abstract class Promise<V> implements Future<V> {
      * @throws ExecutionException The promise has rejected.
      * @throws CancellationException The promise has been cancelled.
      */
-    public V getNow(V defaultValue) throws ExecutionException, CancellationException {
-        if (!isDone()) {
-            return defaultValue;
-        }
-        try {
-            return this.get();
-        }
-        catch (ExecutionException exception) {
-            Throwable cause = exception.getCause();
-            if (cause instanceof CancellationException) {
-                throw (CancellationException)cause;
-            }
-            throw exception;
-        }
-        catch (InterruptedException exception) {
-            throw new ExecutionException(exception);
-        }
-    }
+    V getNow(V defaultValue) throws ExecutionException, CancellationException;
 
     /**
      * Cancels the promise after the specified timeout period.
@@ -85,41 +62,23 @@ public abstract class Promise<V> implements Future<V> {
      * @param timeUnit The unit of time for the {@code timeout} argument.
      * @return A promise that will indicate if this promise was successfully cancelled.
      */
-    public Promise<Boolean> cancelAfter(final boolean mayInterruptIfRunning, long timeout, TimeUnit timeUnit) {
-        if (isDone()) {
-            return Promise.resolved(false);
-        }
-        final Deferred<Boolean> deferred = Promise.defer();
-        final Timer timer = new Timer(true);
-        final AtomicBoolean flag = new AtomicBoolean();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (flag.compareAndSet(false, true)) {
-                    deferred.resolve(Promise.this.cancel(mayInterruptIfRunning));
-                }
-            }
-        }, timeUnit.toMillis(timeout));
-        this.whenCompleted(new OnCompleted<V>() {
-            @Override
-            public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
-                if (flag.compareAndSet(false, true)) {
-                    timer.cancel();
-                    deferred.resolve(false);
-                }
-            }
-        });
-        return deferred.promise();
-    }
+    Promise<Boolean> cancelAfter(final boolean mayInterruptIfRunning, long timeout, TimeUnit timeUnit);
 
     /**
      * Registers an operation that is to be performed when the promise is successfully resolved.
      * @param action The operation that is performed when the promise is successfully resolved accepting the result value.
      * @return A new promise that will be resolved with the same value when the operation has completed.
      */
-    public Promise<V> then(OnResolved<? super V> action) {
-        return this.then(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
-    }
+    Promise<V> then(OnResolved<? super V> action);
+
+    /**
+     * Registers an operation that is to be performed when the promise is successfully resolved using the
+     * specified {@link java.util.concurrent.Executor}.
+     * @param executor The executor that will be used to execute the operation.
+     * @param action The operation that is performed when the promise is successfully resolved accepting the result value.
+     * @return A new promise that will be resolved with the same value when the operation has completed.
+     */
+    Promise<V> then(Executor executor, OnResolved<? super V> action);
 
     /**
      * Registers an operation that is to be performed when the promise is successfully resolved that transforms the
@@ -129,160 +88,7 @@ public abstract class Promise<V> implements Future<V> {
      * @param <V_APPLIED> The type of the transformed value.
      * @return A new promise that will be resolved when the operation has completed transforming the result.
      */
-    public <V_APPLIED> Promise<V_APPLIED> thenApply(OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
-        return this.thenApply(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, function);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is successfully resolved that composed the result
-     * into another value using another asynchronous operation.
-     * @param function The operation that is performed when the promise is successfully resolved accepting the result
-     *                 value and composing the result into a different value asynchronously.
-     * @param <V_COMPOSED> The type of the composed value.
-     * @return A new promise that will complete propagating the result of the composed operation.
-     */
-    public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
-        return this.thenCompose(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, function);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is rejected.
-     * @param action The operation that is performed when the promise is rejected accepting the exception that caused
-     *               the rejection.
-     * @return A new promise that will be rejected with the same exception when the operation has completed.
-     */
-    public Promise<V> whenRejected(OnRejected<Throwable> action) {
-        return this.whenRejected(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is rejected with the specified exception class.
-     * @param exceptionClass The minimum class of which the rejected promise exception must be for the operation
-     *                       to be performed.
-     * @param action The operation that is performed when the promise is rejected with an exception that is of or
-     *               subclasses the specified {@code exceptionClass}, accepting the exception that caused the rejection.
-     * @param <E> The type of the exception.
-     * @return A new promise that will be rejected with the same exception when the operation has completed.
-     */
-    public <E extends Throwable> Promise<V> whenRejected(Class<E> exceptionClass, OnRejected<? super E> action) {
-        return this.whenRejected(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is rejected using the specified
-     * {@link java.util.concurrent.Executor} to execute the operation.
-     * @param executor The executor that will be used to execute the operation.
-     * @param action The operation that is performed when the promise is rejected accepting the exception that caused
-     *               the rejection.
-     * @return A new promise that will be rejected with the same exception when the operation has completed.
-     */
-    public Promise<V> whenRejected(Executor executor, OnRejected<Throwable> action) {
-        return this.whenRejected(Throwable.class, executor, action);
-    }
-
-    /**
-     * Specifies a successful result to be used to resolve the returned promise if the current promise is rejected.
-     * @param result The value to use as a successful result.
-     * @return A new promise that will be resolved with the {@code result} if the current promise is rejected.
-     */
-    public Promise<V> handleWith(V result) {
-        return this.handleWith(Throwable.class, result);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is rejected that handles the rejection
-     * exception and returns a successful result.
-     * @param handler The operation that is performed when the promise is rejected that handles the rejection
-     *                exception and returns a successful result.
-     * @return A new promise that will be resolved with the result of the operation if the current promise is
-     *         rejected.
-     */
-    public Promise<V> handleWith(OnRejectedHandler<Throwable, ? extends V> handler) {
-        return this.handleWith(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, handler);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is rejected that handles the rejection
-     * exception and returns a successful result using the specified {@link java.util.concurrent.Executor}.
-     * @param executor The executor that will be used to execute the operation.
-     * @param handler The operation that is performed when the promise is rejected that handles the rejection
-     *                exception and returns a successful result.
-     * @return A new promise that will be resolved with the result of the operation if the current promise is
-     *         rejected.
-     */
-    public Promise<V> handleWith(Executor executor, OnRejectedHandler<Throwable, ? extends V> handler) {
-        return this.handleWith(Throwable.class, executor, handler);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is rejected with the specified exception class
-     * that handles the rejection exception and returns a successful result.
-     * @param exceptionClass The minimum class of which the rejected promise exception must be for the operation
-     *                       to be performed.
-     * @param handler The operation that is performed when the promise is rejected that handles the rejection
-     *                exception and returns a successful result.
-     * @param <E> The type of the exception.
-     * @return A new promise that will be resolved with the result of the operation if the current promise is
-     *         rejected.
-     */
-    public <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, OnRejectedHandler<? super E, ? extends V> handler) {
-        return this.handleWith(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, handler);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is rejected that handles the rejection
-     * exception and returns a fallback operation.
-     * @param fallback The operation that is performed when the promise is rejected that handles the rejection
-     *                exception and returns a fallback operation.
-     * @return A new promise that will complete propagating the result of the fallback operation.
-     */
-    public Promise<V> fallbackWith(OnRejectedHandler<Throwable, ? extends Future<V>> fallback) {
-        return this.fallbackWith(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, fallback);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is rejected that handles the rejection
-     * exception and returns a fallback operation using the specified {@link java.util.concurrent.Executor}.
-     * @param executor The executor that will be used to execute the operation.
-     * @param fallback The operation that is performed when the promise is rejected that handles the rejection
-     *                exception and returns a fallback operation.
-     * @return A new promise that will complete propagating the result of the fallback operation.
-     */
-    public Promise<V> fallbackWith(Executor executor, OnRejectedHandler<Throwable, ? extends Future<V>> fallback) {
-        return this.fallbackWith(Throwable.class, executor, fallback);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is rejected with the specified exception class
-     * that handles the rejection exception and returns a successful result.
-     * @param exceptionClass The minimum class of which the rejected promise exception must be for the operation
-     *                       to be performed.
-     * @param fallback The operation that is performed when the promise is rejected that handles the rejection
-     *                exception and returns a fallback operation.
-     * @return A new promise that will complete propagating the result of the fallback operation.
-     */
-    public <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, OnRejectedHandler<? super E, ? extends Future<V>> fallback) {
-        return this.fallbackWith(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, fallback);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is completed.
-     * @param action The operation that is performed when the promise is completed.
-     * @return A new promise that will be completed with the same result or exception as the current promise when
-     * the callback operation has completed.
-     */
-    public Promise<V> whenCompleted(OnCompleted<V> action) {
-        return this.whenCompleted(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
-    }
-
-    /**
-     * Registers an operation that is to be performed when the promise is successfully resolved using the
-     * specified {@link java.util.concurrent.Executor}.
-     * @param executor The executor that will be used to execute the operation.
-     * @param action The operation that is performed when the promise is successfully resolved accepting the result value.
-     * @return A new promise that will be resolved with the same value when the operation has completed.
-     */
-    public abstract Promise<V> then(Executor executor, OnResolved<? super V> action);
+    <V_APPLIED> Promise<V_APPLIED> thenApply(OnResolvedFunction<? super V, ? extends V_APPLIED> function);
 
     /**
      * Registers an operation that is to be performed when the promise is successfully resolved that transforms the
@@ -293,7 +99,17 @@ public abstract class Promise<V> implements Future<V> {
      * @param <V_APPLIED> The type of the transformed value.
      * @return A new promise that will be resolved when the operation has completed transforming the result.
      */
-    public abstract <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, OnResolvedFunction<? super V, ? extends V_APPLIED> function);
+    <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, OnResolvedFunction<? super V, ? extends V_APPLIED> function);
+
+    /**
+     * Registers an operation that is to be performed when the promise is successfully resolved that composed the result
+     * into another value using another asynchronous operation.
+     * @param function The operation that is performed when the promise is successfully resolved accepting the result
+     *                 value and composing the result into a different value asynchronously.
+     * @param <V_COMPOSED> The type of the composed value.
+     * @return A new promise that will complete propagating the result of the composed operation.
+     */
+    <V_COMPOSED> Promise<V_COMPOSED> thenCompose(OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function);
 
     /**
      * Registers an operation that is to be performed when the promise is successfully resolved that composed the result
@@ -304,7 +120,36 @@ public abstract class Promise<V> implements Future<V> {
      * @param <V_COMPOSED> The type of the composed value.
      * @return A new promise that will complete propagating the result of the composed operation.
      */
-    public abstract <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function);
+    <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function);
+
+    /**
+     * Registers an operation that is to be performed when the promise is rejected.
+     * @param action The operation that is performed when the promise is rejected accepting the exception that caused
+     *               the rejection.
+     * @return A new promise that will be rejected with the same exception when the operation has completed.
+     */
+    Promise<V> whenRejected(OnRejected<Throwable> action);
+
+    /**
+     * Registers an operation that is to be performed when the promise is rejected with the specified exception class.
+     * @param exceptionClass The minimum class of which the rejected promise exception must be for the operation
+     *                       to be performed.
+     * @param action The operation that is performed when the promise is rejected with an exception that is of or
+     *               subclasses the specified {@code exceptionClass}, accepting the exception that caused the rejection.
+     * @param <E> The type of the exception.
+     * @return A new promise that will be rejected with the same exception when the operation has completed.
+     */
+    <E extends Throwable> Promise<V> whenRejected(Class<E> exceptionClass, OnRejected<? super E> action);
+
+    /**
+     * Registers an operation that is to be performed when the promise is rejected using the specified
+     * {@link java.util.concurrent.Executor} to execute the operation.
+     * @param executor The executor that will be used to execute the operation.
+     * @param action The operation that is performed when the promise is rejected accepting the exception that caused
+     *               the rejection.
+     * @return A new promise that will be rejected with the same exception when the operation has completed.
+     */
+    Promise<V> whenRejected(Executor executor, OnRejected<Throwable> action);
 
     /**
      * Registers an operation that is to be performed when the promise is rejected with the specified exception class
@@ -317,7 +162,14 @@ public abstract class Promise<V> implements Future<V> {
      * @param <E> The type of the exception.
      * @return A new promise that will be rejected with the same exception when the operation has completed.
      */
-    public abstract <E extends Throwable> Promise<V> whenRejected(Class<E> exceptionClass, Executor executor, OnRejected<? super E> action);
+    <E extends Throwable> Promise<V> whenRejected(Class<E> exceptionClass, Executor executor, OnRejected<? super E> action);
+
+    /**
+     * Specifies a successful result to be used to resolve the returned promise if the current promise is rejected.
+     * @param result The value to use as a successful result.
+     * @return A new promise that will be resolved with the {@code result} if the current promise is rejected.
+     */
+    Promise<V> handleWith(V result);
 
     /**
      * Specifies a successful result to be used to resolve the returned promise if the current promise is rejected
@@ -327,7 +179,41 @@ public abstract class Promise<V> implements Future<V> {
      * @param result The value to use as a successful result.
      * @return A new promise that will be resolved with the {@code result} if the current promise is rejected.
      */
-    public abstract <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, V result);
+    <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, V result);
+
+    /**
+     * Registers an operation that is to be performed when the promise is rejected that handles the rejection
+     * exception and returns a successful result.
+     * @param handler The operation that is performed when the promise is rejected that handles the rejection
+     *                exception and returns a successful result.
+     * @return A new promise that will be resolved with the result of the operation if the current promise is
+     *         rejected.
+     */
+    Promise<V> handleWith(OnRejectedHandler<Throwable, ? extends V> handler);
+
+    /**
+     * Registers an operation that is to be performed when the promise is rejected that handles the rejection
+     * exception and returns a successful result using the specified {@link java.util.concurrent.Executor}.
+     * @param executor The executor that will be used to execute the operation.
+     * @param handler The operation that is performed when the promise is rejected that handles the rejection
+     *                exception and returns a successful result.
+     * @return A new promise that will be resolved with the result of the operation if the current promise is
+     *         rejected.
+     */
+    Promise<V> handleWith(Executor executor, OnRejectedHandler<Throwable, ? extends V> handler);
+
+    /**
+     * Registers an operation that is to be performed when the promise is rejected with the specified exception class
+     * that handles the rejection exception and returns a successful result.
+     * @param exceptionClass The minimum class of which the rejected promise exception must be for the operation
+     *                       to be performed.
+     * @param handler The operation that is performed when the promise is rejected that handles the rejection
+     *                exception and returns a successful result.
+     * @param <E> The type of the exception.
+     * @return A new promise that will be resolved with the result of the operation if the current promise is
+     *         rejected.
+     */
+    <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, OnRejectedHandler<? super E, ? extends V> handler);
 
     /**
      * Registers an operation that is to be performed when the promise is rejected with the specified exception class
@@ -342,7 +228,37 @@ public abstract class Promise<V> implements Future<V> {
      * @return A new promise that will be resolved with the result of the operation if the current promise is
      *         rejected.
      */
-    public abstract <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, Executor executor, OnRejectedHandler<? super E, ? extends V> handler);
+    <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, Executor executor, OnRejectedHandler<? super E, ? extends V> handler);
+
+    /**
+     * Registers an operation that is to be performed when the promise is rejected that handles the rejection
+     * exception and returns a fallback operation.
+     * @param fallback The operation that is performed when the promise is rejected that handles the rejection
+     *                exception and returns a fallback operation.
+     * @return A new promise that will complete propagating the result of the fallback operation.
+     */
+    Promise<V> fallbackWith(OnRejectedHandler<Throwable, ? extends Future<V>> fallback);
+
+    /**
+     * Registers an operation that is to be performed when the promise is rejected that handles the rejection
+     * exception and returns a fallback operation using the specified {@link java.util.concurrent.Executor}.
+     * @param executor The executor that will be used to execute the operation.
+     * @param fallback The operation that is performed when the promise is rejected that handles the rejection
+     *                exception and returns a fallback operation.
+     * @return A new promise that will complete propagating the result of the fallback operation.
+     */
+    Promise<V> fallbackWith(Executor executor, OnRejectedHandler<Throwable, ? extends Future<V>> fallback);
+
+    /**
+     * Registers an operation that is to be performed when the promise is rejected with the specified exception class
+     * that handles the rejection exception and returns a successful result.
+     * @param exceptionClass The minimum class of which the rejected promise exception must be for the operation
+     *                       to be performed.
+     * @param fallback The operation that is performed when the promise is rejected that handles the rejection
+     *                exception and returns a fallback operation.
+     * @return A new promise that will complete propagating the result of the fallback operation.
+     */
+    <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, OnRejectedHandler<? super E, ? extends Future<V>> fallback);
 
     /**
      * Registers an operation that is to be performed when the promise is rejected with the specified exception class
@@ -355,7 +271,15 @@ public abstract class Promise<V> implements Future<V> {
      *                exception and returns a fallback operation.
      * @return A new promise that will complete propagating the result of the fallback operation.
      */
-    public abstract <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, Executor executor, OnRejectedHandler<? super E, ? extends Future<V>> fallback);
+    <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, Executor executor, OnRejectedHandler<? super E, ? extends Future<V>> fallback);
+
+    /**
+     * Registers an operation that is to be performed when the promise is completed.
+     * @param action The operation that is performed when the promise is completed.
+     * @return A new promise that will be completed with the same result or exception as the current promise when
+     * the callback operation has completed.
+     */
+    Promise<V> whenCompleted(OnCompleted<V> action);
 
     /**
      * Registers an operation that is to be performed when the promise is completed using the specified
@@ -365,155 +289,5 @@ public abstract class Promise<V> implements Future<V> {
      * @return A new promise that will be completed with the same result or exception as the current promise when
      * the callback operation has completed.
      */
-    public abstract Promise<V> whenCompleted(Executor executor, OnCompleted<V> action);
-
-    /**
-     * Creates a new {@link org.jpromise.Deferred} operation that can be used to generate a {@link org.jpromise.Promise}
-     * that is eventually completed.
-     * @param <V> The type of the result of the promise.
-     * @return The deferred operation.
-     */
-    public static <V> Deferred<V> defer() {
-        return new DeferredPromise<V>();
-    }
-
-    /**
-     * Creates a new {@link org.jpromise.Deferred} operation that can be used to generate a {@link org.jpromise.Promise}
-     * that is eventually completed.  This method can be used to aid in generic type inference with the Java compiler.
-     * @param resultClass The class representing the result type of the promise.
-     * @param <V> The type of the result of the promise.
-     * @return The deferred operation.
-     */
-    public static <V> Deferred<V> defer(Class<V> resultClass) {
-        return new DeferredPromise<V>();
-    }
-
-    /**
-     * Returns a new {@link org.jpromise.Promise} that is already resolved.
-     * @return A resolved promise.
-     */
-    public static Promise<Void> resolved() {
-        return resolved(null);
-    }
-
-    /**
-     * Returns a new {@link org.jpromise.Promise} that is already resolved with the specified result.
-     * @param result The result of the returned promise.
-     * @param <V> The type of the result of the promise.
-     * @return A resolved promise.
-     */
-    public static <V> Promise<V> resolved(V result) {
-        Deferred<V> deferred = defer();
-        deferred.resolve(result);
-        return deferred.promise();
-    }
-
-    /**
-     * Returns a new {@link org.jpromise.Promise} that is already rejected with the specified exception.
-     * @param exception The exception of the returned rejected promise.
-     * @param <V> The type of the result of the promise.
-     * @return A rejected promise.
-     */
-    public static <V> Promise<V> rejected(Throwable exception) {
-        Deferred<V> deferred = defer();
-        deferred.reject(exception);
-        return deferred.promise();
-    }
-
-    /**
-     * Returns a new {@link org.jpromise.Promise} that is already rejected with the specified exception.  This
-     * method can be used to aid in generic type inference with the Java compiler.
-     * @param resultClass The class of the result of the promise.
-     * @param exception The exception of the returned rejected promise.
-     * @param <V> The type of the result of the promise.
-     * @return A rejected promise.
-     */
-    public static <V> Promise<V> rejected(Class<V> resultClass, Throwable exception) {
-        return rejected(exception);
-    }
-
-    /**
-     * Returns a new {@link org.jpromise.Promise} that will be resolved when the timeout expires.
-     * @param timeout The amount of time to wait.
-     * @param timeUnit The time unit of the {@code timeout} argument.
-     * @return A promise that will be resolved when the timeout expires.
-     */
-    public static Promise<Void> delay(long timeout, TimeUnit timeUnit) {
-        if (timeUnit == null) throw new IllegalArgumentException(mustNotBeNull("timeUnit"));
-        Timer timer = new Timer();
-        final Deferred<Void> deferred = Promise.defer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                deferred.resolve(null);
-            }
-        }, timeUnit.toMillis(timeout));
-        return deferred.promise();
-    }
-
-    /**
-     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance.
-     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
-     * @param <V> The result type of the future.
-     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
-     */
-    public static <V> Promise<V> fromFuture(Future<V> future) {
-        return fromFuture(PromiseExecutors.DEFAULT_FUTURE_EXECUTOR, future);
-    }
-
-    /**
-     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance
-     * using the specified {@link java.util.concurrent.Executor} to block on the operation if it is not already
-     * completed.
-     * @param executor The {@link java.util.concurrent.Executor} which will be used to block on the {@code future}
-     *                 until it is completed.
-     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
-     * @param <V> The result type of the future.
-     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
-     */
-    public static <V> Promise<V> fromFuture(Executor executor, Future<V> future) {
-        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
-        if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
-        if (future instanceof Promise) {
-            return (Promise<V>)future;
-        }
-        return new FuturePromise<V>(executor, future);
-    }
-
-    /**
-     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance
-     * that will wait for up until the specified duration until its completion.
-     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
-     * @param timeout The maximum amount of time to wait for the {@code future} to complete.
-     * @param timeUnit The unit of time for the {@code timeout} argument.
-     * @param <V> The result type of the future.
-     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
-     */
-    public static <V> Promise<V> fromFuture(Future<V> future, long timeout, TimeUnit timeUnit) {
-        return fromFuture(PromiseExecutors.DEFAULT_FUTURE_EXECUTOR, future, timeout, timeUnit);
-    }
-
-    /**
-     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance
-     * that will wait for up until the specified duration until its completion using the specified
-     * {@link java.util.concurrent.Executor} to block on the operation if it is not already completed.
-     * @param executor The {@link java.util.concurrent.Executor} which will be used to block on the {@code future}
-     *                 until it is completed.
-     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
-     * @param timeout The maximum amount of time to wait for the {@code future} to complete.
-     * @param timeUnit The unit of time for the {@code timeout} argument.
-     * @param <V> The result type of the future.
-     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
-     */
-    public static <V> Promise<V> fromFuture(Executor executor, Future<V> future, long timeout, TimeUnit timeUnit) {
-        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
-        if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
-        if (timeUnit == null) throw new IllegalArgumentException(mustNotBeNull("timeUnit"));
-        if (future instanceof Promise) {
-            Promise<V> promise = (Promise<V>)future;
-            promise.cancelAfter(true, timeout, timeUnit);
-            return promise;
-        }
-        return new FuturePromise<V>(executor, future, timeout, timeUnit);
-    }
+    Promise<V> whenCompleted(Executor executor, OnCompleted<V> action);
 }

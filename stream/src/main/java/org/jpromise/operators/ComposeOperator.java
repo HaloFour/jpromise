@@ -2,6 +2,7 @@ package org.jpromise.operators;
 
 import org.jpromise.Promise;
 import org.jpromise.PromiseManager;
+import org.jpromise.Promises;
 import org.jpromise.functions.OnCompleted;
 import org.jpromise.functions.OnResolvedFunction;
 
@@ -24,7 +25,7 @@ public class ComposeOperator<V_IN, V_COMPOSED> extends BoundedStreamOperator<V_I
             subscriber.resolved(null);
             return;
         }
-        Promise<V_COMPOSED> promise = Promise.fromFuture(future);
+        Promise<V_COMPOSED> promise = Promises.fromFuture(future);
         promise.whenCompleted(new OnCompleted<V_COMPOSED>() {
             @Override
             public void completed(Promise<V_COMPOSED> promise, V_COMPOSED result, Throwable exception) throws Throwable {

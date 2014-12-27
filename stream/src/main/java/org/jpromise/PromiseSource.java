@@ -19,7 +19,7 @@ class PromiseSource<V> extends PromiseStream<V> {
     public Promise<Void> subscribe(final PromiseSubscriber<? super V> subscriber) {
         if (promises == null) {
             subscriber.complete();
-            return Promise.resolved();
+            return Promises.resolved();
         }
         return PromiseManager
                 .whenAllCompleted(promises, new OnCompleted<V>() {

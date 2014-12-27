@@ -2,6 +2,7 @@ package org.jpromise.patterns;
 
 import org.jpromise.Promise;
 import org.jpromise.PromiseManager;
+import org.jpromise.Promises;
 import org.jpromise.functions.*;
 import org.junit.Test;
 
@@ -92,7 +93,7 @@ public class PatternTest {
 
     @Test
     public void joinWithNullPromise() throws Throwable {
-        Promise<Pattern2<String, String>> promise = Pattern.join(Promise.resolved(SUCCESS1), null);
+        Promise<Pattern2<String, String>> promise = Pattern.join(Promises.resolved(SUCCESS1), null);
         assertResolves(Pattern.<String, String>of(SUCCESS1, null), promise);
     }
 
@@ -130,7 +131,7 @@ public class PatternTest {
 
     @Test
     public void spread2WithNullPromise() throws Throwable {
-        Promise<Pattern2<String, String>> promise = Promise.resolved(null);
+        Promise<Pattern2<String, String>> promise = Promises.resolved(null);
         promise.then(Pattern.spread2(new OnResolved2<String, String>() {
             @Override
             public void resolved(String item1, String item2) throws Throwable {
@@ -154,7 +155,7 @@ public class PatternTest {
 
     @Test
     public void spread3WithNullPromise() throws Throwable {
-        Promise<Pattern3<String, String, String>> promise = Promise.resolved(null);
+        Promise<Pattern3<String, String, String>> promise = Promises.resolved(null);
         promise.then(Pattern.spread3(new OnResolved3<String, String, String>() {
             @Override
             public void resolved(String item1, String item2, String item3) throws Throwable {
@@ -180,7 +181,7 @@ public class PatternTest {
 
     @Test
     public void spread4WithNullPromise() throws Throwable {
-        Promise<Pattern4<String, String, String, String>> promise = Promise.resolved(null);
+        Promise<Pattern4<String, String, String, String>> promise = Promises.resolved(null);
         promise.then(Pattern.spread4(new OnResolved4<String, String, String, String>() {
             @Override
             public void resolved(String item1, String item2, String item3, String item4) throws Throwable {
@@ -208,7 +209,7 @@ public class PatternTest {
 
     @Test
     public void spread5WithNullPromise() throws Throwable {
-        Promise<Pattern5<String, String, String, String, String>> promise = Promise.resolved(null);
+        Promise<Pattern5<String, String, String, String, String>> promise = Promises.resolved(null);
         promise.then(Pattern.spread5(new OnResolved5<String, String, String, String, String>() {
             @Override
             public void resolved(String item1, String item2, String item3, String item4, String item5) throws Throwable {
@@ -237,7 +238,7 @@ public class PatternTest {
 
     @Test
     public void apply2WithNullPromise() throws Throwable {
-        Promise<Pattern2<String, String>> promise1 = Promise.resolved(null);
+        Promise<Pattern2<String, String>> promise1 = Promises.resolved(null);
         Promise<String> promise2 = promise1.thenApply(Pattern.apply2(new OnResolvedFunction2<String, String, String>() {
             @Override
             public String resolved(String item1, String item2) throws Throwable {
@@ -267,7 +268,7 @@ public class PatternTest {
 
     @Test
     public void apply3WithNullPromise() throws Throwable {
-        Promise<Pattern3<String, String, String>> promise1 = Promise.resolved(null);
+        Promise<Pattern3<String, String, String>> promise1 = Promises.resolved(null);
         Promise<String> promise2 = promise1.thenApply(Pattern.apply3(new OnResolvedFunction3<String, String, String, String>() {
             @Override
             public String resolved(String item1, String item2, String item3) throws Throwable {
@@ -299,7 +300,7 @@ public class PatternTest {
 
     @Test
     public void apply4WithNullPromise() throws Throwable {
-        Promise<Pattern4<String, String, String, String>> promise1 = Promise.resolved(null);
+        Promise<Pattern4<String, String, String, String>> promise1 = Promises.resolved(null);
         Promise<String> promise2 = promise1.thenApply(Pattern.apply4(new OnResolvedFunction4<String, String, String, String, String>() {
             @Override
             public String resolved(String item1, String item2, String item3, String item4) throws Throwable {
@@ -333,7 +334,7 @@ public class PatternTest {
 
     @Test
     public void apply5WithNullPromise() throws Throwable {
-        Promise<Pattern5<String, String, String, String, String>> promise1 = Promise.resolved(null);
+        Promise<Pattern5<String, String, String, String, String>> promise1 = Promises.resolved(null);
         Promise<String> promise2 = promise1.thenApply(Pattern.apply5(new OnResolvedFunction5<String, String, String, String, String, String>() {
             @Override
             public String resolved(String item1, String item2, String item3, String item4, String item5) throws Throwable {

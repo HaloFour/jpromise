@@ -62,7 +62,7 @@ public abstract class PromiseStream<V> {
     }
 
     public PromiseStream<V> takeUntil(long timeout, TimeUnit timeUnit) {
-        return takeUntil(Promise.delay(timeout, timeUnit));
+        return takeUntil(Promises.delay(timeout, timeUnit));
     }
 
     public <V2> PromiseStream<V> takeUntil(Promise<V2> promise) {

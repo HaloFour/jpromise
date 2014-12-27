@@ -47,10 +47,10 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAllComplete() throws Throwable {
-        final Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        final Promise<String> promise2 = Promise.resolved(SUCCESS2);
-        final Promise<String> promise3 = Promise.resolved(SUCCESS3);
-        final Promise<String> promise4 = Promise.resolved(SUCCESS4);
+        final Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        final Promise<String> promise2 = Promises.resolved(SUCCESS2);
+        final Promise<String> promise3 = Promises.resolved(SUCCESS3);
+        final Promise<String> promise4 = Promises.resolved(SUCCESS4);
 
         Promise<Void> promise = PromiseManager.whenAllCompleted(promise1, promise2, promise3, promise4)
                 .then(new OnResolved<Void>() {
@@ -93,7 +93,7 @@ public class PromiseManagerTest {
         final Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
         final Promise<String> promise2 = resolveAfter(SUCCESS2, 10);
         final Promise<String> promise3 = resolveAfter(SUCCESS3, 10);
-        final Promise<String> promise4 = Promise.rejected(exception);
+        final Promise<String> promise4 = Promises.rejected(exception);
 
         Promise<Void> promise = PromiseManager.whenAllCompleted(promise1, promise2, promise3, promise4)
                 .then(new OnResolved<Void>() {
@@ -137,9 +137,9 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAllCompleteListContainsNull() throws Throwable {
-        final Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        final Promise<String> promise2 = Promise.resolved(SUCCESS2);
-        final Promise<String> promise3 = Promise.resolved(SUCCESS3);
+        final Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        final Promise<String> promise2 = Promises.resolved(SUCCESS2);
+        final Promise<String> promise3 = Promises.resolved(SUCCESS3);
         final Promise<String> promise4 = null;
 
         Promise<Void> promise = PromiseManager.whenAllCompleted(promise1, promise2, promise3, promise4)
@@ -158,10 +158,10 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAllResolved() throws Throwable {
-        final Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        final Promise<String> promise2 = Promise.resolved(SUCCESS2);
-        final Promise<String> promise3 = Promise.resolved(SUCCESS3);
-        final Promise<String> promise4 = Promise.resolved(SUCCESS4);
+        final Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        final Promise<String> promise2 = Promises.resolved(SUCCESS2);
+        final Promise<String> promise3 = Promises.resolved(SUCCESS3);
+        final Promise<String> promise4 = Promises.resolved(SUCCESS4);
 
         Promise<Void> promise = PromiseManager.whenAllResolved(promise1, promise2, promise3, promise4)
                 .then(new OnResolved<Void>() {
@@ -182,10 +182,10 @@ public class PromiseManagerTest {
         @SuppressWarnings("unchecked")
         OnResolved<String> callback = (OnResolved<String>)mock(OnResolved.class);
 
-        final Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        final Promise<String> promise2 = Promise.resolved(SUCCESS2);
-        final Promise<String> promise3 = Promise.resolved(SUCCESS3);
-        final Promise<String> promise4 = Promise.resolved(SUCCESS4);
+        final Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        final Promise<String> promise2 = Promises.resolved(SUCCESS2);
+        final Promise<String> promise3 = Promises.resolved(SUCCESS3);
+        final Promise<String> promise4 = Promises.resolved(SUCCESS4);
 
         List<Promise<String>> promises = new ArrayList<Promise<String>>(4);
         promises.add(promise1);
@@ -239,7 +239,7 @@ public class PromiseManagerTest {
         final Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
         final Promise<String> promise2 = resolveAfter(SUCCESS2, 10);
         final Promise<String> promise3 = resolveAfter(SUCCESS3, 10);
-        final Promise<String> promise4 = Promise.rejected(exception);
+        final Promise<String> promise4 = Promises.rejected(exception);
 
         Promise<Void> promise = PromiseManager.whenAllResolved(promise1, promise2, promise3, promise4);
 
@@ -273,9 +273,9 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAllResolvedListContainsNull() throws Throwable {
-        final Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        final Promise<String> promise2 = Promise.resolved(SUCCESS2);
-        final Promise<String> promise3 = Promise.resolved(SUCCESS3);
+        final Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        final Promise<String> promise2 = Promises.resolved(SUCCESS2);
+        final Promise<String> promise3 = Promises.resolved(SUCCESS3);
         final Promise<String> promise4 = null;
 
         Promise<Void> promise = PromiseManager.whenAllResolved(promise1, promise2, promise3, promise4)
@@ -294,7 +294,7 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAnyComplete2() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
@@ -306,7 +306,7 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAnyComplete3() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
         Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
 
@@ -320,7 +320,7 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAnyComplete4() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
         Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
         Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
@@ -336,7 +336,7 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAnyComplete5() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
         Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
         Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
@@ -355,7 +355,7 @@ public class PromiseManagerTest {
     @Test
     @SuppressWarnings("unchecked")
     public void whenAnyCompleteArray() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
         Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
         Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
@@ -390,7 +390,7 @@ public class PromiseManagerTest {
     @Test
     public void whenAnyCompleteRejects() throws Throwable {
         Throwable exception = new Throwable();
-        Promise<String> promise1 = Promise.rejected(exception);
+        Promise<String> promise1 = Promises.rejected(exception);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
@@ -404,7 +404,7 @@ public class PromiseManagerTest {
     public void whenAnyCompleteRejectedAfterResolved() throws Throwable {
         Throwable exception = new Throwable();
         Promise<String> promise1 = rejectAfter(exception, 100);
-        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        Promise<String> promise2 = Promises.resolved(SUCCESS2);
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
 
@@ -442,7 +442,7 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAnyResolved2() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
 
         Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2);
@@ -454,7 +454,7 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAnyResolved3() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
         Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
 
@@ -468,7 +468,7 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAnyResolved4() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
         Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
         Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
@@ -484,7 +484,7 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAnyResolved5() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
         Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
         Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
@@ -503,7 +503,7 @@ public class PromiseManagerTest {
     @Test
     @SuppressWarnings("unchecked")
     public void whenAnyResolvedArray() throws Throwable {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
         Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
         Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
@@ -538,7 +538,7 @@ public class PromiseManagerTest {
     @Test
     public void whenAnyResolvedRejects() throws Throwable {
         Throwable exception = new Throwable();
-        Promise<String> promise1 = Promise.rejected(exception);
+        Promise<String> promise1 = Promises.rejected(exception);
         Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
 
         Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2);
@@ -552,7 +552,7 @@ public class PromiseManagerTest {
     public void whenAnyResolvedRejectedAfterResolved() throws Throwable {
         Throwable exception = new Throwable();
         Promise<String> promise1 = rejectAfter(exception, 100);
-        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        Promise<String> promise2 = Promises.resolved(SUCCESS2);
 
         Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2);
 

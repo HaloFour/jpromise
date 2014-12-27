@@ -17,7 +17,7 @@ public abstract class AbstractPromiseService implements PromiseService {
     @Override
     public <V> Promise<V> submit(final Callable<V> task) {
         if (task == null) throw new NullPointerException(mustNotBeNull("task"));
-        final Deferred<V> deferred = Promise.defer();
+        final Deferred<V> deferred = Promises.defer();
         this.execute(new Runnable() {
             @Override
             public void run() {
@@ -42,7 +42,7 @@ public abstract class AbstractPromiseService implements PromiseService {
     @Override
     public <V> Promise<V> submit(final Runnable task, final V result) {
         if (task == null) throw new NullPointerException(mustNotBeNull("task"));
-        final Deferred<V> deferred = Promise.defer();
+        final Deferred<V> deferred = Promises.defer();
         this.execute(new Runnable() {
             @Override
             public void run() {

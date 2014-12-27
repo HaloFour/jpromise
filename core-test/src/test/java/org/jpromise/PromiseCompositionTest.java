@@ -31,8 +31,8 @@ public class PromiseCompositionTest {
 
     @Test
     public void invokeOne() throws Exception {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise2 = Promises.resolved(SUCCESS2);
 
         PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
         PromiseContinuationListener callback = mock(PromiseContinuationListener.class);
@@ -52,8 +52,8 @@ public class PromiseCompositionTest {
 
     @Test
     public void invokeTwo() throws Exception {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise2 = Promises.resolved(SUCCESS2);
 
         PromiseCompositionListener listener1 = mock(PromiseCompositionListener.class);
         PromiseCompositionListener listener2 = mock(PromiseCompositionListener.class);
@@ -77,8 +77,8 @@ public class PromiseCompositionTest {
 
     @Test
     public void composingThrows() throws Exception {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise2 = Promises.resolved(SUCCESS2);
         Throwable exception = new RuntimeException();
 
         PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
@@ -98,8 +98,8 @@ public class PromiseCompositionTest {
 
     @Test
     public void callbackThrows() throws Exception {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise2 = Promises.resolved(SUCCESS2);
         Throwable exception = new RuntimeException();
 
         PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
@@ -120,8 +120,8 @@ public class PromiseCompositionTest {
 
     @Test
     public void completionException() throws Exception {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise2 = Promises.resolved(SUCCESS2);
         Throwable exception = new RuntimeException();
 
         PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
@@ -141,8 +141,8 @@ public class PromiseCompositionTest {
 
     @Test
     public void completionThrows() throws Exception {
-        Promise<String> promise1 = Promise.resolved(SUCCESS1);
-        Promise<String> promise2 = Promise.resolved(SUCCESS2);
+        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise2 = Promises.resolved(SUCCESS2);
         Throwable exception = new RuntimeException();
 
         PromiseCompositionListener listener = mock(PromiseCompositionListener.class);
