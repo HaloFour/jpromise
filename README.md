@@ -17,13 +17,13 @@ Creating promises:
 ```java
 
 // Creating an already resolved promise
-Promise<String> promise1 = Promise.resolved("Hello World!");
+Promise<String> promise1 = Promises.resolved("Hello World!");
 
 // Creating an already rejected promise
-Promise<String> promise2 = Promise.rejected(new Exception("Oops!"));
+Promise<String> promise2 = Promises.rejected(new Exception("Oops!"));
 
 // Creating a deferred promise that will be resolved or rejected later
-Deferred<String> deferred = Promise.defer();
+Deferred<String> deferred = Promises.defer();
 Promise<String> promise3 = deferred.promise();
 // later
 deferred.resolve("Hello World!");
@@ -39,7 +39,7 @@ Promise<String> promise4 = service.submit(new Callable<String>() {
 
 // Creating a promise from an existing Future
 Future<String> future = ...;
-Promise<String> promise = PromiseManager.fromFuture(future);
+Promise<String> promise = Promises.fromFuture(future);
 
 // Creating a promise from an rx.Observable<T>
 Observable<String> observable = Observable.from(new String[] { "Hello World!" });
@@ -59,7 +59,7 @@ promise returned in the callback.  In all cases if the callback throws an except
 the returned promise is rejected with that exception.
 
 ```java
-Promise<String> promise1 = Promise.resolved("Hello World!");
+Promise<String> promise1 = Promises.resolved("Hello World!");
 
 // Calls the callback when the promise resolves passing the result of the promise.  When the callback
 // completes the returned promise will resolve with the same result.  However, if the callback throws
@@ -169,7 +169,7 @@ All of the composable methods are written specifically so that they play well wi
 overload ambiguity.  The following are identical to the examples above.
 
 ```java
-Promise<String> promise1 = Promise.resolved("Hello World!");
+Promise<String> promise1 = Promises.resolved("Hello World!");
 
 Promise<String> promise2 = promise1.then(result -> { System.out.println(result); });
 
