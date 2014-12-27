@@ -1,6 +1,7 @@
 package org.jpromise;
 
 import org.jpromise.functions.OnRejectedHandler;
+import org.jpromise.functions.OnResolved;
 import org.jpromise.functions.OnResolvedFunction;
 import org.jpromise.operators.*;
 
@@ -77,6 +78,10 @@ public abstract class PromiseStream<V> {
     public <V_OUT> PromiseStream<V_OUT> translate(StreamOperator<V, V_OUT> operator) {
         if (operator == null) throw new IllegalArgumentException(mustNotBeNull("operator"));
         return new ComposedPromiseStream<V, V_OUT>(this, operator);
+    }
+
+    public Promise<Void> forEach(OnResolved<V> action) {
+        return terminate(new ForEachOperator<V>(action));
     }
 
     public Promise<List<V>> toList(Class<V> resultClass) {

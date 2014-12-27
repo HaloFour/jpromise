@@ -2,6 +2,7 @@ package org.jpromise;
 
 import junit.framework.AssertionFailedError;
 import org.jpromise.functions.OnRejectedHandler;
+import org.jpromise.functions.OnResolved;
 import org.jpromise.functions.OnResolvedFunction;
 import org.jpromise.operators.TerminalOperation;
 import org.jpromise.operators.TerminalOperator;
@@ -177,6 +178,21 @@ public class PromiseStreamTest {
         Promise<List<String>> promise = stream.toList(String.class);
         List<String> result = assertResolves(promise);
         assertEquals(0, result.size());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void forEach() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        OnResolved<String> callback = mock(OnResolved.class);
+        Promise<Void> promise = stream.forEach(callback);
+
+        assertResolves(promise);
+        verify(callback, times(1)).resolved(eq(SUCCESS1));
+        verify(callback, times(1)).resolved(eq(SUCCESS2));
+        verify(callback, times(1)).resolved(eq(SUCCESS3));
+        verify(callback, times(1)).resolved(eq(SUCCESS4));
+        verify(callback, times(1)).resolved(eq(SUCCESS5));
     }
 
     @Test
