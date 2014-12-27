@@ -450,4 +450,70 @@ public abstract class Promise<V> implements Future<V> {
         }, timeUnit.toMillis(timeout));
         return deferred.promise();
     }
+
+    /**
+     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance.
+     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
+     * @param <V> The result type of the future.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
+     */
+    public static <V> Promise<V> fromFuture(Future<V> future) {
+        return fromFuture(PromiseExecutors.DEFAULT_FUTURE_EXECUTOR, future);
+    }
+
+    /**
+     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance
+     * using the specified {@link java.util.concurrent.Executor} to block on the operation if it is not already
+     * completed.
+     * @param executor The {@link java.util.concurrent.Executor} which will be used to block on the {@code future}
+     *                 until it is completed.
+     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
+     * @param <V> The result type of the future.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
+     */
+    public static <V> Promise<V> fromFuture(Executor executor, Future<V> future) {
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
+        if (future instanceof Promise) {
+            return (Promise<V>)future;
+        }
+        return new FuturePromise<V>(executor, future);
+    }
+
+    /**
+     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance
+     * that will wait for up until the specified duration until its completion.
+     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
+     * @param timeout The maximum amount of time to wait for the {@code future} to complete.
+     * @param timeUnit The unit of time for the {@code timeout} argument.
+     * @param <V> The result type of the future.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
+     */
+    public static <V> Promise<V> fromFuture(Future<V> future, long timeout, TimeUnit timeUnit) {
+        return fromFuture(PromiseExecutors.DEFAULT_FUTURE_EXECUTOR, future, timeout, timeUnit);
+    }
+
+    /**
+     * Creates a promise representing the completion of the specified {@link java.util.concurrent.Future} instance
+     * that will wait for up until the specified duration until its completion using the specified
+     * {@link java.util.concurrent.Executor} to block on the operation if it is not already completed.
+     * @param executor The {@link java.util.concurrent.Executor} which will be used to block on the {@code future}
+     *                 until it is completed.
+     * @param future The {@link java.util.concurrent.Future} instance to be converted into a {@link org.jpromise.Promise}.
+     * @param timeout The maximum amount of time to wait for the {@code future} to complete.
+     * @param timeUnit The unit of time for the {@code timeout} argument.
+     * @param <V> The result type of the future.
+     * @return A new {@link org.jpromise.Promise} representing the completion of the specified {@code future}.
+     */
+    public static <V> Promise<V> fromFuture(Executor executor, Future<V> future, long timeout, TimeUnit timeUnit) {
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
+        if (timeUnit == null) throw new IllegalArgumentException(mustNotBeNull("timeUnit"));
+        if (future instanceof Promise) {
+            Promise<V> promise = (Promise<V>)future;
+            promise.cancelAfter(true, timeout, timeUnit);
+            return promise;
+        }
+        return new FuturePromise<V>(executor, future, timeout, timeUnit);
+    }
 }

@@ -81,6 +81,135 @@ public class PromiseTest {
         assertEquals("[REJECTED]: " + exception.toString(), promise.toString());
     }
 
+
+
+    @Test
+    public void fromFutureDone() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Future<String> future = mock(Future.class);
+        when(future.isDone()).thenReturn(true);
+        when(future.get()).thenReturn(SUCCESS1);
+
+        Promise<String> promise = Promise.fromFuture(future);
+
+        assertResolves(SUCCESS1, promise);
+    }
+
+    @Test
+    public void fromFutureWithPromiseReturnsSelf() throws Throwable {
+        Future<String> future = Promise.resolved(SUCCESS1);
+
+        Promise<String> promise = Promise.fromFuture(future);
+
+        assertEquals(future, promise);
+        assertResolves(SUCCESS1, promise);
+    }
+
+    @Test
+    public void fromFutureWithPromiseAndTimeOutReturnsSelf() throws Throwable {
+        Future<String> future = Promise.resolved(SUCCESS1);
+
+        Promise<String> promise = Promise.fromFuture(future);
+
+        assertEquals(future, promise);
+        assertResolves(SUCCESS1, promise);
+    }
+
+    @Test
+    public void fromFutureWithPromiseAndTimeOutEnforcesTimeout() throws Throwable {
+        Future<String> future = resolveAfter(SUCCESS1, 1000);
+
+        Promise<String> promise = Promise.fromFuture(future, 10, TimeUnit.MILLISECONDS);
+
+        assertEquals(future, promise);
+        assertRejects(CancellationException.class, promise);
+    }
+
+    @Test
+    public void fromFutureCompletesEventually() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Future<String> future = mock(Future.class);
+        when(future.isDone()).thenReturn(false);
+        when(future.get()).thenReturn(SUCCESS1);
+
+        Promise<String> promise = Promise.fromFuture(future);
+
+        assertResolves(SUCCESS1, promise);
+    }
+
+    @Test
+    public void fromFutureThrows() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Future<String> future = mock(Future.class);
+        when(future.isDone()).thenReturn(false);
+        Exception exception = new Exception();
+        when(future.get()).thenThrow(new ExecutionException(exception));
+
+        Promise<String> promise = Promise.fromFuture(future);
+
+        assertRejects(exception, promise);
+    }
+
+    @Test
+    public void fromFutureThrowsWithoutCause() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Future<String> future = mock(Future.class);
+        when(future.isDone()).thenReturn(false);
+        ExecutionException exception = new ExecutionException(null);
+        when(future.get()).thenThrow(exception);
+
+        Promise<String> promise = Promise.fromFuture(future);
+
+        assertRejects(exception, promise);
+    }
+
+    @Test
+    public void fromFutureThrowsEventually() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Future<String> future = mock(Future.class);
+        when(future.isDone()).thenReturn(false);
+        Exception exception = new Exception();
+        when(future.get()).thenThrow(new ExecutionException(exception));
+
+        Promise<String> promise = Promise.fromFuture(future);
+
+        assertRejects(exception, promise);
+    }
+
+    @Test
+    public void fromFutureTimesOut() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Future<String> future = mock(Future.class);
+        when(future.isDone()).thenReturn(false);
+        TimeoutException exception = new TimeoutException();
+        when(future.get(anyLong(), any(TimeUnit.class))).thenThrow(exception);
+
+        Promise<String> promise = Promise.fromFuture(future, 10, TimeUnit.MILLISECONDS);
+
+        assertRejects(exception, promise);
+    }
+
+    @Test
+    public void fromFutureCancelled() throws Throwable {
+        @SuppressWarnings("unchecked")
+        Future<String> future = mock(Future.class);
+        when(future.isDone()).thenReturn(false);
+        when(future.cancel(anyBoolean())).thenReturn(true);
+        when(future.get()).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                Thread.sleep(1000);
+                return SUCCESS1;
+            }
+        });
+
+        Promise<String> promise = Promise.fromFuture(future);
+        assertTrue(promise.cancel(true));
+
+        assertRejects(CancellationException.class, promise);
+        verify(future).cancel(true);
+    }
+
     @Test
     public void resolves() throws Throwable {
         Promise<String> promise = resolveAfter(SUCCESS1, 100);
