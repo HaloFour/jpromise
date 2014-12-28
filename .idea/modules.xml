@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/all/all.iml" filepath="$PROJECT_DIR$/all/all.iml" />
-      <module fileurl="file://$PROJECT_DIR$/completable/completable.iml" filepath="$PROJECT_DIR$/completable/completable.iml" />
       <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
       <module fileurl="file://$PROJECT_DIR$/core-test/core-test.iml" filepath="$PROJECT_DIR$/core-test/core-test.iml" />
       <module fileurl="file://$PROJECT_DIR$/jpromise.iml" filepath="$PROJECT_DIR$/jpromise.iml" />
