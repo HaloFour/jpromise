@@ -30,8 +30,8 @@ public abstract class AbstractPromise<V> implements Promise<V> {
     }
 
     @Override
-    public boolean isResolved() {
-        return this.state() == PromiseState.RESOLVED;
+    public boolean isFulfilled() {
+        return this.state() == PromiseState.FULFILLED;
     }
 
     @Override
@@ -47,8 +47,8 @@ public abstract class AbstractPromise<V> implements Promise<V> {
     @Override
     public String toString() {
         switch (state) {
-            case RESOLVED:
-                return String.format("[RESOLVED]: %s", result);
+            case FULFILLED:
+                return String.format("[FULFILLED]: %s", result);
             case REJECTED:
                 return String.format("[REJECTED]: %s", exception);
             default:
@@ -57,18 +57,18 @@ public abstract class AbstractPromise<V> implements Promise<V> {
     }
 
     @Override
-    public Promise<V> then(OnResolved<? super V> action) {
+    public Promise<V> then(OnFulfilled<? super V> action) {
         return this.then(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
 
     @Override
-    public Promise<V> then(Executor executor, final OnResolved<? super V> action) {
+    public Promise<V> then(Executor executor, final OnFulfilled<? super V> action) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         return registerCallback(new ContinuationPromise<V, V>(this, executor) {
             @Override
             protected void completeComposed(V result) throws Throwable {
                 if (action != null) {
-                    action.resolved(result);
+                    action.fulfilled(result);
                 }
                 complete(result);
             }
@@ -76,35 +76,35 @@ public abstract class AbstractPromise<V> implements Promise<V> {
     }
 
     @Override
-    public <V_APPLIED> Promise<V_APPLIED> thenApply(OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
+    public <V_APPLIED> Promise<V_APPLIED> thenApply(OnFulfilledFunction<? super V, ? extends V_APPLIED> function) {
         return this.thenApply(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, function);
     }
 
     @Override
-    public <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, final OnResolvedFunction<? super V, ? extends V_APPLIED> function) {
+    public <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, final OnFulfilledFunction<? super V, ? extends V_APPLIED> function) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
         return registerCallback(new ContinuationPromise<V, V_APPLIED>(this, executor) {
             @Override
             protected void completeComposed(V result) throws Throwable {
-                complete(function.resolved(result));
+                complete(function.fulfilled(result));
             }
         });
     }
 
     @Override
-    public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
+    public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(OnFulfilledFunction<? super V, ? extends Future<V_COMPOSED>> function) {
         return this.thenCompose(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, function);
     }
 
     @Override
-    public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, final OnResolvedFunction<? super V, ? extends Future<V_COMPOSED>> function) {
+    public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, final OnFulfilledFunction<? super V, ? extends Future<V_COMPOSED>> function) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
         return registerCallback(new ContinuationPromise<V, V_COMPOSED>(this, executor) {
             @Override
             protected void completeComposed(V result) throws Throwable {
-                completeWithFuture(function.resolved(result));
+                completeWithFuture(function.fulfilled(result));
             }
         });
     }
@@ -249,7 +249,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
     @Override
     public Promise<Boolean> cancelAfter(final boolean mayInterruptIfRunning, long timeout, TimeUnit timeUnit) {
         if (isDone()) {
-            return Promises.resolved(false);
+            return Promises.fulfilled(false);
         }
         final Deferred<Boolean> deferred = Promises.defer();
         final Timer timer = new Timer(true);
@@ -258,7 +258,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
             @Override
             public void run() {
                 if (flag.compareAndSet(false, true)) {
-                    deferred.resolve(AbstractPromise.this.cancel(mayInterruptIfRunning));
+                    deferred.fulfill(AbstractPromise.this.cancel(mayInterruptIfRunning));
                 }
             }
         }, timeUnit.toMillis(timeout));
@@ -267,7 +267,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
             public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
                 if (flag.compareAndSet(false, true)) {
                     timer.cancel();
-                    deferred.resolve(false);
+                    deferred.fulfill(false);
                 }
             }
         });
@@ -320,9 +320,9 @@ public abstract class AbstractPromise<V> implements Promise<V> {
         }
         synchronized (lock) {
             if (state != PromiseState.PENDING) return false;
-            state = PromiseState.RESOLVED;
+            state = PromiseState.FULFILLED;
             this.result = result;
-            onResolved(result);
+            onFulfilled(result);
         }
         return true;
     }
@@ -340,8 +340,8 @@ public abstract class AbstractPromise<V> implements Promise<V> {
         return true;
     }
 
-    protected void onResolved(V result) {
-        onCompleted(PromiseState.RESOLVED, result, null);
+    protected void onFulfilled(V result) {
+        onCompleted(PromiseState.FULFILLED, result, null);
     }
 
     protected void onRejected(Throwable exception) {

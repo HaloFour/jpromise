@@ -16,7 +16,7 @@ public class PromiseCallbackTest {
 
         callback.completed(SUCCESS1);
 
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test

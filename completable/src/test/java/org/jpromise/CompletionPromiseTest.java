@@ -14,13 +14,13 @@ public class CompletionPromiseTest {
     private static final String SUCCESS1 = "SUCCESS1";
 
     @Test
-    public void completionPromiseResolves() throws Throwable {
+    public void completionPromiseFulfills() throws Throwable {
         CompletableFuture<String> future = new CompletableFuture<>();
         CompletionPromise<String> promise = new CompletionPromise<>(future);
 
         future.complete(SUCCESS1);
 
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
@@ -36,7 +36,7 @@ public class CompletionPromiseTest {
 
     @Test
     public void completionStageCompletes() throws Throwable {
-        Promise<String> promise = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise = fulfillAfter(SUCCESS1, 10);
         CompletionStage<String> completionStage = CompletionPromise.toCompletionStage(promise);
         CompletableFuture<String> future = completionStage.toCompletableFuture();
 

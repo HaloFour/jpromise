@@ -1,9 +1,8 @@
 package org.jpromise;
 
-import org.jpromise.functions.OnResolved;
+import org.jpromise.functions.OnFulfilled;
 import org.junit.Test;
 
-import static org.jpromise.PromiseHelpers.assertResolves;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -14,17 +13,17 @@ public class AsyncLocalTest {
         local.set("SUCCESS1");
         final Thread thread = Thread.currentThread();
 
-        Promise<String> promise = Promises.resolved("SUCCESS1");
-        promise.then(PromiseExecutors.NEW_THREAD, new OnResolved<String>() {
+        Promise<String> promise = Promises.fulfilled("SUCCESS1");
+        promise.then(PromiseExecutors.NEW_THREAD, new OnFulfilled<String>() {
             @Override
-            public void resolved(String result) throws Throwable {
+            public void fulfilled(String result) throws Throwable {
                 assertNotEquals(thread, Thread.currentThread());
                 String value = local.get();
                 assertEquals("SUCCESS1", value);
             }
         });
 
-        assertResolves(promise);
+        PromiseHelpers.assertFulfills(promise);
     }
 
     @Test

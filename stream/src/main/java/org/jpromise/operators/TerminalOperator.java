@@ -31,13 +31,13 @@ public abstract class TerminalOperator<V, R> {
         }
 
         @Override
-        public synchronized void resolved(V result) {
+        public synchronized void fulfilled(V result) {
             try {
                 if (first.compareAndSet(true, false)) {
                     operation.start();
                 }
                 if (!promise.isDone()) {
-                    operation.resolved(result);
+                    operation.fulfilled(result);
                 }
             }
             catch (Throwable exception) {
@@ -60,7 +60,7 @@ public abstract class TerminalOperator<V, R> {
                 }
                 if (!promise.isDone()) {
                     R result = operation.completed();
-                    deferred.resolve(result);
+                    deferred.fulfill(result);
                 }
             }
             catch (Throwable exception) {

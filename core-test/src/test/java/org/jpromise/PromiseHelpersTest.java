@@ -36,8 +36,8 @@ public class PromiseHelpersTest {
     }
 
     @Test
-    public void resolveAfter() throws Throwable {
-        Promise<String> promise = PromiseHelpers.resolveAfter(SUCCESS1, 10);
+    public void fulfillAfter() throws Throwable {
+        Promise<String> promise = PromiseHelpers.fulfillAfter(SUCCESS1, 10);
         assertFalse(promise.isDone());
         Thread.sleep(20);
         assertTrue(promise.isDone());
@@ -46,10 +46,10 @@ public class PromiseHelpersTest {
     }
 
     @Test
-    public void resolveAfterWithDeferred() throws Throwable {
+    public void fulfillAfterWithDeferred() throws Throwable {
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
-        PromiseHelpers.resolveAfter(deferred, SUCCESS1, 10);
+        PromiseHelpers.fulfillAfter(deferred, SUCCESS1, 10);
         assertFalse(promise.isDone());
         Thread.sleep(20);
         assertTrue(promise.isDone());
@@ -90,64 +90,64 @@ public class PromiseHelpersTest {
     }
 
     @Test
-    public void assertResolves() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
-        String result = PromiseHelpers.assertResolves(promise);
+    public void assertFulfills() throws Throwable {
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
+        String result = PromiseHelpers.assertFulfills(promise);
         assertEquals(SUCCESS1, result);
     }
 
     @Test(expected = AssertionError.class)
-    public void assertResolvesWithRejected() throws Throwable {
+    public void assertFulfillsWithRejected() throws Throwable {
         Promise<String> promise = Promises.rejected(EXCEPTION1);
-        String ignored = PromiseHelpers.assertResolves(promise);
+        String ignored = PromiseHelpers.assertFulfills(promise);
     }
 
     @Test
-    public void assertResolvesWithTimeout() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
-        String result = PromiseHelpers.assertResolves(promise, 100L);
+    public void assertFulfillsWithTimeout() throws Throwable {
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
+        String result = PromiseHelpers.assertFulfills(promise, 100L);
         assertEquals(SUCCESS1, result);
     }
 
     @Test(expected = TimeoutException.class)
-    public void assertResolvesWithTimeoutTimesOut() throws Throwable {
+    public void assertFulfillsWithTimeoutTimesOut() throws Throwable {
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
-        String ignored = PromiseHelpers.assertResolves(promise, 100L);
-        throw new AssertionFailedError("PromiseHelpers.assertResolves() should not return successfully");
+        String ignored = PromiseHelpers.assertFulfills(promise, 100L);
+        throw new AssertionFailedError("PromiseHelpers.assertFulfills() should not return successfully");
     }
 
     @Test
-    public void assertResolvesWithValue() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
-        String result = PromiseHelpers.assertResolves(SUCCESS1, promise);
+    public void assertFulfillsWithValue() throws Throwable {
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
+        String result = PromiseHelpers.assertFulfills(SUCCESS1, promise);
         assertEquals(SUCCESS1, result);
     }
 
     @Test(expected = ComparisonFailure.class)
-    public void assertResolvesWithValueMismatch() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
-        String ignored = PromiseHelpers.assertResolves(SUCCESS2, promise);
+    public void assertFulfillsWithValueMismatch() throws Throwable {
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
+        String ignored = PromiseHelpers.assertFulfills(SUCCESS2, promise);
     }
 
     @Test
-    public void assertResolvesWithTimeoutAndValue() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
-        String result = PromiseHelpers.assertResolves(SUCCESS1, promise, 100L);
+    public void assertFulfillsWithTimeoutAndValue() throws Throwable {
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
+        String result = PromiseHelpers.assertFulfills(SUCCESS1, promise, 100L);
         assertEquals(SUCCESS1, result);
     }
 
     @Test(expected = TimeoutException.class)
-    public void assertResolvesWithTimeoutAndValueTimesOut() throws Throwable {
+    public void assertFulfillsWithTimeoutAndValueTimesOut() throws Throwable {
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
-        String ignored = PromiseHelpers.assertResolves(SUCCESS1, promise, 100L);
+        String ignored = PromiseHelpers.assertFulfills(SUCCESS1, promise, 100L);
     }
 
     @Test(expected = ComparisonFailure.class)
-    public void assertResolvesWithTimeoutAndValueMismatch() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
-        String ignored = PromiseHelpers.assertResolves(SUCCESS2, promise, 100L);
+    public void assertFulfillsWithTimeoutAndValueMismatch() throws Throwable {
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
+        String ignored = PromiseHelpers.assertFulfills(SUCCESS2, promise, 100L);
     }
 
     @Test
@@ -158,8 +158,8 @@ public class PromiseHelpersTest {
     }
 
     @Test(expected = AssertionError.class)
-    public void assertRejectsWithResolved() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
+    public void assertRejectsWithFulfilled() throws Throwable {
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
         Throwable ignored = PromiseHelpers.assertRejects(promise);
     }
 
@@ -200,8 +200,8 @@ public class PromiseHelpersTest {
 
     @Test(expected = ComparisonFailure.class)
     public void assertRejectsWithValueMismatch() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
-        String ignored = PromiseHelpers.assertResolves(SUCCESS2, promise);
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
+        String ignored = PromiseHelpers.assertFulfills(SUCCESS2, promise);
     }
 
     @Test

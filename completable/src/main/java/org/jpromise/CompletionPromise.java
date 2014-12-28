@@ -23,7 +23,7 @@ public class CompletionPromise<V> extends AbstractPromise<V> {
         CompletableFuture<V> future = new CompletableFuture<>();
         promise.whenCompleted((p, result, exception) -> {
             switch (p.state()) {
-                case RESOLVED:
+                case FULFILLED:
                     future.complete(result);
                     break;
                 case REJECTED:

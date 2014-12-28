@@ -1,26 +1,19 @@
 package org.jpromise;
 
-import org.jpromise.functions.OnResolved;
+import org.jpromise.functions.OnFulfilled;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.*;
 
 import static org.jpromise.PromiseHelpers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class PromiseManagerTest {
     private static final String SUCCESS1 = "SUCCESS1";
@@ -47,67 +40,67 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAllComplete() throws Throwable {
-        final Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        final Promise<String> promise2 = Promises.resolved(SUCCESS2);
-        final Promise<String> promise3 = Promises.resolved(SUCCESS3);
-        final Promise<String> promise4 = Promises.resolved(SUCCESS4);
+        final Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        final Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
+        final Promise<String> promise3 = Promises.fulfilled(SUCCESS3);
+        final Promise<String> promise4 = Promises.fulfilled(SUCCESS4);
 
         Promise<Void> promise = PromiseManager.whenAllCompleted(promise1, promise2, promise3, promise4)
-                .then(new OnResolved<Void>() {
+                .then(new OnFulfilled<Void>() {
                     @Override
-                    public void resolved(Void result) throws Throwable {
-                        assertResolves(SUCCESS1, promise1);
-                        assertResolves(SUCCESS2, promise2);
-                        assertResolves(SUCCESS3, promise3);
-                        assertResolves(SUCCESS4, promise4);
+                    public void fulfilled(Void result) throws Throwable {
+                        assertFulfills(SUCCESS1, promise1);
+                        assertFulfills(SUCCESS2, promise2);
+                        assertFulfills(SUCCESS3, promise3);
+                        assertFulfills(SUCCESS4, promise4);
                     }
                 });
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
     public void whenAllCompleteEventually() throws Throwable {
-        final Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        final Promise<String> promise2 = resolveAfter(SUCCESS2, 10);
-        final Promise<String> promise3 = resolveAfter(SUCCESS3, 10);
-        final Promise<String> promise4 = resolveAfter(SUCCESS4, 10);
+        final Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        final Promise<String> promise2 = fulfillAfter(SUCCESS2, 10);
+        final Promise<String> promise3 = fulfillAfter(SUCCESS3, 10);
+        final Promise<String> promise4 = fulfillAfter(SUCCESS4, 10);
 
         Promise<Void> promise = PromiseManager.whenAllCompleted(promise1, promise2, promise3, promise4)
-                .then(new OnResolved<Void>() {
+                .then(new OnFulfilled<Void>() {
                     @Override
-                    public void resolved(Void result) throws Throwable {
-                        assertResolves(SUCCESS1, promise1);
-                        assertResolves(SUCCESS2, promise2);
-                        assertResolves(SUCCESS3, promise3);
-                        assertResolves(SUCCESS4, promise4);
+                    public void fulfilled(Void result) throws Throwable {
+                        assertFulfills(SUCCESS1, promise1);
+                        assertFulfills(SUCCESS2, promise2);
+                        assertFulfills(SUCCESS3, promise3);
+                        assertFulfills(SUCCESS4, promise4);
                     }
                 });
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
     public void whenAllCompleteRejected() throws Throwable {
         final Throwable exception = new Throwable();
-        final Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        final Promise<String> promise2 = resolveAfter(SUCCESS2, 10);
-        final Promise<String> promise3 = resolveAfter(SUCCESS3, 10);
+        final Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        final Promise<String> promise2 = fulfillAfter(SUCCESS2, 10);
+        final Promise<String> promise3 = fulfillAfter(SUCCESS3, 10);
         final Promise<String> promise4 = Promises.rejected(exception);
 
         Promise<Void> promise = PromiseManager.whenAllCompleted(promise1, promise2, promise3, promise4)
-                .then(new OnResolved<Void>() {
+                .then(new OnFulfilled<Void>() {
                     @Override
-                    public void resolved(Void result) throws Throwable {
-                        assertResolves(SUCCESS1, promise1);
-                        assertResolves(SUCCESS2, promise2);
-                        assertResolves(SUCCESS3, promise3);
+                    public void fulfilled(Void result) throws Throwable {
+                        assertFulfills(SUCCESS1, promise1);
+                        assertFulfills(SUCCESS2, promise2);
+                        assertFulfills(SUCCESS3, promise3);
                         assertRejects(exception, promise4);
 
                     }
                 });
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
 
@@ -116,7 +109,7 @@ public class PromiseManagerTest {
         List<Promise<String>> list = new ArrayList<Promise<String>>(0);
         Promise<Void> promise = PromiseManager.whenAllCompleted(list);
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
@@ -124,7 +117,7 @@ public class PromiseManagerTest {
         List<Promise<String>> list = null;
         Promise<Void> promise = PromiseManager.whenAllCompleted(list);
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
@@ -132,60 +125,60 @@ public class PromiseManagerTest {
         Promise<String>[] array = null;
         Promise<Void> promise = PromiseManager.whenAllCompleted(array);
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
     public void whenAllCompleteListContainsNull() throws Throwable {
-        final Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        final Promise<String> promise2 = Promises.resolved(SUCCESS2);
-        final Promise<String> promise3 = Promises.resolved(SUCCESS3);
+        final Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        final Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
+        final Promise<String> promise3 = Promises.fulfilled(SUCCESS3);
         final Promise<String> promise4 = null;
 
         Promise<Void> promise = PromiseManager.whenAllCompleted(promise1, promise2, promise3, promise4)
-                .then(new OnResolved<Void>() {
+                .then(new OnFulfilled<Void>() {
                     @Override
-                    public void resolved(Void result) throws Throwable {
-                        assertResolves(SUCCESS1, promise1);
-                        assertResolves(SUCCESS2, promise2);
-                        assertResolves(SUCCESS3, promise3);
+                    public void fulfilled(Void result) throws Throwable {
+                        assertFulfills(SUCCESS1, promise1);
+                        assertFulfills(SUCCESS2, promise2);
+                        assertFulfills(SUCCESS3, promise3);
                         assertNull(promise4);
                     }
                 });
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
-    public void whenAllResolved() throws Throwable {
-        final Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        final Promise<String> promise2 = Promises.resolved(SUCCESS2);
-        final Promise<String> promise3 = Promises.resolved(SUCCESS3);
-        final Promise<String> promise4 = Promises.resolved(SUCCESS4);
+    public void whenAllFulfilled() throws Throwable {
+        final Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        final Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
+        final Promise<String> promise3 = Promises.fulfilled(SUCCESS3);
+        final Promise<String> promise4 = Promises.fulfilled(SUCCESS4);
 
-        Promise<Void> promise = PromiseManager.whenAllResolved(promise1, promise2, promise3, promise4)
-                .then(new OnResolved<Void>() {
+        Promise<Void> promise = PromiseManager.whenAllFulfilled(promise1, promise2, promise3, promise4)
+                .then(new OnFulfilled<Void>() {
                     @Override
-                    public void resolved(Void result) throws Throwable {
-                        assertResolves(SUCCESS1, promise1);
-                        assertResolves(SUCCESS2, promise2);
-                        assertResolves(SUCCESS3, promise3);
-                        assertResolves(SUCCESS4, promise4);
+                    public void fulfilled(Void result) throws Throwable {
+                        assertFulfills(SUCCESS1, promise1);
+                        assertFulfills(SUCCESS2, promise2);
+                        assertFulfills(SUCCESS3, promise3);
+                        assertFulfills(SUCCESS4, promise4);
                     }
                 });
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
-    public void whenAllResolvedWithCallback() throws Throwable {
+    public void whenAllFulfilledWithCallback() throws Throwable {
         @SuppressWarnings("unchecked")
-        OnResolved<String> callback = (OnResolved<String>)mock(OnResolved.class);
+        OnFulfilled<String> callback = (OnFulfilled<String>)mock(OnFulfilled.class);
 
-        final Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        final Promise<String> promise2 = Promises.resolved(SUCCESS2);
-        final Promise<String> promise3 = Promises.resolved(SUCCESS3);
-        final Promise<String> promise4 = Promises.resolved(SUCCESS4);
+        final Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        final Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
+        final Promise<String> promise3 = Promises.fulfilled(SUCCESS3);
+        final Promise<String> promise4 = Promises.fulfilled(SUCCESS4);
 
         List<Promise<String>> promises = new ArrayList<Promise<String>>(4);
         promises.add(promise1);
@@ -193,173 +186,173 @@ public class PromiseManagerTest {
         promises.add(promise3);
         promises.add(promise4);
 
-        Promise<Void> promise = PromiseManager.whenAllResolved(promises, callback)
-                .then(new OnResolved<Void>() {
+        Promise<Void> promise = PromiseManager.whenAllFulfilled(promises, callback)
+                .then(new OnFulfilled<Void>() {
                     @Override
-                    public void resolved(Void result) throws Throwable {
-                        assertResolves(SUCCESS1, promise1);
-                        assertResolves(SUCCESS2, promise2);
-                        assertResolves(SUCCESS3, promise3);
-                        assertResolves(SUCCESS4, promise4);
+                    public void fulfilled(Void result) throws Throwable {
+                        assertFulfills(SUCCESS1, promise1);
+                        assertFulfills(SUCCESS2, promise2);
+                        assertFulfills(SUCCESS3, promise3);
+                        assertFulfills(SUCCESS4, promise4);
                     }
                 });
 
-        assertResolves(promise);
-        verify(callback, times(4)).resolved(anyString());
-        verify(callback, times(1)).resolved(SUCCESS1);
-        verify(callback, times(1)).resolved(SUCCESS2);
-        verify(callback, times(1)).resolved(SUCCESS3);
-        verify(callback, times(1)).resolved(SUCCESS4);
+        assertFulfills(promise);
+        verify(callback, times(4)).fulfilled(anyString());
+        verify(callback, times(1)).fulfilled(SUCCESS1);
+        verify(callback, times(1)).fulfilled(SUCCESS2);
+        verify(callback, times(1)).fulfilled(SUCCESS3);
+        verify(callback, times(1)).fulfilled(SUCCESS4);
     }
 
     @Test
-    public void whenAllResolvedEventually() throws Throwable {
-        final Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        final Promise<String> promise2 = resolveAfter(SUCCESS2, 10);
-        final Promise<String> promise3 = resolveAfter(SUCCESS3, 10);
-        final Promise<String> promise4 = resolveAfter(SUCCESS4, 10);
+    public void whenAllFulfilledEventually() throws Throwable {
+        final Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        final Promise<String> promise2 = fulfillAfter(SUCCESS2, 10);
+        final Promise<String> promise3 = fulfillAfter(SUCCESS3, 10);
+        final Promise<String> promise4 = fulfillAfter(SUCCESS4, 10);
 
-        Promise<Void> promise = PromiseManager.whenAllResolved(promise1, promise2, promise3, promise4)
-                .then(new OnResolved<Void>() {
+        Promise<Void> promise = PromiseManager.whenAllFulfilled(promise1, promise2, promise3, promise4)
+                .then(new OnFulfilled<Void>() {
                     @Override
-                    public void resolved(Void result) throws Throwable {
-                        assertResolves(SUCCESS1, promise1);
-                        assertResolves(SUCCESS2, promise2);
-                        assertResolves(SUCCESS3, promise3);
-                        assertResolves(SUCCESS4, promise4);
+                    public void fulfilled(Void result) throws Throwable {
+                        assertFulfills(SUCCESS1, promise1);
+                        assertFulfills(SUCCESS2, promise2);
+                        assertFulfills(SUCCESS3, promise3);
+                        assertFulfills(SUCCESS4, promise4);
                     }
                 });
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
-    public void whenAllResolvedRejected() throws Throwable {
+    public void whenAllFulfilledRejected() throws Throwable {
         final Throwable exception = new Throwable();
-        final Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        final Promise<String> promise2 = resolveAfter(SUCCESS2, 10);
-        final Promise<String> promise3 = resolveAfter(SUCCESS3, 10);
+        final Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        final Promise<String> promise2 = fulfillAfter(SUCCESS2, 10);
+        final Promise<String> promise3 = fulfillAfter(SUCCESS3, 10);
         final Promise<String> promise4 = Promises.rejected(exception);
 
-        Promise<Void> promise = PromiseManager.whenAllResolved(promise1, promise2, promise3, promise4);
+        Promise<Void> promise = PromiseManager.whenAllFulfilled(promise1, promise2, promise3, promise4);
 
         assertRejects(exception, promise);
     }
 
 
     @Test
-    public void whenAllResolvedEmptyList() throws Throwable {
+    public void whenAllFulfilledEmptyList() throws Throwable {
         List<Promise<String>> list = new ArrayList<Promise<String>>(0);
-        Promise<Void> promise = PromiseManager.whenAllResolved(list);
+        Promise<Void> promise = PromiseManager.whenAllFulfilled(list);
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
-    public void whenAllResolvedNullList() throws Throwable {
+    public void whenAllFulfilledNullList() throws Throwable {
         List<Promise<String>> list = null;
-        Promise<Void> promise = PromiseManager.whenAllResolved(list);
+        Promise<Void> promise = PromiseManager.whenAllFulfilled(list);
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
-    public void whenAllResolvedNullArray() throws Throwable {
+    public void whenAllFulfilledNullArray() throws Throwable {
         Promise<String>[] array = null;
-        Promise<Void> promise = PromiseManager.whenAllResolved(array);
+        Promise<Void> promise = PromiseManager.whenAllFulfilled(array);
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
-    public void whenAllResolvedListContainsNull() throws Throwable {
-        final Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        final Promise<String> promise2 = Promises.resolved(SUCCESS2);
-        final Promise<String> promise3 = Promises.resolved(SUCCESS3);
+    public void whenAllFulfilledListContainsNull() throws Throwable {
+        final Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        final Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
+        final Promise<String> promise3 = Promises.fulfilled(SUCCESS3);
         final Promise<String> promise4 = null;
 
-        Promise<Void> promise = PromiseManager.whenAllResolved(promise1, promise2, promise3, promise4)
-                .then(new OnResolved<Void>() {
+        Promise<Void> promise = PromiseManager.whenAllFulfilled(promise1, promise2, promise3, promise4)
+                .then(new OnFulfilled<Void>() {
                     @Override
-                    public void resolved(Void result) throws Throwable {
-                        assertResolves(SUCCESS1, promise1);
-                        assertResolves(SUCCESS2, promise2);
-                        assertResolves(SUCCESS3, promise3);
+                    public void fulfilled(Void result) throws Throwable {
+                        assertFulfills(SUCCESS1, promise1);
+                        assertFulfills(SUCCESS2, promise2);
+                        assertFulfills(SUCCESS3, promise3);
                         assertNull(promise4);
                     }
                 });
 
-        assertResolves(promise);
+        assertFulfills(promise);
     }
 
     @Test
     public void whenAnyComplete2() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void whenAnyComplete3() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
-        Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
+        Promise<String> promise3 = fulfillAfter(SUCCESS3, 100);
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2, promise3);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS3, promise3);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS3, promise3);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void whenAnyComplete4() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
-        Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
-        Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
+        Promise<String> promise3 = fulfillAfter(SUCCESS3, 100);
+        Promise<String> promise4 = fulfillAfter(SUCCESS4, 100);
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2, promise3, promise4);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS3, promise3);
-        assertResolves(SUCCESS4, promise4);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS3, promise3);
+        assertFulfills(SUCCESS4, promise4);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void whenAnyComplete5() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
-        Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
-        Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
-        Promise<String> promise5 = resolveAfter(SUCCESS5, 100);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
+        Promise<String> promise3 = fulfillAfter(SUCCESS3, 100);
+        Promise<String> promise4 = fulfillAfter(SUCCESS4, 100);
+        Promise<String> promise5 = fulfillAfter(SUCCESS5, 100);
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2, promise3, promise4, promise5);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS3, promise3);
-        assertResolves(SUCCESS4, promise4);
-        assertResolves(SUCCESS5, promise5);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS3, promise3);
+        assertFulfills(SUCCESS4, promise4);
+        assertFulfills(SUCCESS5, promise5);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void whenAnyCompleteArray() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
-        Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
-        Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
-        Promise<String> promise5 = resolveAfter(SUCCESS5, 100);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
+        Promise<String> promise3 = fulfillAfter(SUCCESS3, 100);
+        Promise<String> promise4 = fulfillAfter(SUCCESS4, 100);
+        Promise<String> promise5 = fulfillAfter(SUCCESS5, 100);
 
         Promise<String>[] array = (Promise<String>[])new Promise [] {
                 promise1, promise2, promise3, promise4, promise5
@@ -367,50 +360,50 @@ public class PromiseManagerTest {
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(array);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS3, promise3);
-        assertResolves(SUCCESS4, promise4);
-        assertResolves(SUCCESS5, promise5);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS3, promise3);
+        assertFulfills(SUCCESS4, promise4);
+        assertFulfills(SUCCESS5, promise5);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void whenAnyCompleteEventually() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void whenAnyCompleteRejects() throws Throwable {
         Throwable exception = new Throwable();
         Promise<String> promise1 = Promises.rejected(exception);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
 
         assertRejects(exception, promise1);
-        assertResolves(SUCCESS2, promise2);
+        assertFulfills(SUCCESS2, promise2);
         assertRejects(exception, promise);
     }
 
     @Test
-    public void whenAnyCompleteRejectedAfterResolved() throws Throwable {
+    public void whenAnyCompleteRejectedAfterFulfilled() throws Throwable {
         Throwable exception = new Throwable();
         Promise<String> promise1 = rejectAfter(exception, 100);
-        Promise<String> promise2 = Promises.resolved(SUCCESS2);
+        Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2);
 
         assertRejects(exception, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS2, promise);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS2, promise);
     }
 
     @Test
@@ -431,160 +424,160 @@ public class PromiseManagerTest {
 
     @Test
     public void whenAnyCompleteListContainsNulls() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
         Promise<String> promise3 = null;
 
         Promise<String> promise = PromiseManager.whenAnyCompleted(promise1, promise2, promise3);
 
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
-    public void whenAnyResolved2() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
+    public void whenAnyFulfilled2() throws Throwable {
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
 
-        Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(promise1, promise2);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
-    public void whenAnyResolved3() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
-        Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
+    public void whenAnyFulfilled3() throws Throwable {
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
+        Promise<String> promise3 = fulfillAfter(SUCCESS3, 100);
 
-        Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2, promise3);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(promise1, promise2, promise3);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS3, promise3);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS3, promise3);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
-    public void whenAnyResolved4() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
-        Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
-        Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
+    public void whenAnyFulfilled4() throws Throwable {
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
+        Promise<String> promise3 = fulfillAfter(SUCCESS3, 100);
+        Promise<String> promise4 = fulfillAfter(SUCCESS4, 100);
 
-        Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2, promise3, promise4);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(promise1, promise2, promise3, promise4);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS3, promise3);
-        assertResolves(SUCCESS4, promise4);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS3, promise3);
+        assertFulfills(SUCCESS4, promise4);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
-    public void whenAnyResolved5() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
-        Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
-        Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
-        Promise<String> promise5 = resolveAfter(SUCCESS5, 100);
+    public void whenAnyFulfilled5() throws Throwable {
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
+        Promise<String> promise3 = fulfillAfter(SUCCESS3, 100);
+        Promise<String> promise4 = fulfillAfter(SUCCESS4, 100);
+        Promise<String> promise5 = fulfillAfter(SUCCESS5, 100);
 
-        Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2, promise3, promise4, promise5);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(promise1, promise2, promise3, promise4, promise5);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS3, promise3);
-        assertResolves(SUCCESS4, promise4);
-        assertResolves(SUCCESS5, promise5);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS3, promise3);
+        assertFulfills(SUCCESS4, promise4);
+        assertFulfills(SUCCESS5, promise5);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void whenAnyResolvedArray() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
-        Promise<String> promise3 = resolveAfter(SUCCESS3, 100);
-        Promise<String> promise4 = resolveAfter(SUCCESS4, 100);
-        Promise<String> promise5 = resolveAfter(SUCCESS5, 100);
+    public void whenAnyFulfilledArray() throws Throwable {
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
+        Promise<String> promise3 = fulfillAfter(SUCCESS3, 100);
+        Promise<String> promise4 = fulfillAfter(SUCCESS4, 100);
+        Promise<String> promise5 = fulfillAfter(SUCCESS5, 100);
 
         Promise<String>[] array = (Promise<String>[])new Promise [] {
                 promise1, promise2, promise3, promise4, promise5
         };
 
-        Promise<String> promise = PromiseManager.whenAnyResolved(array);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(array);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS3, promise3);
-        assertResolves(SUCCESS4, promise4);
-        assertResolves(SUCCESS5, promise5);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS3, promise3);
+        assertFulfills(SUCCESS4, promise4);
+        assertFulfills(SUCCESS5, promise5);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
-    public void whenAnyResolvedEventually() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
+    public void whenAnyFulfilledEventually() throws Throwable {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
 
-        Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(promise1, promise2);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
-    public void whenAnyResolvedRejects() throws Throwable {
+    public void whenAnyFulfilledRejects() throws Throwable {
         Throwable exception = new Throwable();
         Promise<String> promise1 = Promises.rejected(exception);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
 
-        Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(promise1, promise2);
 
         assertRejects(exception, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS2, promise);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS2, promise);
     }
 
     @Test
-    public void whenAnyResolvedRejectedAfterResolved() throws Throwable {
+    public void whenAnyFulfilledRejectedAfterFulfilled() throws Throwable {
         Throwable exception = new Throwable();
         Promise<String> promise1 = rejectAfter(exception, 100);
-        Promise<String> promise2 = Promises.resolved(SUCCESS2);
+        Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
 
-        Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(promise1, promise2);
 
         assertRejects(exception, promise1);
-        assertResolves(SUCCESS2, promise2);
-        assertResolves(SUCCESS2, promise);
+        assertFulfills(SUCCESS2, promise2);
+        assertFulfills(SUCCESS2, promise);
     }
 
     @Test
-    public void whenAnyResolvedNullList() throws Throwable {
+    public void whenAnyFulfilledNullList() throws Throwable {
         List<Promise<String>> list = null;
-        Promise<String> promise = PromiseManager.whenAnyResolved(list);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(list);
 
         assertFalse(promise.isDone());
     }
 
     @Test
-    public void whenAnyResolvedNullArray() throws Throwable {
+    public void whenAnyFulfilledNullArray() throws Throwable {
         Promise<String>[] array = null;
-        Promise<String> promise = PromiseManager.whenAnyResolved(array);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(array);
 
         assertFalse(promise.isDone());
     }
 
     @Test
-    public void whenAnyResolvedListContainsNulls() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        Promise<String> promise2 = resolveAfter(SUCCESS2, 100);
+    public void whenAnyFulfilledListContainsNulls() throws Throwable {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        Promise<String> promise2 = fulfillAfter(SUCCESS2, 100);
         Promise<String> promise3 = null;
 
-        Promise<String> promise = PromiseManager.whenAnyResolved(promise1, promise2, promise3);
+        Promise<String> promise = PromiseManager.whenAnyFulfilled(promise1, promise2, promise3);
 
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise);
     }
 }

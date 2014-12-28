@@ -8,10 +8,10 @@ public abstract class StreamOperator<V_IN, V_OUT> {
             private final OutstandingOperationTracker tracker = new OutstandingOperationTracker();
 
             @Override
-            public void resolved(V_IN result) {
+            public void fulfilled(V_IN result) {
                 OutstandingOperation operation = tracker.start();
                 try {
-                    StreamOperator.this.resolved(subscriber, result);
+                    StreamOperator.this.fulfilled(subscriber, result);
                 }
                 catch (Throwable exception) {
                     subscriber.rejected(exception);
@@ -53,7 +53,7 @@ public abstract class StreamOperator<V_IN, V_OUT> {
         };
     }
 
-    protected abstract void resolved(PromiseSubscriber<? super V_OUT> subscriber, V_IN result) throws Throwable;
+    protected abstract void fulfilled(PromiseSubscriber<? super V_OUT> subscriber, V_IN result) throws Throwable;
 
     protected void rejected(PromiseSubscriber<? super V_OUT> subscriber, Throwable exception) throws Throwable {
         subscriber.rejected(exception);

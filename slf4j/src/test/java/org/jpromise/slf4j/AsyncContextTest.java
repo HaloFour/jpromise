@@ -4,7 +4,7 @@ import org.jpromise.Promise;
 import org.jpromise.PromiseComposition;
 import org.jpromise.PromiseExecutors;
 import org.jpromise.Promises;
-import org.jpromise.functions.OnResolved;
+import org.jpromise.functions.OnFulfilled;
 import org.junit.Test;
 import org.slf4j.MDC;
 
@@ -25,17 +25,17 @@ public class AsyncContextTest {
         MDC.put(KEY1, VALUE1);
         final Thread thread = Thread.currentThread();
 
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
 
-        Promise<String> promise2 = promise1.then(PromiseExecutors.NEW_THREAD, new OnResolved<String>() {
+        Promise<String> promise2 = promise1.then(PromiseExecutors.NEW_THREAD, new OnFulfilled<String>() {
             @Override
-            public void resolved(String result) throws Throwable {
+            public void fulfilled(String result) throws Throwable {
                 assertNotEquals(thread, Thread.currentThread());
                 String value = MDC.get(KEY1);
                 assertEquals(VALUE1, value);
             }
         });
 
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise2);
     }
 }

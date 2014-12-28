@@ -4,7 +4,7 @@ class DeferredPromise<V> implements Deferred<V> {
     private final AbstractPromise<V> promise = new AbstractPromise<V>() { };
 
     @Override
-    public boolean resolve(V result) {
+    public boolean fulfill(V result) {
         return promise.complete(result);
     }
 

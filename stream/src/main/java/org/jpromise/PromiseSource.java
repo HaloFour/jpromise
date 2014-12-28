@@ -19,15 +19,15 @@ class PromiseSource<V> extends PromiseStream<V> {
     public Promise<Void> subscribe(final PromiseSubscriber<? super V> subscriber) {
         if (promises == null) {
             subscriber.complete();
-            return Promises.resolved();
+            return Promises.fulfilled();
         }
         return PromiseManager
                 .whenAllCompleted(promises, new OnCompleted<V>() {
                     @Override
                     public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
                         switch (promise.state()) {
-                            case RESOLVED:
-                                subscriber.resolved(result);
+                            case FULFILLED:
+                                subscriber.fulfilled(result);
                                 break;
                             case REJECTED:
                                 subscriber.rejected(exception);

@@ -11,8 +11,8 @@ public class TakeOperator<V> extends StreamOperator<V, V> {
     }
 
     @Override
-    protected void resolved(PromiseSubscriber<? super V> subscriber, V result) throws Throwable {
-        subscriber.resolved(result);
+    protected void fulfilled(PromiseSubscriber<? super V> subscriber, V result) throws Throwable {
+        subscriber.fulfilled(result);
     }
 
     @Override
@@ -32,8 +32,8 @@ public class TakeOperator<V> extends StreamOperator<V, V> {
         }
 
         @Override
-        public void resolved(V result) {
-            completed(PromiseState.RESOLVED, result, null);
+        public void fulfilled(V result) {
+            completed(PromiseState.FULFILLED, result, null);
         }
 
         @Override
@@ -54,8 +54,8 @@ public class TakeOperator<V> extends StreamOperator<V, V> {
             OutstandingOperation operation = tracker.start();
             try {
                 switch (state) {
-                    case RESOLVED:
-                        parent.resolved(result);
+                    case FULFILLED:
+                        parent.fulfilled(result);
                         break;
                     case REJECTED:
                         parent.rejected(exception);

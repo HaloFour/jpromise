@@ -16,7 +16,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 
 import static org.jpromise.PromiseHelpers.*;
-import static org.jpromise.PromiseHelpers.resolveAfter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
@@ -37,7 +36,7 @@ public class ObservablePromiseTest {
 
         Promise<String> promise = new ObservablePromise<String>(observable);
 
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
@@ -77,7 +76,7 @@ public class ObservablePromiseTest {
 
     @Test
     public void toObservableSingle() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
 
         BlockingObservable<String> observable = new PromiseObservable<String>(promise)
                 .toBlocking();
@@ -109,7 +108,7 @@ public class ObservablePromiseTest {
 
     @Test
     public void toObservable1() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
 
         BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1)
                 .toList()
@@ -123,8 +122,8 @@ public class ObservablePromiseTest {
 
     @Test
     public void toObservable2() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = Promises.resolved(SUCCESS2);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
 
         BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1, promise2)
                 .toList()
@@ -139,9 +138,9 @@ public class ObservablePromiseTest {
 
     @Test
     public void toObservable3() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = Promises.resolved(SUCCESS2);
-        Promise<String> promise3 = Promises.resolved(SUCCESS3);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
+        Promise<String> promise3 = Promises.fulfilled(SUCCESS3);
 
         BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1, promise2, promise3)
                 .toList()
@@ -157,10 +156,10 @@ public class ObservablePromiseTest {
 
     @Test
     public void toObservable4() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = Promises.resolved(SUCCESS2);
-        Promise<String> promise3 = Promises.resolved(SUCCESS3);
-        Promise<String> promise4 = Promises.resolved(SUCCESS4);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
+        Promise<String> promise3 = Promises.fulfilled(SUCCESS3);
+        Promise<String> promise4 = Promises.fulfilled(SUCCESS4);
 
         BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1, promise2, promise3, promise4)
                 .toList()
@@ -177,11 +176,11 @@ public class ObservablePromiseTest {
 
     @Test
     public void toObservable5() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = Promises.resolved(SUCCESS2);
-        Promise<String> promise3 = Promises.resolved(SUCCESS3);
-        Promise<String> promise4 = Promises.resolved(SUCCESS4);
-        Promise<String> promise5 = Promises.resolved(SUCCESS5);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
+        Promise<String> promise3 = Promises.fulfilled(SUCCESS3);
+        Promise<String> promise4 = Promises.fulfilled(SUCCESS4);
+        Promise<String> promise5 = Promises.fulfilled(SUCCESS5);
 
         BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1, promise2, promise3, promise4, promise5)
                 .toList()
@@ -201,11 +200,11 @@ public class ObservablePromiseTest {
     @SuppressWarnings("unchecked")
     public void toObservableFromArray() throws Throwable {
         Promise<String>[] array = (Promise<String>[])new Promise[] {
-                Promises.resolved(SUCCESS1),
-                Promises.resolved(SUCCESS2),
-                Promises.resolved(SUCCESS3),
-                Promises.resolved(SUCCESS4),
-                Promises.resolved(SUCCESS5)
+                Promises.fulfilled(SUCCESS1),
+                Promises.fulfilled(SUCCESS2),
+                Promises.fulfilled(SUCCESS3),
+                Promises.fulfilled(SUCCESS4),
+                Promises.fulfilled(SUCCESS5)
         };
 
         BlockingObservable<List<String>> observable = new PromiseObservable<String>(array)
@@ -225,9 +224,9 @@ public class ObservablePromiseTest {
     @Test
     public void toObservableManyToSingleFails() throws Throwable {
         Throwable exception = new Throwable();
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = Promises.resolved(SUCCESS2);
-        Promise<String> promise3 = Promises.resolved(SUCCESS3);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
+        Promise<String> promise3 = Promises.fulfilled(SUCCESS3);
         Promise<String> promise4 = Promises.rejected(exception);
 
         BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1, promise2, promise3, promise4)
@@ -246,9 +245,9 @@ public class ObservablePromiseTest {
     @Test
     public void toObservableFilterRejected() throws Throwable {
         Throwable exception = new Throwable();
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = Promises.resolved(SUCCESS2);
-        Promise<String> promise3 = Promises.resolved(SUCCESS3);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = Promises.fulfilled(SUCCESS2);
+        Promise<String> promise3 = Promises.fulfilled(SUCCESS3);
         Promise<String> promise4 = Promises.rejected(exception);
 
         BlockingObservable<List<String>> observable = new PromiseObservable<String>(promise1, promise2, promise3, promise4)
@@ -281,10 +280,10 @@ public class ObservablePromiseTest {
         PromiseObservable<String> observable = new PromiseObservable<String>(promise1, promise2, promise3, promise4);
         observable.subscribe(action).unsubscribe();
 
-        deferred1.resolve(SUCCESS1);
-        deferred2.resolve(SUCCESS2);
-        deferred3.resolve(SUCCESS3);
-        deferred4.resolve(SUCCESS4);
+        deferred1.fulfill(SUCCESS1);
+        deferred2.fulfill(SUCCESS2);
+        deferred3.fulfill(SUCCESS3);
+        deferred4.fulfill(SUCCESS4);
 
         verify(action, never()).call(anyString());
     }

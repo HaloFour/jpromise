@@ -24,7 +24,7 @@ public abstract class PromiseCallback<RESPONSE> implements InvocationCallback<RE
      */
     @Override
     public void completed(RESPONSE response) {
-        deferred.resolve(response);
+        deferred.fulfill(response);
     }
 
     /**

@@ -23,12 +23,12 @@ public class PromiseHelpers {
 
     public static final long DEFAULT_TIMEOUT = 2000L;
 
-    public static <T> void resolveAfter(final Deferred<T> deferred, final T value, long delay) {
+    public static <T> void fulfillAfter(final Deferred<T> deferred, final T value, long delay) {
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                deferred.resolve(value);
+                deferred.fulfill(value);
             }
         }, delay);
     }
@@ -43,9 +43,9 @@ public class PromiseHelpers {
         }, delay);
     }
 
-    public static <T> Promise<T> resolveAfter(final T value, long delay) {
+    public static <T> Promise<T> fulfillAfter(final T value, long delay) {
         Deferred<T> deferred = new DeferredPromise<T>();
-        resolveAfter(deferred, value, delay);
+        fulfillAfter(deferred, value, delay);
         return deferred.promise();
     }
 
@@ -62,7 +62,7 @@ public class PromiseHelpers {
             @Override
             public void completed(Promise<T> promise, T result, Throwable exception) throws Throwable {
                 switch (promise.state()) {
-                    case RESOLVED:
+                    case FULFILLED:
                         promiseResult.result = result;
                         break;
                     case REJECTED:
@@ -78,27 +78,27 @@ public class PromiseHelpers {
         return promiseResult;
     }
 
-    public static <T> T assertResolves(Promise<T> promise) throws InterruptedException, ExecutionException, TimeoutException {
-        return assertResolves(promise, DEFAULT_TIMEOUT);
+    public static <T> T assertFulfills(Promise<T> promise) throws InterruptedException, ExecutionException, TimeoutException {
+        return assertFulfills(promise, DEFAULT_TIMEOUT);
     }
 
-    public static <T> T assertResolves(Promise<T> promise, long millis) throws InterruptedException, ExecutionException, TimeoutException {
+    public static <T> T assertFulfills(Promise<T> promise, long millis) throws InterruptedException, ExecutionException, TimeoutException {
         PromiseResult<T> promiseResult = await(promise, millis);
-        assertEquals(PromiseState.RESOLVED, promise.state());
+        assertEquals(PromiseState.FULFILLED, promise.state());
         assertTrue(promise.isDone());
-        assertTrue(promise.isResolved());
+        assertTrue(promise.isFulfilled());
         assertFalse(promise.isRejected());
         return promiseResult.result;
     }
 
-    public static <T> T assertResolves(T expected, Promise<T> promise) throws InterruptedException, ExecutionException, TimeoutException {
-        T result = assertResolves(promise);
+    public static <T> T assertFulfills(T expected, Promise<T> promise) throws InterruptedException, ExecutionException, TimeoutException {
+        T result = assertFulfills(promise);
         assertEquals(expected, result);
         return result;
     }
 
-    public static <T> T assertResolves(T expected, Promise<T> promise, long millis) throws InterruptedException, ExecutionException, TimeoutException {
-        T result = assertResolves(promise, millis);
+    public static <T> T assertFulfills(T expected, Promise<T> promise, long millis) throws InterruptedException, ExecutionException, TimeoutException {
+        T result = assertFulfills(promise, millis);
         assertEquals(expected, result);
         return result;
     }
@@ -111,7 +111,7 @@ public class PromiseHelpers {
         PromiseResult<T> promiseResult = await(promise, millis);
         assertEquals(PromiseState.REJECTED, promise.state());
         assertTrue(promise.isDone());
-        assertFalse(promise.isResolved());
+        assertFalse(promise.isFulfilled());
         assertTrue(promise.isRejected());
         return promiseResult.reason;
     }

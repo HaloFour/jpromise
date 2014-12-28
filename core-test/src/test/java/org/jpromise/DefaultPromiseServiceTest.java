@@ -3,7 +3,7 @@ package org.jpromise;
 import org.junit.Test;
 
 import java.util.concurrent.Callable;
-import static org.jpromise.PromiseHelpers.assertResolves;
+
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,7 +16,7 @@ public class DefaultPromiseServiceTest {
         Runnable runnable = mock(Runnable.class);
         PromiseService service = new DefaultPromiseService();
         Promise<Void> promise = service.submit(runnable);
-        assertResolves(promise);
+        PromiseHelpers.assertFulfills(promise);
         verify(runnable, times(1)).run();
     }
 
@@ -27,7 +27,7 @@ public class DefaultPromiseServiceTest {
         when(callable.call()).thenReturn(SUCCESS1);
         PromiseService service = new DefaultPromiseService();
         Promise<String> promise = service.submit(callable);
-        assertResolves(SUCCESS1, promise);
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
         verify(callable, times(1)).call();
     }
 
@@ -36,7 +36,7 @@ public class DefaultPromiseServiceTest {
         Runnable runnable = mock(Runnable.class);
         PromiseService service = new DefaultPromiseService();
         Promise<String> promise = service.submit(runnable, SUCCESS1);
-        assertResolves(SUCCESS1, promise);
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
         verify(runnable, times(1)).run();
     }
 }

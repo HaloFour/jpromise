@@ -4,7 +4,7 @@ import org.jpromise.Promise;
 import org.jpromise.PromiseExecutors;
 import org.jpromise.PromiseManager;
 import org.jpromise.functions.OnCompleted;
-import org.jpromise.functions.OnResolved;
+import org.jpromise.functions.OnFulfilled;
 import rx.Observable;
 import rx.Subscriber;
 
@@ -67,16 +67,16 @@ public class PromiseObservable<V> extends Observable<V> {
                     completed = PromiseManager.whenAllCompleted(promises, PromiseExecutors.CURRENT_THREAD, new OnCompleted<V>() {
                         @Override
                         public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
-                            if (promise.isResolved() && !subscriber.isUnsubscribed()) {
+                            if (promise.isFulfilled() && !subscriber.isUnsubscribed()) {
                                 subscriber.onNext(result);
                             }
                         }
                     });
                 }
                 else {
-                    completed = PromiseManager.whenAllResolved(promises, PromiseExecutors.CURRENT_THREAD, new OnResolved<V>() {
+                    completed = PromiseManager.whenAllFulfilled(promises, PromiseExecutors.CURRENT_THREAD, new OnFulfilled<V>() {
                         @Override
-                        public void resolved(V result) throws Throwable {
+                        public void fulfilled(V result) throws Throwable {
                             if (!subscriber.isUnsubscribed()) {
                                 subscriber.onNext(result);
                             }
@@ -91,7 +91,7 @@ public class PromiseObservable<V> extends Observable<V> {
                             return;
                         }
                         switch (promise.state()) {
-                            case RESOLVED:
+                            case FULFILLED:
                                 subscriber.onCompleted();
                                 break;
                             case REJECTED:

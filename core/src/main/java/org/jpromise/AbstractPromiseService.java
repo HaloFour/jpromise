@@ -22,7 +22,7 @@ public abstract class AbstractPromiseService implements PromiseService {
             @Override
             public void run() {
                 try {
-                    deferred.resolve(task.call());
+                    deferred.fulfill(task.call());
                 }
                 catch (Throwable exception) {
                     deferred.reject(exception);
@@ -48,7 +48,7 @@ public abstract class AbstractPromiseService implements PromiseService {
             public void run() {
                 try {
                     task.run();
-                    deferred.resolve(result);
+                    deferred.fulfill(result);
                 }
                 catch (Throwable exception) {
                     deferred.reject(exception);

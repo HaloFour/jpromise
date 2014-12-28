@@ -9,9 +9,9 @@ public enum PromiseState {
      */
     PENDING,
     /**
-     * Specifies that the {@link org.jpromise.Promise} has resolved successfully.
+     * Specifies that the {@link org.jpromise.Promise} has fulfilled successfully.
      */
-    RESOLVED,
+    FULFILLED,
     /**
      * Specifies that the {@link org.jpromise.Promise} has been rejected.
      */

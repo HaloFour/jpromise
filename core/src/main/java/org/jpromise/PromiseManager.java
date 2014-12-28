@@ -1,15 +1,12 @@
 package org.jpromise;
 
 import org.jpromise.functions.OnCompleted;
-import org.jpromise.functions.OnResolved;
+import org.jpromise.functions.OnFulfilled;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,7 +28,7 @@ public class PromiseManager {
             @Override
             public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
                 if (counter.decrementAndGet() <= 0) {
-                    deferred.resolve(null);
+                    deferred.fulfill(null);
                 }
             }
         });
@@ -45,7 +42,7 @@ public class PromiseManager {
      */
     public static Promise<Void> whenAllCompleted(Promise<?>... promises) {
         if (promises == null || promises.length == 0) {
-            return Promises.resolved(null);
+            return Promises.fulfilled(null);
         }
         return whenAllCompleted(Arrays.asList(promises));
     }
@@ -93,7 +90,7 @@ public class PromiseManager {
 
     private static <V> Promise<Void> whenAllCompletedImpl(Iterable<? extends Promise<V>> promises, Executor executor, OnCompleted<V> action) {
         if (promises == null) {
-            return Promises.resolved(null);
+            return Promises.fulfilled(null);
         }
 
         final Deferred<Void> deferred = Promises.defer();
@@ -108,13 +105,13 @@ public class PromiseManager {
             whenCompleted(promise, executor, action, deferred, counter);
         }
         if (counter.decrementAndGet() <= 0) {
-            deferred.resolve(null);
+            deferred.fulfill(null);
         }
 
         return deferred.promise();
     }
 
-    private static <V> void whenResolved(Promise<V> promise, Executor executor, OnResolved<? super V> action, final Deferred<Void> deferred, final AtomicInteger counter, final AtomicBoolean done) {
+    private static <V> void whenFulfilled(Promise<V> promise, Executor executor, OnFulfilled<? super V> action, final Deferred<Void> deferred, final AtomicInteger counter, final AtomicBoolean done) {
         if (action != null) {
             promise = promise.then(executor, action);
         }
@@ -128,7 +125,7 @@ public class PromiseManager {
                 }
                 else {
                     if (counter.decrementAndGet() <= 0 && done.compareAndSet(false, true)) {
-                        deferred.resolve(null);
+                        deferred.fulfill(null);
                     }
                 }
             }
@@ -141,11 +138,11 @@ public class PromiseManager {
      * @param promises The array of promises.
      * @return A new {@link org.jpromise.Promise} that represents the resolution of all of the specified {@code promises}.
      */
-    public static Promise<Void> whenAllResolved(Promise<?>... promises) {
+    public static Promise<Void> whenAllFulfilled(Promise<?>... promises) {
         if (promises == null || promises.length == 0) {
-            return Promises.resolved(null);
+            return Promises.fulfilled(null);
         }
-        return whenAllResolved(Arrays.asList(promises));
+        return whenAllFulfilled(Arrays.asList(promises));
     }
 
     /**
@@ -155,8 +152,8 @@ public class PromiseManager {
      * @return A new {@link org.jpromise.Promise} that represents the resolution of all of the specified {@code promises}.
      */
     @SuppressWarnings("unchecked")
-    public static Promise<Void> whenAllResolved(Iterable<? extends Promise<?>> promises) {
-        return whenAllResolvedImpl((Iterable)promises, null, null);
+    public static Promise<Void> whenAllFulfilled(Iterable<? extends Promise<?>> promises) {
+        return whenAllFulfilledImpl((Iterable) promises, null, null);
     }
 
     /**
@@ -164,14 +161,14 @@ public class PromiseManager {
      * the specified action is performed.  If any of the specified promises is rejected then the returned promise
      * immediately rejects with the same exception.
      * @param promises The collection of promises.
-     * @param action The action to perform with the result of each of the promises as they are resolved.
+     * @param action The action to perform with the result of each of the promises as they are fulfilled.
      * @param <V> The result type of the promises.
      * @return A new {@link org.jpromise.Promise} that represents the resolution of all of the specified {@code promises}
      * after the specified action is performed.
      */
-    public static <V> Promise<Void> whenAllResolved(Iterable<? extends Promise<V>> promises, OnResolved<? super V> action) {
+    public static <V> Promise<Void> whenAllFulfilled(Iterable<? extends Promise<V>> promises, OnFulfilled<? super V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
-        return whenAllResolvedImpl(promises, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
+        return whenAllFulfilledImpl(promises, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
     }
     /**
      * Returns a {@link org.jpromise.Promise} representing the successful resolution of the specified promises after
@@ -179,20 +176,20 @@ public class PromiseManager {
      * specified promises is rejected then the returned promise immediately rejects with the same exception.
      * @param promises The collection of promises.
      * @param executor The {@link java.util.concurrent.Executor} on which to schedule the {@code action}.
-     * @param action The action to perform with the result of each of the promises as they are resolved.
+     * @param action The action to perform with the result of each of the promises as they are fulfilled.
      * @param <V> The result type of the promises.
      * @return A new {@link org.jpromise.Promise} that represents the resolution of all of the specified {@code promises}
      * after the specified action is performed.
      */
-    public static <V> Promise<Void> whenAllResolved(Iterable<? extends Promise<V>> promises, Executor executor, OnResolved<? super V> action) {
+    public static <V> Promise<Void> whenAllFulfilled(Iterable<? extends Promise<V>> promises, Executor executor, OnFulfilled<? super V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
-        return whenAllResolvedImpl(promises, executor, action);
+        return whenAllFulfilledImpl(promises, executor, action);
     }
 
-    private static <V> Promise<Void> whenAllResolvedImpl(Iterable<? extends Promise<V>> promises, Executor executor, OnResolved<? super V> action) {
+    private static <V> Promise<Void> whenAllFulfilledImpl(Iterable<? extends Promise<V>> promises, Executor executor, OnFulfilled<? super V> action) {
         if (promises == null) {
-            return Promises.resolved(null);
+            return Promises.fulfilled(null);
         }
 
         final Deferred<Void> deferred = Promises.defer();
@@ -205,10 +202,10 @@ public class PromiseManager {
                 continue;
             }
             counter.incrementAndGet();
-            whenResolved(promise, executor, action, deferred, counter, done);
+            whenFulfilled(promise, executor, action, deferred, counter, done);
         }
         if (counter.decrementAndGet() <= 0 && done.compareAndSet(false, true)) {
-            deferred.resolve(null);
+            deferred.fulfill(null);
         }
 
         return deferred.promise();
@@ -325,8 +322,8 @@ public class PromiseManager {
                 public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
                     if (promise.isDone() && done.compareAndSet(false, true)) {
                         switch (promise.state()) {
-                            case RESOLVED:
-                                deferred.resolve(result);
+                            case FULFILLED:
+                                deferred.fulfill(result);
                                 break;
                             case REJECTED:
                                 deferred.reject(exception);
@@ -341,102 +338,102 @@ public class PromiseManager {
     }
 
     /**
-     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
-     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first fulfilled promise.  If
+     * none of the specified promises fulfill successfully then the returned promise will never be completed.
      * @param promise1 The first promise.
      * @param promise2 The second promise.
      * @param <V> The result type of the promises.
-     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the fulfilled result of the first of the fulfilled promises.
      */
-    public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2) {
+    public static <V> Promise<V> whenAnyFulfilled(Promise<V> promise1, Promise<V> promise2) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(2);
         promises.add(promise1);
         promises.add(promise2);
-        return whenAnyResolved(promises);
+        return whenAnyFulfilled(promises);
     }
 
     /**
-     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
-     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first fulfilled promise.  If
+     * none of the specified promises fulfill successfully then the returned promise will never be completed.
      * @param promise1 The first promise.
      * @param promise2 The second promise.
      * @param promise3 The third promise.
      * @param <V> The result type of the promises.
-     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the fulfilled result of the first of the fulfilled promises.
      */
-    public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3) {
+    public static <V> Promise<V> whenAnyFulfilled(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(3);
         promises.add(promise1);
         promises.add(promise2);
         promises.add(promise3);
-        return whenAnyResolved(promises);
+        return whenAnyFulfilled(promises);
     }
 
     /**
-     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
-     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first fulfilled promise.  If
+     * none of the specified promises fulfill successfully then the returned promise will never be completed.
      * @param promise1 The first promise.
      * @param promise2 The second promise.
      * @param promise3 The third promise.
      * @param promise4 The fourth promise.
      * @param <V> The result type of the promises.
-     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the fulfilled result of the first of the fulfilled promises.
      */
-    public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4) {
+    public static <V> Promise<V> whenAnyFulfilled(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(4);
         promises.add(promise1);
         promises.add(promise2);
         promises.add(promise3);
         promises.add(promise4);
-        return whenAnyResolved(promises);
+        return whenAnyFulfilled(promises);
     }
 
     /**
-     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
-     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first fulfilled promise.  If
+     * none of the specified promises fulfill successfully then the returned promise will never be completed.
      * @param promise1 The first promise.
      * @param promise2 The second promise.
      * @param promise3 The third promise.
      * @param promise4 The fourth promise.
      * @param promise5 The fifth promise.
      * @param <V> The result type of the promises.
-     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved promises.
+     * @return A {@link org.jpromise.Promise} which will propagate the fulfilled result of the first of the fulfilled promises.
      */
-    public static <V> Promise<V> whenAnyResolved(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4, Promise<V> promise5) {
+    public static <V> Promise<V> whenAnyFulfilled(Promise<V> promise1, Promise<V> promise2, Promise<V> promise3, Promise<V> promise4, Promise<V> promise5) {
         List<Promise<V>> promises = new ArrayList<Promise<V>>(5);
         promises.add(promise1);
         promises.add(promise2);
         promises.add(promise3);
         promises.add(promise4);
         promises.add(promise5);
-        return whenAnyResolved(promises);
+        return whenAnyFulfilled(promises);
     }
 
     /**
-     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
-     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first fulfilled promise.  If
+     * none of the specified promises fulfill successfully then the returned promise will never be completed.
      * @param promises The array of promises.
      * @param <V> The result type of the promises.
-     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved
+     * @return A {@link org.jpromise.Promise} which will propagate the fulfilled result of the first of the fulfilled
      * {@code promises}.
      */
-    public static <V> Promise<V> whenAnyResolved(Promise<V>[] promises) {
+    public static <V> Promise<V> whenAnyFulfilled(Promise<V>[] promises) {
         if (promises == null || promises.length == 0) {
             Deferred<V> deferred = Promises.defer();
             return deferred.promise();
         }
-        return whenAnyResolved(Arrays.asList(promises));
+        return whenAnyFulfilled(Arrays.asList(promises));
     }
 
     /**
-     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first resolved promise.  If
-     * none of the specified promises resolve successfully then the returned promise will never be completed.
+     * Returns a new {@link org.jpromise.Promise} which is completed with the result of the first fulfilled promise.  If
+     * none of the specified promises fulfill successfully then the returned promise will never be completed.
      * @param promises The collection of promises.
      * @param <V> The result type of the promises.
-     * @return A {@link org.jpromise.Promise} which will propagate the resolved result of the first of the resolved
+     * @return A {@link org.jpromise.Promise} which will propagate the fulfilled result of the first of the fulfilled
      * {@code promises}.
      */
-    public static <V> Promise<V> whenAnyResolved(Iterable<? extends Promise<V>> promises) {
+    public static <V> Promise<V> whenAnyFulfilled(Iterable<? extends Promise<V>> promises) {
         final Deferred<V> deferred = Promises.defer();
         if (promises == null) {
             return deferred.promise();
@@ -450,8 +447,8 @@ public class PromiseManager {
             promise.whenCompleted(new OnCompleted<V>() {
                 @Override
                 public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
-                    if (promise.isResolved() && done.compareAndSet(false, true)) {
-                        deferred.resolve(result);
+                    if (promise.isFulfilled() && done.compareAndSet(false, true)) {
+                        deferred.fulfill(result);
                     }
                 }
             });

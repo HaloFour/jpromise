@@ -9,12 +9,12 @@ public class DeferredTest {
     public final String SUCCESS1 = "SUCCESS1";
 
     @Test
-    public void resolve() throws Exception {
+    public void fulfill() throws Exception {
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
         assertFalse(promise.isDone());
-        assertTrue(deferred.resolve(SUCCESS1));
-        assertResolves(SUCCESS1, promise);
+        assertTrue(deferred.fulfill(SUCCESS1));
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
@@ -28,16 +28,16 @@ public class DeferredTest {
     }
 
     @Test
-    public void resolveAlreadyCompletedReturnsFalse() throws Exception {
+    public void fulfillAlreadyCompletedReturnsFalse() throws Exception {
         Deferred<String> deferred = Promises.defer();
-        deferred.resolve(SUCCESS1);
-        assertFalse(deferred.resolve(SUCCESS1));
+        deferred.fulfill(SUCCESS1);
+        assertFalse(deferred.fulfill(SUCCESS1));
     }
 
     @Test
     public void rejectAlreadyCompletedReturnsFalse() throws Exception {
         Deferred<String> deferred = Promises.defer();
-        deferred.resolve(SUCCESS1);
+        deferred.fulfill(SUCCESS1);
         Exception exception = new Exception();
         assertFalse(deferred.reject(exception));
     }

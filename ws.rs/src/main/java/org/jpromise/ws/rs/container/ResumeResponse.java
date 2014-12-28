@@ -31,14 +31,14 @@ public class ResumeResponse<RESPONSE> implements OnCompleted<RESPONSE> {
      * Resumes the suspended {@link javax.ws.rs.container.AsyncResponse} using the completed result of the
      * {@link org.jpromise.Promise} to which this callback has been registered.
      * @param promise The promise that has completed.
-     * @param result The result of the promise if the promise has resolved successfully, otherwise {@code null}.
+     * @param result The result of the promise if the promise has fulfilled successfully, otherwise {@code null}.
      * @param exception The exception that caused the promise to be rejected, otherwise {@code null}.
      * @throws Throwable
      */
     @Override
     public final void completed(Promise<RESPONSE> promise, RESPONSE result, Throwable exception) throws Throwable {
         switch (promise.state()) {
-            case RESOLVED:
+            case FULFILLED:
                 response.resume(result);
                 break;
             case REJECTED:

@@ -17,8 +17,8 @@ public class TakeUntilOperator<V1, V2> extends StreamOperator<V1, V1> {
     }
 
     @Override
-    protected void resolved(PromiseSubscriber<? super V1> subscriber, V1 result) throws Throwable {
-        subscriber.resolved(result);
+    protected void fulfilled(PromiseSubscriber<? super V1> subscriber, V1 result) throws Throwable {
+        subscriber.fulfilled(result);
     }
 
     @Override
@@ -37,9 +37,9 @@ public class TakeUntilOperator<V1, V2> extends StreamOperator<V1, V1> {
         }
 
         @Override
-        public void resolved(V1 result) {
+        public void fulfilled(V1 result) {
             if (!flag.get()) {
-                parent.resolved(result);
+                parent.fulfilled(result);
             }
         }
 

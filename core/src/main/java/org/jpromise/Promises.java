@@ -38,22 +38,22 @@ public class Promises {
     }
 
     /**
-     * Returns a new {@link org.jpromise.Promise} that is already resolved.
-     * @return A resolved promise.
+     * Returns a new {@link org.jpromise.Promise} that is already fulfilled.
+     * @return A fulfilled promise.
      */
-    public static Promise<Void> resolved() {
-        return resolved(null);
+    public static Promise<Void> fulfilled() {
+        return fulfilled(null);
     }
 
     /**
-     * Returns a new {@link org.jpromise.Promise} that is already resolved with the specified result.
+     * Returns a new {@link org.jpromise.Promise} that is already fulfilled with the specified result.
      * @param result The result of the returned promise.
      * @param <V> The type of the result of the promise.
-     * @return A resolved promise.
+     * @return A fulfilled promise.
      */
-    public static <V> Promise<V> resolved(V result) {
+    public static <V> Promise<V> fulfilled(V result) {
         Deferred<V> deferred = defer();
-        deferred.resolve(result);
+        deferred.fulfill(result);
         return deferred.promise();
     }
 
@@ -82,10 +82,10 @@ public class Promises {
     }
 
     /**
-     * Returns a new {@link org.jpromise.Promise} that will be resolved when the timeout expires.
+     * Returns a new {@link org.jpromise.Promise} that will be fulfilled when the timeout expires.
      * @param timeout The amount of time to wait.
      * @param timeUnit The time unit of the {@code timeout} argument.
-     * @return A promise that will be resolved when the timeout expires.
+     * @return A promise that will be fulfilled when the timeout expires.
      */
     public static Promise<Void> delay(long timeout, TimeUnit timeUnit) {
         if (timeUnit == null) throw new IllegalArgumentException(mustNotBeNull("timeUnit"));
@@ -94,7 +94,7 @@ public class Promises {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                deferred.resolve(null);
+                deferred.fulfill(null);
             }
         }, timeUnit.toMillis(timeout));
         return deferred.promise();

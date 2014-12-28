@@ -25,8 +25,8 @@ public class FilterRejectedOperator<V, E extends Throwable> extends BoundedStrea
     }
 
     @Override
-    protected void resolved(BoundedPromiseSubscriber<V> subscriber, V result) throws Throwable {
-        subscriber.resolved(result);
+    protected void fulfilled(BoundedPromiseSubscriber<V> subscriber, V result) throws Throwable {
+        subscriber.fulfilled(result);
     }
 
     @Override

@@ -21,13 +21,13 @@ Creating promises:
 
 ```java
 
-// Creating an already resolved promise
-Promise<String> promise1 = Promises.resolved("Hello World!");
+// Creating an already fulfilled promise
+Promise<String> promise1 = Promises.fulfilled("Hello World!");
 
 // Creating an already rejected promise
 Promise<String> promise2 = Promises.rejected(new Exception("Oops!"));
 
-// Creating a deferred promise that will be resolved or rejected later
+// Creating a deferred promise that will be fulfilled or rejected later
 Deferred<String> deferred = Promises.defer();
 Promise<String> promise3 = deferred.promise();
 // later
@@ -64,34 +64,34 @@ promise returned in the callback.  In all cases if the callback throws an except
 the returned promise is rejected with that exception.
 
 ```java
-Promise<String> promise1 = Promises.resolved("Hello World!");
+Promise<String> promise1 = Promises.fulfilled("Hello World!");
 
 // Calls the callback when the promise resolves passing the result of the promise.  When the callback
 // completes the returned promise will resolve with the same result.  However, if the callback throws
 // an exception the returned promise will be rejected with that exception.
 Promise<String> promise2 = promise1.then(new OnResolved<String>() {
-    @Override public void resolved(String result) {
+    @Override public void fulfilled(String result) {
         System.out.println(result);
     }
 });
 
 // Calls the callback when the promise resolves passing the result of the promise.  The callback can
 // then synchronously transform the result into a new value of any type.  The returned promise will
-// be resolved with that transformed value when the callback returns.  If the callback throws an
+// be fulfilled with that transformed value when the callback returns.  If the callback throws an
 // exception the returned promise will be rejected with that exception.
 Promise<String> promise3 = promise2.thenApply(new OnResolvedFunction<String, String>() {
-    @Override public String resolved(String result) {
+    @Override public String fulfilled(String result) {
         return new StringBuilder(result).reverse().toString();
     }
 });
 
 // Calls the callback when the promise resolves passing the result of the promise.  The callback
 // can then return any Future representing an asynchronous operation, including another Promise.
-// The promise returned by this method will be resolved or rejected with the same result as that
+// The promise returned by this method will be fulfilled or rejected with the same result as that
 // returned Future.
 Promise<String> promise4 = promise3.thenCompose(new OnResolvedFunction<String, Future<String>>() {
-    @Override public Future<String> resolved(String result) {
-        return Promise.resolved("Goodbye world!");
+    @Override public Future<String> fulfilled(String result) {
+        return Promises.fulfilled("Goodbye world!");
     }
 });
 
@@ -106,7 +106,7 @@ Promise<String> promise5 = promise4.whenRejected(new OnRejected<Throwable>() {
 
 // Calls the callback when the promise is rejected passing the exception.  The callback can then
 // synchronously resolve to a value of the original promise type.  The returned promise will be
-// resolved with that new value when the callback returns.  If the callback throws an
+// fulfilled with that new value when the callback returns.  If the callback throws an
 // exception the returned promise will be rejected with that exception.
 Promise<String> promise6 = promise5.withHandler(new OnRejectedHandler<Throwable, String>() {
     @Override public String handle(Throwable exception) {
@@ -116,15 +116,15 @@ Promise<String> promise6 = promise5.withHandler(new OnRejectedHandler<Throwable,
 
 // Calls the callback when the promise is rejected passing the exception.  The callback can then
 // return a Future of the original promise type representing an asynchronous operation.  The promise
-// returned by this method will be resolved or rejected with the same result as that returned Future.
+// returned by this method will be fulfilled or rejected with the same result as that returned Future.
 Promise<String> promise7 = promise6.withFallback(new OnRejectedHandler<Throwable, Future<String>>() {
     @Override public Future<String> handle(Throwable exception) {
-        return Promise.resolved("Got a good value from somewhere else.");
+        return Promises.fulfilled("Got a good value from somewhere else.");
     }
 });
 
 // Calls the callback when the promise is completed with either a resolution or a rejection.  When
-// the callback completes the returned promise will be resolved or rejected with the same result.
+// the callback completes the returned promise will be fulfilled or rejected with the same result.
 // If the callback throws an exception the returned promise will be rejected with that exception.
 Promise<String> promise8 = promise7.whenCompleted(new OnCompleted<String>() {
     @Override public void completed(Promise<String> promise, String result, Throwable exception) {
@@ -158,14 +158,14 @@ executor is not specified the callbacks will be executed asynchronously on a com
 ForkJoinPool mainPool = ...;
 
 Promise<String> promise10 = promise9.then(mainPool, new OnResolved<String>() {
-    @Override public void resolved(String result) {
+    @Override public void fulfilled(String result) {
         // executed asynchronously on the specified ForkJoinPool
     }
 });
 
 Promise<String> promise11 = promise10.then(PromiseExecutors.CURRENT_THREAD, new OnResolved<String>() {
-    @Override public void resolved(String result) {
-        // executed synchronously on the thread that resolved the promise
+    @Override public void fulfilled(String result) {
+        // executed synchronously on the thread that fulfilled the promise
     }
 });
 ```
@@ -174,19 +174,19 @@ All of the composable methods are written specifically so that they play well wi
 overload ambiguity.  The following are identical to the examples above.
 
 ```java
-Promise<String> promise1 = Promises.resolved("Hello World!");
+Promise<String> promise1 = Promises.fulfilled("Hello World!");
 
 Promise<String> promise2 = promise1.then(result -> { System.out.println(result); });
 
 Promise<String> promise3 = promise2.thenApply(result -> new StringBuilder(result).reverse().toString());
 
-Promise<String> promise4 = promise3.thenCompose(result -> Promise.resolved("Goodbye world!"));
+Promise<String> promise4 = promise3.thenCompose(result -> Promises.fulfilled("Goodbye world!"));
 
 Promise<String> promise5 = promise4.whenRejected(exception -> { System.err.println(exception.toString()); });
 
 Promise<String> promise6 = promise5.withHandler(exception -> "Oops, this oughta fix it.");
 
-Promise<String> promise7 = promise6.withFallback(exception -> Promise.resolved("Got a good value from somewhere else."));
+Promise<String> promise7 = promise6.withFallback(exception -> Promises.fulfilled("Got a good value from somewhere else."));
 
 Promise<String> promise8 = promise7.whenCompleted((p, result, exception) -> {
     switch (promise.state()) {
@@ -210,12 +210,12 @@ is to join two-to-five separate heterogeneous promises into a pattern which beha
 Promise<String> promise1 = ...;
 Promise<Integer> promise2 = ...;
 
-// create a single promise that will resolve when all of the specified promises have resolved
+// create a single promise that will resolve when all of the specified promises have fulfilled
 Promise<Pattern2<String, Integer>> joined = Pattern.join(promise1, promise2);
 
 // helper methods on the Pattern class can deconstruct the result into the individual arguments
 joined.then(Pattern.spread2(new OnResolved2<String, Integer>() {
-    @Override public void resolved(String result1, Integer result2) {
+    @Override public void fulfilled(String result1, Integer result2) {
         System.out.printf("Both promises completed successfully: %s, %d%n", result1, result2);
     }
 }));
@@ -226,12 +226,12 @@ You can also asynchronously wait on the completion or resolution of any number o
 ```java
 List<Promise<?>> promises = ...;
 
-// Returns a promise that will resolve when all of the specified promises have either been resolved or rejected
+// Returns a promise that will resolve when all of the specified promises have either been fulfilled or rejected
 Promise<Void> completed = PromiseManager.whenAllCompleted(promises);
 
-// Returns a promise that will resolve when all of the specified promises have been resolved.  If any of the
+// Returns a promise that will resolve when all of the specified promises have been fulfilled.  If any of the
 // promises is rejected then the returned promise will propagate that rejection.
-Promise<Void> resolved = PromiseManager.whenAllResolved(promises);
+Promise<Void> fulfilled = PromiseManager.whenAllResolved(promises);
 ```
 
 There are methods to race the completion of one or more promises.
@@ -243,7 +243,7 @@ List<Promise<String>> promises = ...;
 Promise<String> completed = PromiseManager.whenAnyCompleted(promises);
 
 // Returns a promise that propagates the result of the first promise that resolves.
-Promise<String> resolved = PromiseManager.whenAnyResolved(promises);
+Promise<String> fulfilled = PromiseManager.whenAnyResolved(promises);
 ```
 
 The `PromiseStream` class provides basic query and collection functionality over any number of homogeneous promises.
@@ -256,7 +256,7 @@ PromiseStream<String> stream = PromiseStream.from(promises);
 Promise<Integer[]> promise = stream
     // transform the results of the individual promises
     .map(new OnResolvedFunction<String, Integer>() {
-        @Override public Integer resolved(String result) {
+        @Override public Integer fulfilled(String result) {
             return Integer.valueOf(result, 10);
         }
     })
@@ -266,7 +266,7 @@ Promise<Integer[]> promise = stream
     .toArray(Integer.class, 10);
     
 promise.then(new OnResolved<Integer[]>() {
-    @Override public void resolved(Integer[] result) {
+    @Override public void fulfilled(Integer[] result) {
         // use the final results here
     }
 });

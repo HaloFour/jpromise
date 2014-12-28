@@ -1,13 +1,13 @@
 package org.jpromise.operators;
 
-import org.jpromise.functions.OnResolved;
+import org.jpromise.functions.OnFulfilled;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
 public class ForEachOperator<V> extends TerminalOperator<V, Void> {
-    private final OnResolved<V> action;
+    private final OnFulfilled<V> action;
 
-    public ForEachOperator(OnResolved<V> action) {
+    public ForEachOperator(OnFulfilled<V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
         this.action = action;
     }
@@ -22,8 +22,8 @@ public class ForEachOperator<V> extends TerminalOperator<V, Void> {
         public void start() throws Throwable { }
 
         @Override
-        public void resolved(V result) throws Throwable {
-            action.resolved(result);
+        public void fulfilled(V result) throws Throwable {
+            action.fulfilled(result);
         }
 
         @Override

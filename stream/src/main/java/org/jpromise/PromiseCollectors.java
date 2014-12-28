@@ -1,6 +1,6 @@
 package org.jpromise;
 
-import org.jpromise.functions.OnResolvedFunction;
+import org.jpromise.functions.OnFulfilledFunction;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -189,21 +189,21 @@ public class PromiseCollectors {
         };
     }
 
-    public static <V, MK> PromiseCollector<V, ?, Map<MK, V>> toMap(Class<MK> keyClass, Class<V> valueClass, OnResolvedFunction<V, MK> keyMapper) {
+    public static <V, MK> PromiseCollector<V, ?, Map<MK, V>> toMap(Class<MK> keyClass, Class<V> valueClass, OnFulfilledFunction<V, MK> keyMapper) {
         return toMap(new Callable<Map<MK, V>>() {
             @Override
             public Map<MK, V> call() throws Exception {
                 return new HashMap<MK, V>();
             }
-        }, keyMapper, new OnResolvedFunction<V, V>() {
+        }, keyMapper, new OnFulfilledFunction<V, V>() {
             @Override
-            public V resolved(V result) throws Throwable {
+            public V fulfilled(V result) throws Throwable {
                 return result;
             }
         });
     }
 
-    public static <V, MK, MV> PromiseCollector<V, ?, Map<MK, MV>> toMap(Class<MK> keyClass, Class<MV> valueClass, OnResolvedFunction<V, MK> keyMapper, OnResolvedFunction<V, MV> valueMapper) {
+    public static <V, MK, MV> PromiseCollector<V, ?, Map<MK, MV>> toMap(Class<MK> keyClass, Class<MV> valueClass, OnFulfilledFunction<V, MK> keyMapper, OnFulfilledFunction<V, MV> valueMapper) {
         return toMap(new Callable<Map<MK, MV>>() {
             @Override
             public Map<MK, MV> call() throws Exception {
@@ -212,16 +212,16 @@ public class PromiseCollectors {
         }, keyMapper, valueMapper);
     }
 
-    public static <V, MK, M extends Map<MK, V>> PromiseCollector<V, ?, M> toMap(M map, OnResolvedFunction<V, MK> keyMapper) {
-        return toMap(map, keyMapper, new OnResolvedFunction<V, V>() {
+    public static <V, MK, M extends Map<MK, V>> PromiseCollector<V, ?, M> toMap(M map, OnFulfilledFunction<V, MK> keyMapper) {
+        return toMap(map, keyMapper, new OnFulfilledFunction<V, V>() {
             @Override
-            public V resolved(V result) throws Throwable {
+            public V fulfilled(V result) throws Throwable {
                 return result;
             }
         });
     }
 
-    public static <V, MK, MV, M extends Map<MK, MV>> PromiseCollector<V, ?, M> toMap(final M map, final OnResolvedFunction<V, MK> keyMapper, final OnResolvedFunction<V, MV> valueMapper) {
+    public static <V, MK, MV, M extends Map<MK, MV>> PromiseCollector<V, ?, M> toMap(final M map, final OnFulfilledFunction<V, MK> keyMapper, final OnFulfilledFunction<V, MV> valueMapper) {
         if (map == null) throw new IllegalArgumentException(mustNotBeNull("map"));
         if (keyMapper == null) throw new IllegalArgumentException(mustNotBeNull("keyMapper"));
         if (valueMapper == null) throw new IllegalArgumentException(mustNotBeNull("valueMapper"));
@@ -229,8 +229,8 @@ public class PromiseCollectors {
         return new SingleAccumulatorPromiseCollector<V, M, M>(map) {
             @Override
             public void accumulate(M accumulator, V result) throws Throwable {
-                MK key = keyMapper.resolved(result);
-                MV value = valueMapper.resolved(result);
+                MK key = keyMapper.fulfilled(result);
+                MV value = valueMapper.fulfilled(result);
                 synchronized (lock) {
                     accumulator.put(key, value);
                 }
@@ -243,7 +243,7 @@ public class PromiseCollectors {
         };
     }
 
-    public static <V, MK, MV, M extends Map<MK, MV>> PromiseCollector<V, ?, M> toMap(final Callable<M> mapFactory, final OnResolvedFunction<V, MK> keyMapper, final OnResolvedFunction<V, MV> valueMapper) {
+    public static <V, MK, MV, M extends Map<MK, MV>> PromiseCollector<V, ?, M> toMap(final Callable<M> mapFactory, final OnFulfilledFunction<V, MK> keyMapper, final OnFulfilledFunction<V, MV> valueMapper) {
         if (mapFactory == null) throw new IllegalArgumentException(mustNotBeNull("mapFactory"));
         if (keyMapper == null) throw new IllegalArgumentException(mustNotBeNull("keyMapper"));
         if (valueMapper == null) throw new IllegalArgumentException(mustNotBeNull("valueMapper"));
@@ -256,8 +256,8 @@ public class PromiseCollectors {
 
             @Override
             public void accumulate(M accumulator, V result) throws Throwable {
-                MK key = keyMapper.resolved(result);
-                MV value = valueMapper.resolved(result);
+                MK key = keyMapper.fulfilled(result);
+                MV value = valueMapper.fulfilled(result);
                 synchronized (lock) {
                     accumulator.put(key, value);
                 }
@@ -270,17 +270,17 @@ public class PromiseCollectors {
         };
     }
 
-    public static <V, A, K> PromiseCollector<V, ?, Map<K, Set<V>>> groupingBy(Class<K> keyClass, Class<V> resultClass, OnResolvedFunction<V, K> keyMapper) {
+    public static <V, A, K> PromiseCollector<V, ?, Map<K, Set<V>>> groupingBy(Class<K> keyClass, Class<V> resultClass, OnFulfilledFunction<V, K> keyMapper) {
         Map<K, Set<V>> groupMap = new HashMap<K, Set<V>>();
         return groupingBy(groupMap, keyMapper, PromiseCollectors.toSet(resultClass));
     }
 
-    public static <V, A, K, C> PromiseCollector<V, ?, Map<K, C>> groupingBy(Class<K> keyClass, final OnResolvedFunction<V, K> keyMapper, final PromiseCollector<V, A, C> groupCollector) {
+    public static <V, A, K, C> PromiseCollector<V, ?, Map<K, C>> groupingBy(Class<K> keyClass, final OnFulfilledFunction<V, K> keyMapper, final PromiseCollector<V, A, C> groupCollector) {
         Map<K, C> groupMap = new HashMap<K, C>();
         return groupingBy(groupMap, keyMapper, groupCollector);
     }
 
-    public static <V, A, K, C, M extends Map<K, C>> PromiseCollector<V, ?, M> groupingBy(final M map, final OnResolvedFunction<V, K> keyMapper, final PromiseCollector<V, A, C> groupCollector) {
+    public static <V, A, K, C, M extends Map<K, C>> PromiseCollector<V, ?, M> groupingBy(final M map, final OnFulfilledFunction<V, K> keyMapper, final PromiseCollector<V, A, C> groupCollector) {
         if (map == null) throw new IllegalArgumentException(mustNotBeNull("map"));
         if (keyMapper == null) throw new IllegalArgumentException(mustNotBeNull("keyMapper"));
         if (groupCollector == null) throw new IllegalArgumentException(mustNotBeNull("groupCollector"));
@@ -293,7 +293,7 @@ public class PromiseCollectors {
 
             @Override
             public void accumulate(Map<K, A> accumulator, V result) throws Throwable {
-                K key = keyMapper.resolved(result);
+                K key = keyMapper.fulfilled(result);
                 A group;
                 synchronized (lock) {
                     if (accumulator.containsKey(key)) {

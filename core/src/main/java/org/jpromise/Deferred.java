@@ -6,11 +6,11 @@ package org.jpromise;
  */
 public interface Deferred<V> {
     /**
-     * Resolves the deferred operation with the specified result.
+     * Fulfills the deferred operation with the specified result.
      * @param result The result of the deferred operation.
-     * @return {@code true} if the deferred operation was resolved; otherwise, {@code false}.
+     * @return {@code true} if the deferred operation was fulfilled; otherwise, {@code false}.
      */
-    boolean resolve(V result);
+    boolean fulfill(V result);
 
     /**
      * Rejects the deferred operation with the specified exception.

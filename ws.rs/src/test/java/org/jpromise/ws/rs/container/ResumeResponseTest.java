@@ -18,11 +18,11 @@ public class ResumeResponseTest {
         AsyncResponse response = mock(AsyncResponse.class);
         when(response.resume(eq(SUCCESS1))).thenReturn(true);
 
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
         Promise<String> promise2 = promise1.whenCompleted(new ResumeResponse<String>(response));
 
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise2);
         verify(response, times(1)).resume(eq(SUCCESS1));
         verify(response, never()).resume(any(Throwable.class));
     }

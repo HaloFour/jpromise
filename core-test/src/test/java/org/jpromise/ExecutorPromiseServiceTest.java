@@ -6,7 +6,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 
 import static org.jpromise.PromiseHelpers.assertRejects;
-import static org.jpromise.PromiseHelpers.assertResolves;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -34,7 +33,7 @@ public class ExecutorPromiseServiceTest {
         Runnable runnable = captor.getValue();
         runnable.run();
 
-        assertResolves(promise);
+        PromiseHelpers.assertFulfills(promise);
     }
 
     @Test
@@ -57,7 +56,7 @@ public class ExecutorPromiseServiceTest {
         Runnable runnable = captor.getValue();
         runnable.run();
 
-        assertResolves(SUCCESS1, promise);
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
     }
 
     @Test

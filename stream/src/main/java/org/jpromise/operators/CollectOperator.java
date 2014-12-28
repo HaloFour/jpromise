@@ -34,7 +34,7 @@ public class CollectOperator<V, A, R> extends TerminalOperator<V, R> {
         }
 
         @Override
-        public void resolved(V result) throws Throwable {
+        public void fulfilled(V result) throws Throwable {
             collector.accumulate(accumulator, result);
         }
 

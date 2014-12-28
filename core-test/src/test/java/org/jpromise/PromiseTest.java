@@ -6,9 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.*;
 
@@ -24,12 +22,12 @@ public class PromiseTest {
     private static final String FAIL1 = "FAIL1";
 
     @Test
-    public void resolves() throws Throwable {
-        Promise<String> promise = resolveAfter(SUCCESS1, 100);
+    public void fulfills() throws Throwable {
+        Promise<String> promise = fulfillAfter(SUCCESS1, 100);
 
         assertEquals(promise.state(), PromiseState.PENDING);
 
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
@@ -42,16 +40,16 @@ public class PromiseTest {
 
     @Test
     public void then() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
         @SuppressWarnings("unchecked")
-        OnResolved<String> callback = mock(OnResolved.class);
+        OnFulfilled<String> callback = mock(OnFulfilled.class);
 
         Promise<String> promise2 = promise1.then(callback);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS1, promise2);
-        verify(callback, times(1)).resolved(SUCCESS1);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise2);
+        verify(callback, times(1)).fulfilled(SUCCESS1);
     }
 
     @Test
@@ -60,41 +58,41 @@ public class PromiseTest {
         Promise<String> promise1 = rejectAfter(exception, 10);
 
         @SuppressWarnings("unchecked")
-        OnResolved<String> callback = mock(OnResolved.class);
+        OnFulfilled<String> callback = mock(OnFulfilled.class);
         Promise<String> promise2 = promise1.then(callback);
 
         assertRejects(exception, promise1);
         assertRejects(exception, promise2);
-        verify(callback, never()).resolved(anyString());
+        verify(callback, never()).fulfilled(anyString());
     }
 
     @Test
     public void thenThrows() throws Throwable {
         final Exception exception = new Exception();
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        Promise<String> promise2 = promise1.then(new OnResolved<String>() {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        Promise<String> promise2 = promise1.then(new OnFulfilled<String>() {
             @Override
-            public void resolved(String result) throws Throwable {
+            public void fulfilled(String result) throws Throwable {
                 throw exception;
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise1);
         assertRejects(exception, promise2);
     }
 
     @Test
     public void testApply() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        Promise<String> promise2 = promise1.thenApply(new OnResolvedFunction<String, String>() {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        Promise<String> promise2 = promise1.thenApply(new OnFulfilledFunction<String, String>() {
             @Override
-            public String resolved(String result) throws Throwable {
+            public String fulfilled(String result) throws Throwable {
                 return SUCCESS2;
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
     }
 
     @Test
@@ -103,75 +101,75 @@ public class PromiseTest {
         Promise<String> promise1 = rejectAfter(exception, 10);
 
         @SuppressWarnings("unchecked")
-        OnResolvedFunction<String, String> callback = mock(OnResolvedFunction.class);
-        when(callback.resolved(anyString())).thenReturn(SUCCESS2);
+        OnFulfilledFunction<String, String> callback = mock(OnFulfilledFunction.class);
+        when(callback.fulfilled(anyString())).thenReturn(SUCCESS2);
 
         Promise<String> promise2 = promise1.thenApply(callback);
 
         assertRejects(exception, promise1);
         assertRejects(exception, promise2);
 
-        verify(callback, never()).resolved(anyString());
+        verify(callback, never()).fulfilled(anyString());
     }
 
     @Test
     public void thenApplyThrows() throws Throwable {
         final Exception exception = new Exception();
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        Promise<String> promise2 = promise1.thenApply(new OnResolvedFunction<String, String>() {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        Promise<String> promise2 = promise1.thenApply(new OnFulfilledFunction<String, String>() {
             @Override
-            public String resolved(String result) throws Throwable {
+            public String fulfilled(String result) throws Throwable {
                 throw exception;
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise1);
         assertRejects(exception, promise2);
     }
 
     @Test
     public void thenCompose() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
-        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+        Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Future<String>>() {
             @Override
-            public Future<String> resolved(String d) {
-                return resolveAfter(SUCCESS2, 10);
+            public Future<String> fulfilled(String d) {
+                return fulfillAfter(SUCCESS2, 10);
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
     }
 
     @Test
-    public void thenComposeAlreadyResolved() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+    public void thenComposeAlreadyFulfilled() throws Throwable {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
-        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+        Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Future<String>>() {
             @Override
-            public Future<String> resolved(String d) {
-                return Promises.resolved(SUCCESS2);
+            public Future<String> fulfilled(String d) {
+                return Promises.fulfilled(SUCCESS2);
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
     }
 
     @Test
     public void thenComposeAlreadyRejected() throws Throwable {
         final Exception exception = new Exception();
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
-        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+        Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Future<String>>() {
             @Override
-            public Future<String> resolved(String d) {
+            public Future<String> fulfilled(String d) {
                 return Promises.rejected(exception);
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise1);
         assertRejects(exception, promise2);
     }
 
@@ -179,19 +177,19 @@ public class PromiseTest {
     @SuppressWarnings("unchecked")
     public void thenComposeAlreadyRejectedWithEmptyExecutionException() throws Throwable {
         final ExecutionException exception = new ExecutionException(null);
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
         final Promise<String> promise3 = mock(Promise.class);
         when(promise3.isDone()).thenReturn(true);
         when(promise3.get()).thenThrow(exception);
 
-        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+        Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Future<String>>() {
             @Override
-            public Future<String> resolved(String d) {
+            public Future<String> fulfilled(String d) {
                 return promise3;
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise1);
         assertRejects(exception, promise2);
     }
 
@@ -199,19 +197,19 @@ public class PromiseTest {
     @SuppressWarnings("unchecked")
     public void thenComposeAlreadyRejectedWithInterruptedException() throws Throwable {
         final InterruptedException exception = new InterruptedException();
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
         final Promise<String> promise3 = mock(Promise.class);
         when(promise3.isDone()).thenReturn(true);
         when(promise3.get()).thenThrow(exception);
 
-        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+        Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Future<String>>() {
             @Override
-            public Future<String> resolved(String d) {
+            public Future<String> fulfilled(String d) {
                 return promise3;
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise1);
         assertRejects(exception, promise2);
     }
 
@@ -220,10 +218,10 @@ public class PromiseTest {
         Exception exception = new Exception();
         Promise<String> promise1 = rejectAfter(exception, 10);
 
-        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Promise<String>>() {
+        Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Promise<String>>() {
             @Override
-            public Promise<String> resolved(String d) {
-                return resolveAfter(SUCCESS1, 10);
+            public Promise<String> fulfilled(String d) {
+                return fulfillAfter(SUCCESS1, 10);
             }
         });
 
@@ -234,58 +232,58 @@ public class PromiseTest {
     @Test
     public void thenComposeRejects() throws Throwable {
         final Exception exception = new Exception();
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
-        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Promise<String>>() {
+        Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Promise<String>>() {
             @Override
-            public Promise<String> resolved(String d) {
+            public Promise<String> fulfilled(String d) {
                 return rejectAfter(exception, 10);
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise1);
         assertRejects(exception, promise2);
     }
 
     @Test
     public void thenComposeThrows() throws Throwable {
         final Exception exception = new Exception();
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
-        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Promise<String>>() {
+        Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Promise<String>>() {
             @Override
-            public Promise<String> resolved(String d) throws Throwable {
+            public Promise<String> fulfilled(String d) throws Throwable {
                 throw exception;
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise1);
         assertRejects(exception, promise2);
     }
 
     @Test
     public void thenComposeNullPromise() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
-        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Promise<String>>() {
+        Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Promise<String>>() {
             @Override
-            public Promise<String> resolved(String d) throws Throwable {
+            public Promise<String> fulfilled(String d) throws Throwable {
                 return null;
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(null, promise2);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(null, promise2);
     }
 
     @Test
     public void thenComposeFuture() throws Throwable {
         final ExecutorService executor = Executors.newSingleThreadExecutor();
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
-        Promise<String> promise2 = promise1.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+        Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Future<String>>() {
             @Override
-            public Future<String> resolved(String result) throws Throwable {
+            public Future<String> fulfilled(String result) throws Throwable {
                 return executor.submit(new Callable<String>() {
                     @Override
                     public String call() throws Exception {
@@ -295,8 +293,8 @@ public class PromiseTest {
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS2, promise2);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
 
         executor.shutdown();
     }
@@ -348,15 +346,15 @@ public class PromiseTest {
     }
 
     @Test
-    public void whenRejectedResolved() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+    public void whenRejectedFulfilled() throws Throwable {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
         @SuppressWarnings("unchecked")
         OnRejected<Throwable> callback = mock(OnRejected.class);
         Promise<String> promise2 = promise1.whenRejected(callback);
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise2);
         verify(callback, never()).rejected(any(Throwable.class));
     }
 
@@ -410,7 +408,7 @@ public class PromiseTest {
         });
 
         assertRejects(exception, promise1);
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise2);
     }
 
     @Test
@@ -420,7 +418,7 @@ public class PromiseTest {
         Promise<String> promise2 = promise1.handleWith(SUCCESS1);
 
         assertRejects(exception, promise1);
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise2);
     }
 
     @Test
@@ -435,7 +433,7 @@ public class PromiseTest {
         });
 
         assertRejects(exception, promise1);
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise2);
     }
 
     @Test
@@ -445,7 +443,7 @@ public class PromiseTest {
         Promise<String> promise2 = promise1.handleWith(ArithmeticException.class, SUCCESS1);
 
         assertRejects(exception, promise1);
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise2);
     }
 
     @Test
@@ -464,8 +462,8 @@ public class PromiseTest {
     }
 
     @Test
-    public void handleWithResolved() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+    public void handleWithFulfilled() throws Throwable {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
         Promise<String> promise2 = promise1.handleWith(new OnRejectedHandler<Throwable, String>() {
             @Override
             public String handle(Throwable exception) {
@@ -473,8 +471,8 @@ public class PromiseTest {
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise2);
     }
 
     @Test
@@ -512,7 +510,7 @@ public class PromiseTest {
         runnable.run();
         verify(callback, times(1)).handle(exception);
 
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise2);
     }
 
     @Test
@@ -523,27 +521,27 @@ public class PromiseTest {
         Promise<String> promise2 = promise1.fallbackWith(new OnRejectedHandler<Throwable, Promise<String>>() {
             @Override
             public Promise<String> handle(Throwable reason) throws Throwable {
-                return resolveAfter(SUCCESS1, 10);
+                return fulfillAfter(SUCCESS1, 10);
             }
         });
 
         assertRejects(exception, promise1);
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise2);
     }
 
     @Test
-    public void fallbackWithResolved() throws Throwable {
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
+    public void fallbackWithFulfilled() throws Throwable {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
         Promise<String> promise2 = promise1.fallbackWith(new OnRejectedHandler<Throwable, Promise<String>>() {
             @Override
             public Promise<String> handle(Throwable reason) {
-                return resolveAfter(SUCCESS2, 10);
+                return fulfillAfter(SUCCESS2, 10);
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise2);
     }
 
     @Test
@@ -617,13 +615,13 @@ public class PromiseTest {
         runnable.run();
 
         verify(callback, times(1)).handle(exception);
-        deferred.resolve(SUCCESS1);
+        deferred.fulfill(SUCCESS1);
 
         verify(executor, times(1)).execute(captor.capture());
         runnable = captor.getValue();
         runnable.run();
 
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise2);
     }
 
     @Test
@@ -634,12 +632,12 @@ public class PromiseTest {
         Promise<String> promise2 = promise1.fallbackWith(ArithmeticException.class, new OnRejectedHandler<ArithmeticException, Promise<String>>() {
             @Override
             public Promise<String> handle(ArithmeticException reason) {
-                return resolveAfter(SUCCESS1, 10);
+                return fulfillAfter(SUCCESS1, 10);
             }
         });
 
         assertRejects(exception, promise1);
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise2);
     }
 
     @Test
@@ -650,7 +648,7 @@ public class PromiseTest {
         Promise<String> promise2 = promise1.fallbackWith(ArithmeticException.class, new OnRejectedHandler<ArithmeticException, Promise<String>>() {
             @Override
             public Promise<String> handle(ArithmeticException reason) {
-                return resolveAfter(SUCCESS1, 10);
+                return fulfillAfter(SUCCESS1, 10);
             }
         });
 
@@ -664,21 +662,21 @@ public class PromiseTest {
         Executor executor = mock(Executor.class);
         doThrow(exception).when(executor).execute(any(Runnable.class));
 
-        Promise<String> promise1 = resolveAfter(SUCCESS1, 10);
-        Promise<String> promise2 = promise1.thenApply(executor, new OnResolvedFunction<String, String>() {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+        Promise<String> promise2 = promise1.thenApply(executor, new OnFulfilledFunction<String, String>() {
             @Override
-            public String resolved(String result) throws Throwable {
+            public String fulfilled(String result) throws Throwable {
                 return SUCCESS2;
             }
         });
 
-        assertResolves(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise1);
         assertRejects(exception, promise2);
     }
 
     @Test
     public void cancel() throws Throwable {
-        Promise<String> promise = resolveAfter(SUCCESS1, 100);
+        Promise<String> promise = fulfillAfter(SUCCESS1, 100);
         assertTrue(promise.cancel(true));
         assertRejects(CancellationException.class, promise);
         assertTrue(promise.isCancelled());
@@ -686,40 +684,40 @@ public class PromiseTest {
 
     @Test
     public void cancelCompleted() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
         assertFalse(promise.cancel(true));
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(SUCCESS1, promise);
         assertFalse(promise.isCancelled());
     }
 
     @Test
     public void cancelPreventsCallback() throws Throwable {
         @SuppressWarnings("unchecked")
-        OnResolved<String> callback = mock(OnResolved.class);
+        OnFulfilled<String> callback = mock(OnFulfilled.class);
 
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise1 = deferred.promise();
         Promise<String> promise2 = promise1.then(callback);
 
         assertTrue(promise2.cancel(true));
-        deferred.resolve(SUCCESS1);
+        deferred.fulfill(SUCCESS1);
 
-        assertResolves(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise1);
         assertRejects(CancellationException.class, promise2);
-        verify(callback, never()).resolved(anyString());
+        verify(callback, never()).fulfilled(anyString());
     }
 
     @Test
     public void cancelPreventsSubmittedCallback() throws Throwable {
         Executor executor = mock(Executor.class);
         @SuppressWarnings("unchecked")
-        OnResolved<String> callback = mock(OnResolved.class);
+        OnFulfilled<String> callback = mock(OnFulfilled.class);
 
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise1 = deferred.promise();
         Promise<String> promise2 = promise1.then(executor, callback);
 
-        deferred.resolve(SUCCESS1);
+        deferred.fulfill(SUCCESS1);
         assertTrue(promise2.cancel(true));
 
         ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
@@ -727,18 +725,18 @@ public class PromiseTest {
         Runnable runnable = captor.getValue();
         runnable.run();
 
-        assertResolves(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise1);
         assertRejects(CancellationException.class, promise2);
-        verify(callback, never()).resolved(anyString());
+        verify(callback, never()).fulfilled(anyString());
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void cancelPreventsComposingReturnedFuture() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
         Executor executor = PromiseExecutors.CURRENT_THREAD;
 
-        final Promise<String> promise3 = spy(Promises.resolved(SUCCESS2));
+        final Promise<String> promise3 = spy(Promises.fulfilled(SUCCESS2));
 
         ContinuationPromise<String, String> promise2 = new ContinuationPromise<String, String>(promise1, executor) {
             @Override
@@ -758,7 +756,7 @@ public class PromiseTest {
     @SuppressWarnings("unchecked")
     public void cancelPreventsComposedFutureCallback() throws Throwable {
         Deferred<String> deferred = Promises.defer();
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
         Executor executor = PromiseExecutors.CURRENT_THREAD;
         final Promise<String> promise3 = spy(deferred.promise());
 
@@ -776,7 +774,7 @@ public class PromiseTest {
 
         promise2.completed(promise1, SUCCESS1, null);
         assertTrue(promise2.cancel(false));
-        deferred.resolve(SUCCESS2);
+        deferred.fulfill(SUCCESS2);
 
         assertRejects(CancellationException.class, promise2);
         verify(promise3, times(1)).whenCompleted(any(Executor.class), any(OnCompleted.class));
@@ -786,14 +784,14 @@ public class PromiseTest {
     public void cancelInterruptsCallbackThread() throws Throwable {
         final CountDownLatch latch1 = new CountDownLatch(1);
         final CountDownLatch latch2 = new CountDownLatch(1);
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
         class Closure {
             public Throwable exception;
         }
         final Closure closure = new Closure();
-        Promise<String> promise2 = promise1.then(PromiseExecutors.NEW_THREAD, new OnResolved<String>() {
+        Promise<String> promise2 = promise1.then(PromiseExecutors.NEW_THREAD, new OnFulfilled<String>() {
             @Override
-            public void resolved(String result) throws Throwable {
+            public void fulfilled(String result) throws Throwable {
                 latch1.countDown();
                 try {
                     Thread.sleep(10000);
@@ -807,7 +805,7 @@ public class PromiseTest {
             }
         });
 
-        assertResolves(promise1);
+        assertFulfills(promise1);
         latch1.await();
 
         assertTrue(promise2.cancel(true));
@@ -822,16 +820,16 @@ public class PromiseTest {
         Promise<String> promise1 = deferred.promise();
 
         @SuppressWarnings("unchecked")
-        OnResolved<String> callback = mock(OnResolved.class);
+        OnFulfilled<String> callback = mock(OnFulfilled.class);
 
         Promise<String> promise2 = promise1.then(callback);
 
         promise2.cancel(true);
-        deferred.resolve(SUCCESS1);
+        deferred.fulfill(SUCCESS1);
 
         assertRejects(CancellationException.class, promise2);
-        assertResolves(SUCCESS1, promise1);
-        verify(callback, never()).resolved(anyString());
+        assertFulfills(SUCCESS1, promise1);
+        verify(callback, never()).fulfilled(anyString());
     }
 
     @Test
@@ -840,18 +838,18 @@ public class PromiseTest {
         Promise<String> promise1 = deferred.promise();
 
         @SuppressWarnings("unchecked")
-        OnResolvedFunction<String, Future<String>> callback = mock(OnResolvedFunction.class);
+        OnFulfilledFunction<String, Future<String>> callback = mock(OnFulfilledFunction.class);
         @SuppressWarnings("unchecked")
         Promise<String> future = mock(Promise.class);
 
-        when(callback.resolved(anyString())).thenReturn(future);
+        when(callback.fulfilled(anyString())).thenReturn(future);
         when(future.whenCompleted(any(Executor.class), Mockito.<OnCompleted<String>>any())).thenReturn(null);
         when(future.cancel(anyBoolean())).thenReturn(true);
 
         Promise<String> promise2 = promise1.thenCompose(callback);
 
-        deferred.resolve(SUCCESS1);
-        assertResolves(SUCCESS1, promise1);
+        deferred.fulfill(SUCCESS1);
+        assertFulfills(SUCCESS1, promise1);
         verify(future, timeout(10).times(1)).whenCompleted(any(Executor.class), Mockito.<OnCompleted<String>>any());
 
         promise2.cancel(true);
@@ -861,56 +859,56 @@ public class PromiseTest {
 
     @Test
     public void cancelComposedAlreadyComplete() throws Throwable {
-        Promise<String> promise1 = Promises.resolved(SUCCESS1);
-        Promise<String> promise2 = promise1.then(PromiseExecutors.CURRENT_THREAD, new OnResolved<String>() {
+        Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
+        Promise<String> promise2 = promise1.then(PromiseExecutors.CURRENT_THREAD, new OnFulfilled<String>() {
             @Override
-            public void resolved(String result) throws Throwable {
+            public void fulfilled(String result) throws Throwable {
             }
         });
 
         assertFalse(promise2.cancel(true));
-        assertResolves(SUCCESS1, promise1);
-        assertResolves(SUCCESS1, promise2);
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS1, promise2);
         assertFalse(promise2.isCancelled());
     }
 
     @Test
     public void cancelAfter() throws Throwable {
-        Promise<String> promise = resolveAfter(SUCCESS1, 100);
+        Promise<String> promise = fulfillAfter(SUCCESS1, 100);
         Promise<Boolean> cancel = promise.cancelAfter(true, 10, TimeUnit.MILLISECONDS);
 
-        assertResolves(true, cancel);
+        assertFulfills(true, cancel);
         assertRejects(CancellationException.class, promise);
     }
 
     @Test(timeout = 1000)
     public void cancelAfterCompletes() throws Throwable {
-        Promise<String> promise = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise = fulfillAfter(SUCCESS1, 10);
         Promise<Boolean> cancel = promise.cancelAfter(true, 5000, TimeUnit.MILLISECONDS);
 
-        assertResolves(false, cancel);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(false, cancel);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void cancelAfterAlreadyCompleted() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
         Promise<Boolean> cancel = promise.cancelAfter(true, 5000, TimeUnit.MILLISECONDS);
 
-        assertResolves(false, cancel);
-        assertResolves(SUCCESS1, promise);
+        assertFulfills(false, cancel);
+        assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void get() throws Throwable {
-        Promise<String> promise = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise = fulfillAfter(SUCCESS1, 10);
         String result = promise.get();
         assertEquals(SUCCESS1, result);
     }
 
     @Test
     public void getNow() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
         String result = promise.getNow(SUCCESS2);
         assertEquals(SUCCESS1, result);
     }
@@ -940,7 +938,7 @@ public class PromiseTest {
 
     @Test
     public void getNowInterrupted() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
         Promise<String> spy = spy(promise);
 
         InterruptedException exception = new InterruptedException();
@@ -983,7 +981,7 @@ public class PromiseTest {
 
     @Test
     public void getTimed() throws Throwable {
-        Promise<String> promise = resolveAfter(SUCCESS1, 10);
+        Promise<String> promise = fulfillAfter(SUCCESS1, 10);
         String result = promise.get(100, TimeUnit.MILLISECONDS);
         assertEquals(SUCCESS1, result);
     }
@@ -997,7 +995,7 @@ public class PromiseTest {
 
     @Test(expected = TimeoutException.class)
     public void getTimedTimesOut() throws Throwable {
-        Promise<String> promise = resolveAfter(SUCCESS1, 1000);
+        Promise<String> promise = fulfillAfter(SUCCESS1, 1000);
         String ignored = promise.get(10, TimeUnit.MILLISECONDS);
         throw new AssertionFailedError("promise.get(long, TimeUnit) should not return successfully");
     }

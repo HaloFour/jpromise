@@ -3,14 +3,14 @@ package org.jpromise.patterns;
 import org.jpromise.Promise;
 import org.jpromise.PromiseManager;
 import org.jpromise.functions.*;
-import org.jpromise.functions.OnResolved2;
-import org.jpromise.functions.OnResolved3;
-import org.jpromise.functions.OnResolved4;
-import org.jpromise.functions.OnResolved5;
-import org.jpromise.functions.OnResolvedFunction2;
-import org.jpromise.functions.OnResolvedFunction3;
-import org.jpromise.functions.OnResolvedFunction4;
-import org.jpromise.functions.OnResolvedFunction5;
+import org.jpromise.functions.OnFulfilled2;
+import org.jpromise.functions.OnFulfilled3;
+import org.jpromise.functions.OnFulfilled4;
+import org.jpromise.functions.OnFulfilled5;
+import org.jpromise.functions.OnFulfilledFunction2;
+import org.jpromise.functions.OnFulfilledFunction3;
+import org.jpromise.functions.OnFulfilledFunction4;
+import org.jpromise.functions.OnFulfilledFunction5;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -93,13 +93,13 @@ public class Pattern {
      * @param second The second promise.
      * @param <V1> The result type of the first promise.
      * @param <V2> The result type of the second promise.
-     * @return A promise that will be completed when both promises are resolved.
+     * @return A promise that will be completed when both promises are fulfilled.
      */
     public static <V1, V2> Promise<Pattern2<V1, V2>> join(final Promise<V1> first, final Promise<V2> second) {
-        return PromiseManager.whenAllResolved(first, second)
-                .thenApply(new OnResolvedFunction<Void, Pattern2<V1, V2>>() {
+        return PromiseManager.whenAllFulfilled(first, second)
+                .thenApply(new OnFulfilledFunction<Void, Pattern2<V1, V2>>() {
                     @Override
-                    public Pattern2<V1, V2> resolved(Void result) throws Throwable {
+                    public Pattern2<V1, V2> fulfilled(Void result) throws Throwable {
                         return new Pattern2<V1, V2>(getResult(first), getResult(second));
                     }
                 });
@@ -115,13 +115,13 @@ public class Pattern {
      * @param <V1> The result type of the first promise.
      * @param <V2> The result type of the second promise.
      * @param <V3> The result type of the third promise.
-     * @return A promise that will be completed when all of the promises are resolved.
+     * @return A promise that will be completed when all of the promises are fulfilled.
      */
     public static <V1, V2, V3> Promise<Pattern3<V1, V2, V3>> join(final Promise<V1> first, final Promise<V2> second, final Promise<V3> third) {
-        return PromiseManager.whenAllResolved(first, second, third)
-                .thenApply(new OnResolvedFunction<Void, Pattern3<V1, V2, V3>>() {
+        return PromiseManager.whenAllFulfilled(first, second, third)
+                .thenApply(new OnFulfilledFunction<Void, Pattern3<V1, V2, V3>>() {
                     @Override
-                    public Pattern3<V1, V2, V3> resolved(Void result) throws Throwable {
+                    public Pattern3<V1, V2, V3> fulfilled(Void result) throws Throwable {
                         return new Pattern3<V1, V2, V3>(getResult(first), getResult(second), getResult(third));
                     }
                 });
@@ -139,13 +139,13 @@ public class Pattern {
      * @param <V2> The result type of the second promise.
      * @param <V3> The result type of the third promise.
      * @param <V4> The result type of the fourth promise.
-     * @return A promise that will be completed when all of the promises are resolved.
+     * @return A promise that will be completed when all of the promises are fulfilled.
      */
     public static <V1, V2, V3, V4> Promise<Pattern4<V1, V2, V3, V4>> join(final Promise<V1> first, final Promise<V2> second, final Promise<V3> third, final Promise<V4> fourth) {
-        return PromiseManager.whenAllResolved(first, second, third, fourth)
-                .thenApply(new OnResolvedFunction<Void, Pattern4<V1, V2, V3, V4>>() {
+        return PromiseManager.whenAllFulfilled(first, second, third, fourth)
+                .thenApply(new OnFulfilledFunction<Void, Pattern4<V1, V2, V3, V4>>() {
                     @Override
-                    public Pattern4<V1, V2, V3, V4> resolved(Void result) throws Throwable {
+                    public Pattern4<V1, V2, V3, V4> fulfilled(Void result) throws Throwable {
                         return new Pattern4<V1, V2, V3, V4>(getResult(first), getResult(second), getResult(third), getResult(fourth));
                     }
                 });
@@ -165,13 +165,13 @@ public class Pattern {
      * @param <V3> The result type of the third promise.
      * @param <V4> The result type of the fourth promise.
      * @param <V5> The result type of the fifth promise.
-     * @return A promise that will be completed when all of the promises are resolved.
+     * @return A promise that will be completed when all of the promises are fulfilled.
      */
     public static <V1, V2, V3, V4, V5> Promise<Pattern5<V1, V2, V3, V4, V5>> join(final Promise<V1> first, final Promise<V2> second, final Promise<V3> third, final Promise<V4> fourth, final Promise<V5> fifth) {
-        return PromiseManager.whenAllResolved(first, second, third, fourth, fifth)
-                .thenApply(new OnResolvedFunction<Void, Pattern5<V1, V2, V3, V4, V5>>() {
+        return PromiseManager.whenAllFulfilled(first, second, third, fourth, fifth)
+                .thenApply(new OnFulfilledFunction<Void, Pattern5<V1, V2, V3, V4, V5>>() {
                     @Override
-                    public Pattern5<V1, V2, V3, V4, V5> resolved(Void result) throws Throwable {
+                    public Pattern5<V1, V2, V3, V4, V5> fulfilled(Void result) throws Throwable {
                         return new Pattern5<V1, V2, V3, V4, V5>(getResult(first), getResult(second), getResult(third), getResult(fourth), getResult(fifth));
                     }
                 });
@@ -185,36 +185,36 @@ public class Pattern {
     }
 
     /**
-     * Helper method to be combined with the {@link org.jpromise.Promise#then(org.jpromise.functions.OnResolved)}
+     * Helper method to be combined with the {@link org.jpromise.Promise#then(org.jpromise.functions.OnFulfilled)}
      * method to decompose the separate values of the {@link org.jpromise.patterns.Pattern2} into
      * separate arguments.
      * @param action The operation that accepts the decomposed arguments.
      * @param <V1> The type of the first argument.
      * @param <V2> The type of the second argument.
-     * @return An {@link org.jpromise.functions.OnResolved} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#then(org.jpromise.functions.OnResolved)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilled} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#then(org.jpromise.functions.OnFulfilled)} method.
      */
-    public static <V1, V2> OnResolved<Pattern2<V1, V2>> spread2(OnResolved2<V1, V2> action) {
+    public static <V1, V2> OnFulfilled<Pattern2<V1, V2>> spread2(OnFulfilled2<V1, V2> action) {
         return action;
     }
 
     /**
-     * Helper method to be combined with the {@link org.jpromise.Promise#then(org.jpromise.functions.OnResolved)}
+     * Helper method to be combined with the {@link org.jpromise.Promise#then(org.jpromise.functions.OnFulfilled)}
      * method to decompose the separate values of the {@link org.jpromise.patterns.Pattern3} into
      * separate arguments.
      * @param action The operation that accepts the decomposed arguments.
      * @param <V1> The type of the first argument.
      * @param <V2> The type of the second argument.
      * @param <V3> The type of the third argument.
-     * @return An {@link org.jpromise.functions.OnResolved} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#then(org.jpromise.functions.OnResolved)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilled} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#then(org.jpromise.functions.OnFulfilled)} method.
      */
-    public static <V1, V2, V3> OnResolved<Pattern3<V1, V2, V3>> spread3(OnResolved3<V1, V2, V3> action) {
+    public static <V1, V2, V3> OnFulfilled<Pattern3<V1, V2, V3>> spread3(OnFulfilled3<V1, V2, V3> action) {
         return action;
     }
 
     /**
-     * Helper method to be combined with the {@link org.jpromise.Promise#then(org.jpromise.functions.OnResolved)}
+     * Helper method to be combined with the {@link org.jpromise.Promise#then(org.jpromise.functions.OnFulfilled)}
      * method to decompose the separate values of the {@link org.jpromise.patterns.Pattern4} into
      * separate arguments.
      * @param action The operation that accepts the decomposed arguments.
@@ -222,15 +222,15 @@ public class Pattern {
      * @param <V2> The type of the second argument.
      * @param <V3> The type of the third argument.
      * @param <V4> The type of the fourth argument.
-     * @return An {@link org.jpromise.functions.OnResolved} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#then(org.jpromise.functions.OnResolved)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilled} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#then(org.jpromise.functions.OnFulfilled)} method.
      */
-    public static <V1, V2, V3, V4> OnResolved<Pattern4<V1, V2, V3, V4>> spread4(OnResolved4<V1, V2, V3, V4> action) {
+    public static <V1, V2, V3, V4> OnFulfilled<Pattern4<V1, V2, V3, V4>> spread4(OnFulfilled4<V1, V2, V3, V4> action) {
         return action;
     }
 
     /**
-     * Helper method to be combined with the {@link org.jpromise.Promise#then(org.jpromise.functions.OnResolved)}
+     * Helper method to be combined with the {@link org.jpromise.Promise#then(org.jpromise.functions.OnFulfilled)}
      * method to decompose the separate values of the {@link org.jpromise.patterns.Pattern5} into
      * separate arguments.
      * @param action The operation that accepts the decomposed arguments.
@@ -239,61 +239,61 @@ public class Pattern {
      * @param <V3> The type of the third argument.
      * @param <V4> The type of the fourth argument.
      * @param <V5> The type of the fifth argument.
-     * @return An {@link org.jpromise.functions.OnResolved} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#then(org.jpromise.functions.OnResolved)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilled} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#then(org.jpromise.functions.OnFulfilled)} method.
      */
-    public static <V1, V2, V3, V4, V5> OnResolved<Pattern5<V1, V2, V3, V4, V5>> spread5(OnResolved5<V1, V2, V3, V4, V5> action) {
+    public static <V1, V2, V3, V4, V5> OnFulfilled<Pattern5<V1, V2, V3, V4, V5>> spread5(OnFulfilled5<V1, V2, V3, V4, V5> action) {
         return action;
     }
 
     /**
      * Helper method to be combined with the
-     * {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnResolvedFunction)} method to decompose
+     * {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnFulfilledFunction)} method to decompose
      * the separate values of the {@link org.jpromise.patterns.Pattern2} into separate arguments.
      * @param function The operation that accepts the decomposed arguments.
      * @param <V1> The type of the first argument.
      * @param <V2> The type of the second argument.
-     * @return An {@link org.jpromise.functions.OnResolvedFunction} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnResolvedFunction)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilledFunction} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnFulfilledFunction)} method.
      */
-    public static <V1, V2, VR> OnResolvedFunction<Pattern2<V1, V2>, VR> apply2(OnResolvedFunction2<V1, V2, VR> function) {
+    public static <V1, V2, VR> OnFulfilledFunction<Pattern2<V1, V2>, VR> apply2(OnFulfilledFunction2<V1, V2, VR> function) {
         return function;
     }
 
     /**
      * Helper method to be combined with the
-     * {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnResolvedFunction)} method to decompose
+     * {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnFulfilledFunction)} method to decompose
      * the separate values of the {@link org.jpromise.patterns.Pattern3} into separate arguments.
      * @param function The operation that accepts the decomposed arguments.
      * @param <V1> The type of the first argument.
      * @param <V2> The type of the second argument.
      * @param <V3> The type of the third argument.
-     * @return An {@link org.jpromise.functions.OnResolvedFunction} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnResolvedFunction)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilledFunction} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnFulfilledFunction)} method.
      */
-    public static <V1, V2, V3, VR> OnResolvedFunction<Pattern3<V1, V2, V3>, VR> apply3(OnResolvedFunction3<V1, V2, V3, VR> function) {
+    public static <V1, V2, V3, VR> OnFulfilledFunction<Pattern3<V1, V2, V3>, VR> apply3(OnFulfilledFunction3<V1, V2, V3, VR> function) {
         return function;
     }
 
     /**
      * Helper method to be combined with the
-     * {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnResolvedFunction)} method to decompose
+     * {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnFulfilledFunction)} method to decompose
      * the separate values of the {@link org.jpromise.patterns.Pattern4} into separate arguments.
      * @param function The operation that accepts the decomposed arguments.
      * @param <V1> The type of the first argument.
      * @param <V2> The type of the second argument.
      * @param <V3> The type of the third argument.
      * @param <V4> The type of the fourth argument.
-     * @return An {@link org.jpromise.functions.OnResolvedFunction} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnResolvedFunction)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilledFunction} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnFulfilledFunction)} method.
      */
-    public static <V1, V2, V3, V4, VR> OnResolvedFunction<Pattern4<V1, V2, V3, V4>, VR> apply4(OnResolvedFunction4<V1, V2, V3, V4, VR> function) {
+    public static <V1, V2, V3, V4, VR> OnFulfilledFunction<Pattern4<V1, V2, V3, V4>, VR> apply4(OnFulfilledFunction4<V1, V2, V3, V4, VR> function) {
         return function;
     }
 
     /**
      * Helper method to be combined with the
-     * {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnResolvedFunction)} method to decompose
+     * {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnFulfilledFunction)} method to decompose
      * the separate values of the {@link org.jpromise.patterns.Pattern5} into separate arguments.
      * @param function The operation that accepts the decomposed arguments.
      * @param <V1> The type of the first argument.
@@ -301,61 +301,61 @@ public class Pattern {
      * @param <V3> The type of the third argument.
      * @param <V4> The type of the fourth argument.
      * @param <V5> The type of the fifth argument.
-     * @return An {@link org.jpromise.functions.OnResolvedFunction} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnResolvedFunction)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilledFunction} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#thenApply(org.jpromise.functions.OnFulfilledFunction)} method.
      */
-    public static <V1, V2, V3, V4, V5, VR> OnResolvedFunction<Pattern5<V1, V2, V3, V4, V5>, VR> apply5(OnResolvedFunction5<V1, V2, V3, V4, V5, VR> function) {
+    public static <V1, V2, V3, V4, V5, VR> OnFulfilledFunction<Pattern5<V1, V2, V3, V4, V5>, VR> apply5(OnFulfilledFunction5<V1, V2, V3, V4, V5, VR> function) {
         return function;
     }
 
     /**
      * Helper method to be combined with the
-     * {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnResolvedFunction)} method to decompose
+     * {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnFulfilledFunction)} method to decompose
      * the separate values of the {@link org.jpromise.patterns.Pattern2} into separate arguments.
      * @param function The operation that accepts the decomposed arguments.
      * @param <V1> The type of the first argument.
      * @param <V2> The type of the second argument.
-     * @return An {@link org.jpromise.functions.OnResolvedFunction} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnResolvedFunction)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilledFunction} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnFulfilledFunction)} method.
      */
-    public static <V1, V2, VR> OnResolvedFunction<Pattern2<V1, V2>, ? extends Future<VR>> compose2(OnResolvedFunction2<V1, V2, ? extends Future<VR>> function) {
+    public static <V1, V2, VR> OnFulfilledFunction<Pattern2<V1, V2>, ? extends Future<VR>> compose2(OnFulfilledFunction2<V1, V2, ? extends Future<VR>> function) {
         return function;
     }
 
     /**
      * Helper method to be combined with the
-     * {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnResolvedFunction)} method to decompose
+     * {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnFulfilledFunction)} method to decompose
      * the separate values of the {@link org.jpromise.patterns.Pattern3} into separate arguments.
      * @param function The operation that accepts the decomposed arguments.
      * @param <V1> The type of the first argument.
      * @param <V2> The type of the second argument.
      * @param <V3> The type of the third argument.
-     * @return An {@link org.jpromise.functions.OnResolvedFunction} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnResolvedFunction)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilledFunction} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnFulfilledFunction)} method.
      */
-    public static <V1, V2, V3, VR> OnResolvedFunction<Pattern3<V1, V2, V3>, ? extends Future<VR>> compose3(OnResolvedFunction3<V1, V2, V3, ? extends Future<VR>> function) {
+    public static <V1, V2, V3, VR> OnFulfilledFunction<Pattern3<V1, V2, V3>, ? extends Future<VR>> compose3(OnFulfilledFunction3<V1, V2, V3, ? extends Future<VR>> function) {
         return function;
     }
 
     /**
      * Helper method to be combined with the
-     * {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnResolvedFunction)} method to decompose
+     * {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnFulfilledFunction)} method to decompose
      * the separate values of the {@link org.jpromise.patterns.Pattern4} into separate arguments.
      * @param function The operation that accepts the decomposed arguments.
      * @param <V1> The type of the first argument.
      * @param <V2> The type of the second argument.
      * @param <V3> The type of the third argument.
      * @param <V4> The type of the fourth argument.
-     * @return An {@link org.jpromise.functions.OnResolvedFunction} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnResolvedFunction)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilledFunction} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnFulfilledFunction)} method.
      */
-    public static <V1, V2, V3, V4, VR> OnResolvedFunction<Pattern4<V1, V2, V3, V4>, ? extends Future<VR>> compose4(OnResolvedFunction4<V1, V2, V3, V4, ? extends Future<VR>> function) {
+    public static <V1, V2, V3, V4, VR> OnFulfilledFunction<Pattern4<V1, V2, V3, V4>, ? extends Future<VR>> compose4(OnFulfilledFunction4<V1, V2, V3, V4, ? extends Future<VR>> function) {
         return function;
     }
 
     /**
      * Helper method to be combined with the
-     * {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnResolvedFunction)} method to decompose
+     * {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnFulfilledFunction)} method to decompose
      * the separate values of the {@link org.jpromise.patterns.Pattern5} into separate arguments.
      * @param function The operation that accepts the decomposed arguments.
      * @param <V1> The type of the first argument.
@@ -363,10 +363,10 @@ public class Pattern {
      * @param <V3> The type of the third argument.
      * @param <V4> The type of the fourth argument.
      * @param <V5> The type of the fifth argument.
-     * @return An {@link org.jpromise.functions.OnResolvedFunction} that can be passed as an
-     * argument to the {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnResolvedFunction)} method.
+     * @return An {@link org.jpromise.functions.OnFulfilledFunction} that can be passed as an
+     * argument to the {@link org.jpromise.Promise#thenCompose(org.jpromise.functions.OnFulfilledFunction)} method.
      */
-    public static <V1, V2, V3, V4, V5, VR> OnResolvedFunction<Pattern5<V1, V2, V3, V4, V5>, ? extends Future<VR>> compose5(OnResolvedFunction5<V1, V2, V3, V4, V5, ? extends Future<VR>> function) {
+    public static <V1, V2, V3, V4, V5, VR> OnFulfilledFunction<Pattern5<V1, V2, V3, V4, V5>, ? extends Future<VR>> compose5(OnFulfilledFunction5<V1, V2, V3, V4, V5, ? extends Future<VR>> function) {
         return function;
     }
 }

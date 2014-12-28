@@ -34,7 +34,7 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
                     try {
                         callbackThread = Thread.currentThread();
                         switch (promise.state()) {
-                            case RESOLVED:
+                            case FULFILLED:
                                 completeComposed(result);
                                 break;
                             case REJECTED:
@@ -126,7 +126,7 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
                         return;
                     }
                     switch (promise.state()) {
-                        case RESOLVED:
+                        case FULFILLED:
                             complete(result);
                             break;
                         case REJECTED:

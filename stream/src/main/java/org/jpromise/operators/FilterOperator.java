@@ -1,22 +1,22 @@
 package org.jpromise.operators;
 
-import org.jpromise.functions.OnResolvedFunction;
+import org.jpromise.functions.OnFulfilledFunction;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
 public class FilterOperator<V> extends BoundedStreamOperator<V, V> {
-    private final OnResolvedFunction<V, Boolean> predicate;
+    private final OnFulfilledFunction<V, Boolean> predicate;
 
-    public FilterOperator(OnResolvedFunction<V, Boolean> predicate) {
+    public FilterOperator(OnFulfilledFunction<V, Boolean> predicate) {
         if (predicate == null) throw new IllegalArgumentException(mustNotBeNull("predicate"));
         this.predicate = predicate;
     }
 
     @Override
-    protected void resolved(BoundedPromiseSubscriber<V> subscriber, V result) throws Throwable {
-        Boolean filter = predicate.resolved(result);
+    protected void fulfilled(BoundedPromiseSubscriber<V> subscriber, V result) throws Throwable {
+        Boolean filter = predicate.fulfilled(result);
         if (filter != null && filter) {
-            subscriber.resolved(result);
+            subscriber.fulfilled(result);
         }
         else {
             subscriber.omit();

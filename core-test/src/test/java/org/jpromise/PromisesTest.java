@@ -12,8 +12,7 @@ import java.lang.reflect.Modifier;
 import java.util.concurrent.*;
 
 import static org.jpromise.PromiseHelpers.assertRejects;
-import static org.jpromise.PromiseHelpers.assertResolves;
-import static org.jpromise.PromiseHelpers.resolveAfter;
+import static org.jpromise.PromiseHelpers.fulfillAfter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -65,7 +64,7 @@ public class PromisesTest {
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
         assertEquals(PromiseState.PENDING, promise.state());
-        assertFalse(promise.isResolved());
+        assertFalse(promise.isFulfilled());
         assertFalse(promise.isRejected());
         assertFalse(promise.isDone());
         assertFalse(promise.isCancelled());
@@ -73,17 +72,17 @@ public class PromisesTest {
     }
 
     @Test
-    public void resolved() throws Throwable {
-        Promise<String> promise = Promises.resolved(SUCCESS1);
+    public void fulfilled() throws Throwable {
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
 
-        assertResolves(SUCCESS1, promise);
-        assertEquals("[RESOLVED]: SUCCESS1", promise.toString());
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
+        assertEquals("[FULFILLED]: SUCCESS1", promise.toString());
     }
 
     @Test
-    public void resolvedVoid() throws Throwable {
-        Promise<Void> promise = Promises.resolved();
-        assertResolves(promise);
+    public void fulfilledVoid() throws Throwable {
+        Promise<Void> promise = Promises.fulfilled();
+        PromiseHelpers.assertFulfills(promise);
     }
 
     @Test
@@ -113,32 +112,32 @@ public class PromisesTest {
 
         Promise<String> promise = Promises.fromFuture(future);
 
-        assertResolves(SUCCESS1, promise);
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void fromFutureWithPromiseReturnsSelf() throws Throwable {
-        Future<String> future = Promises.resolved(SUCCESS1);
+        Future<String> future = Promises.fulfilled(SUCCESS1);
 
         Promise<String> promise = Promises.fromFuture(future);
 
         assertEquals(future, promise);
-        assertResolves(SUCCESS1, promise);
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void fromFutureWithPromiseAndTimeOutReturnsSelf() throws Throwable {
-        Future<String> future = Promises.resolved(SUCCESS1);
+        Future<String> future = Promises.fulfilled(SUCCESS1);
 
         Promise<String> promise = Promises.fromFuture(future);
 
         assertEquals(future, promise);
-        assertResolves(SUCCESS1, promise);
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void fromFutureWithPromiseAndTimeOutEnforcesTimeout() throws Throwable {
-        Future<String> future = resolveAfter(SUCCESS1, 1000);
+        Future<String> future = fulfillAfter(SUCCESS1, 1000);
 
         Promise<String> promise = Promises.fromFuture(future, 10, TimeUnit.MILLISECONDS);
 
@@ -155,7 +154,7 @@ public class PromisesTest {
 
         Promise<String> promise = Promises.fromFuture(future);
 
-        assertResolves(SUCCESS1, promise);
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
     }
 
     @Test
