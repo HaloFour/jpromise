@@ -8,6 +8,11 @@ Very much a work-in-progress.  The API is volatile but the core functionality is
 comprehensive set of unit tests.  I do intent to fully flesh out the javadocs and to populate the Wiki with
 documentation and tutorials.
 
+Status:
+======
+
+[![Build Status](https://travis-ci.org/HaloFour/jpromise.svg?branch=master)](https://travis-ci.org/HaloFour/jpromise)
+
 Basics:
 =======
 
