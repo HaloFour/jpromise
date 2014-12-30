@@ -9,8 +9,9 @@ import java.util.concurrent.*;
  * the computation is complete, to register operations to be performed upon completion, to wait for its completion, and
  * to retrieve the result of the computation.  The registered operations return additional promise instances which
  * represent the completion of those operations, which can translate the results both synchronously and asynchronously.
- * The Cancellation is performed by the {@see #cancel()} method. Additional methods are provided to determine if the
- * task completed normally or was cancelled. Once a computation has completed, the computation cannot be cancelled.
+ * The Cancellation is performed by the {@link java.util.concurrent.Future#cancel(boolean)} method. Additional methods
+ * are provided to determine if the task completed normally or was cancelled. Once a computation has completed, the
+ * computation cannot be cancelled.
  * @param <V> The result type of the promise.
  */
 public interface Promise<V> extends Future<V> {
@@ -172,6 +173,7 @@ public interface Promise<V> extends Future<V> {
      * @param exceptionClass The minimum class of which the rejected promise exception must be for the operation
      *                       to be performed.
      * @param result The value to use as a successful result.
+     * @param <E> The type of the exception.
      * @return A new promise that will be fulfilled with the {@code result} if the current promise is rejected.
      */
     <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, V result);
@@ -251,6 +253,7 @@ public interface Promise<V> extends Future<V> {
      *                       to be performed.
      * @param fallback The operation that is performed when the promise is rejected that handles the rejection
      *                exception and returns a fallback operation.
+     * @param <E> The type of the exception.
      * @return A new promise that will complete propagating the result of the fallback operation.
      */
     <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, OnRejectedHandler<? super E, ? extends Future<V>> fallback);
@@ -264,6 +267,7 @@ public interface Promise<V> extends Future<V> {
      * @param executor The executor that will be used to execute the operation.
      * @param fallback The operation that is performed when the promise is rejected that handles the rejection
      *                exception and returns a fallback operation.
+     * @param <E> The type of the exception.
      * @return A new promise that will complete propagating the result of the fallback operation.
      */
     <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, Executor executor, OnRejectedHandler<? super E, ? extends Future<V>> fallback);

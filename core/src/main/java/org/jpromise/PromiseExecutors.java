@@ -79,7 +79,7 @@ public enum PromiseExecutors implements Executor {
     public final static Executor DEFAULT_CONTINUATION_EXECUTOR;
     /**
      * Returns the default {@link java.util.concurrent.Executor} used when creating a new promise using
-     * {@link org.jpromise.PromiseManager#create}.
+     * the {@link org.jpromise.DefaultPromiseService} promise service.
      */
     public final static Executor DEFAULT_CREATION_EXECUTOR;
     /**
