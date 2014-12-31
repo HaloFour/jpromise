@@ -14,8 +14,7 @@ public class DefaultPromiseServiceTest {
     @Test
     public void submitWithRunnable() throws Throwable {
         Runnable runnable = mock(Runnable.class);
-        PromiseService service = new DefaultPromiseService();
-        Promise<Void> promise = service.submit(runnable);
+        Promise<Void> promise = DefaultPromiseService.INSTANCE.submit(runnable);
         PromiseHelpers.assertFulfills(promise);
         verify(runnable, times(1)).run();
     }
@@ -25,8 +24,7 @@ public class DefaultPromiseServiceTest {
         @SuppressWarnings("unchecked")
         Callable<String> callable = mock(Callable.class);
         when(callable.call()).thenReturn(SUCCESS1);
-        PromiseService service = new DefaultPromiseService();
-        Promise<String> promise = service.submit(callable);
+        Promise<String> promise = DefaultPromiseService.INSTANCE.submit(callable);
         PromiseHelpers.assertFulfills(SUCCESS1, promise);
         verify(callable, times(1)).call();
     }
@@ -34,8 +32,7 @@ public class DefaultPromiseServiceTest {
     @Test
     public void submitWithRunnableAndValue() throws Throwable {
         Runnable runnable = mock(Runnable.class);
-        PromiseService service = new DefaultPromiseService();
-        Promise<String> promise = service.submit(runnable, SUCCESS1);
+        Promise<String> promise = DefaultPromiseService.INSTANCE.submit(runnable, SUCCESS1);
         PromiseHelpers.assertFulfills(SUCCESS1, promise);
         verify(runnable, times(1)).run();
     }
