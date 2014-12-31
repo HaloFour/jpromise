@@ -2,6 +2,7 @@ package org.jpromise;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -164,5 +165,79 @@ public class Promises {
             return promise;
         }
         return new FuturePromise<V>(executor, future, timeout, timeUnit);
+    }
+
+    /**
+     * Creates a new {@link org.jpromise.Promise} for the submitted {@link java.lang.Runnable} task using the default
+     * {@link org.jpromise.PromiseService}.
+     * @param task The task to execute.
+     * @return A {@link org.jpromise.Promise} representing the pending task.
+     */
+    public static Promise<Void> create(Runnable task) {
+        PromiseService service = DefaultPromiseService.INSTANCE;
+        return service.submit(task);
+    }
+
+    /**
+     * Creates a new {@link org.jpromise.Promise} for the submitted {@link java.lang.Runnable} task using the default
+     * {@link org.jpromise.PromiseService}.
+     * @param task The task to execute.
+     * @param result The result to return when the task is completed.
+     * @return A {@link org.jpromise.Promise} representing the pending task.
+     */
+    public static <V> Promise<V> create(Runnable task, V result) {
+        PromiseService service = DefaultPromiseService.INSTANCE;
+        return service.submit(task, result);
+    }
+
+    /**
+     * Creates a new {@link org.jpromise.Promise} for the submitted value-returning {@link java.util.concurrent.Callable}
+     * task using the default {@link org.jpromise.PromiseService}.
+     * @param task The task to execute.
+     * @return A {@link org.jpromise.Promise} representing the pending task.
+     */
+    public static <V> Promise<V> create(Callable<V> task) {
+        PromiseService service = DefaultPromiseService.INSTANCE;
+        return service.submit(task);
+    }
+
+    /**
+     * Creates a new {@link org.jpromise.Promise} for the submitted {@link java.lang.Runnable} task using the specified
+     * {@link java.util.concurrent.Executor}.
+     * @param executor The {@link java.util.concurrent.Executor} on which to execute the task.
+     * @param task The task to execute.
+     * @return A {@link org.jpromise.Promise} representing the pending task.
+     */
+    public static Promise<Void> create(Executor executor, Runnable task) {
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        PromiseService service = new ExecutorPromiseService(executor);
+        return service.submit(task);
+    }
+
+    /**
+     * Creates a new {@link org.jpromise.Promise} for the submitted {@link java.lang.Runnable} task using the specified
+     * {@link java.util.concurrent.Executor}.
+     * @param executor The {@link java.util.concurrent.Executor} on which to execute the task.
+     * @param task The task to execute.
+     * @param result The result to return when the task is completed.
+     * @return A {@link org.jpromise.Promise} representing the pending task.
+     */
+    public static <V> Promise<V> create(Executor executor, Runnable task, V result) {
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        PromiseService service = new ExecutorPromiseService(executor);
+        return service.submit(task, result);
+    }
+
+    /**
+     * Creates a new {@link org.jpromise.Promise} for the submitted value-returning {@link java.util.concurrent.Callable}
+     * task using the specified {@link java.util.concurrent.Executor}.
+     * @param executor The {@link java.util.concurrent.Executor} on which to execute the task.
+     * @param task The task to execute.
+     * @return A {@link org.jpromise.Promise} representing the pending task.
+     */
+    public static <V> Promise<V> create(Executor executor, Callable<V> task) {
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        PromiseService service = new ExecutorPromiseService(executor);
+        return service.submit(task);
     }
 }

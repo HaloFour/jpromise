@@ -2,6 +2,7 @@ package org.jpromise;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
@@ -19,9 +20,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PromisesTest {
@@ -228,5 +228,135 @@ public class PromisesTest {
 
         assertRejects(CancellationException.class, promise);
         verify(future).cancel(true);
+    }
+
+    @Test
+    public void createWithRunnable() throws Throwable {
+        Runnable runnable = mock(Runnable.class);
+        Promise<Void> promise = Promises.create(runnable);
+        PromiseHelpers.assertFulfills(promise);
+        verify(runnable, times(1)).run();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void createWithCallable() throws Throwable {
+        Callable<String> callable = mock(Callable.class);
+        when(callable.call()).thenReturn(SUCCESS1);
+        Promise<String> promise = Promises.create(callable);
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
+        verify(callable, times(1)).call();
+    }
+
+    @Test
+    public void createWithRunnableAndValue() throws Throwable {
+        Runnable runnable = mock(Runnable.class);
+        Promise<String> promise = Promises.create(runnable, SUCCESS1);
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
+        verify(runnable, times(1)).run();
+    }
+
+    @Test
+    public void createWithExecutorAndRunnable() throws Throwable {
+        Runnable task = mock(Runnable.class);
+        Executor executor = mock(Executor.class);
+        doNothing().when(task).run();
+        doNothing().when(executor).execute(any(Runnable.class));
+
+        Promise<Void> promise = Promises.create(executor, task);
+
+        assertFalse(promise.isDone());
+
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor, times(1)).execute(captor.capture());
+        Runnable runnable = captor.getValue();
+        runnable.run();
+        verify(task, times(1)).run();
+
+        PromiseHelpers.assertFulfills(promise);
+    }
+
+    @Test
+    public void createWithExecutorAndRunnableAndValue() throws Throwable {
+        Runnable task = mock(Runnable.class);
+        Executor executor = mock(Executor.class);
+        doNothing().when(task).run();
+        doNothing().when(executor).execute(any(Runnable.class));
+
+        Promise<String> promise = Promises.create(executor, task, SUCCESS1);
+
+        assertFalse(promise.isDone());
+
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor, times(1)).execute(captor.capture());
+        Runnable runnable = captor.getValue();
+        runnable.run();
+        verify(task, times(1)).run();
+
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void createWithExecutorAndCallable() throws Throwable {
+        Callable<String> task = mock(Callable.class);
+        Executor executor = mock(Executor.class);
+        when(task.call()).thenReturn(SUCCESS1);
+        doNothing().when(executor).execute(any(Runnable.class));
+
+        Promise<String> promise = Promises.create(executor, task);
+
+        assertFalse(promise.isDone());
+
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor, times(1)).execute(captor.capture());
+        Runnable runnable = captor.getValue();
+        runnable.run();
+        verify(task, times(1)).call();
+
+        PromiseHelpers.assertFulfills(SUCCESS1, promise);
+    }
+
+    @Test
+    public void createWithExecutorAndRunnableThrows() throws Throwable {
+        final RuntimeException exception = new RuntimeException();
+        Runnable task = mock(Runnable.class);
+        Executor executor = mock(Executor.class);
+        doThrow(exception).when(task).run();
+        doNothing().when(executor).execute(any(Runnable.class));
+
+        Promise<Void> promise = Promises.create(executor, task);
+
+        assertFalse(promise.isDone());
+
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor, times(1)).execute(captor.capture());
+        Runnable runnable = captor.getValue();
+        runnable.run();
+        verify(task, times(1)).run();
+
+        assertRejects(exception, promise);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void createWithExecutorAndCallableThrows() throws Throwable {
+        final RuntimeException exception = new RuntimeException();
+        Callable<String> task = mock(Callable.class);
+        Executor executor = mock(Executor.class);
+        when(task.call()).thenThrow(exception);
+        doNothing().when(executor).execute(any(Runnable.class));
+
+        Promise<String> promise = Promises.create(executor, task);
+
+        assertFalse(promise.isDone());
+
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor, times(1)).execute(captor.capture());
+        Runnable runnable = captor.getValue();
+        runnable.run();
+        verify(task, times(1)).call();
+
+        assertRejects(exception, promise);
     }
 }
