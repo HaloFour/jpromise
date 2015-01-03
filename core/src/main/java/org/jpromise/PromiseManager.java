@@ -69,7 +69,7 @@ public class PromiseManager {
      */
     public static <V> Promise<Void> whenAllCompleted(Iterable<? extends Promise<V>> promises, OnCompleted<V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
-        return whenAllCompletedImpl(promises, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
+        return whenAllCompletedImpl(promises, PromiseExecutors.getContextExecutor(), action);
     }
 
     /**
@@ -168,7 +168,7 @@ public class PromiseManager {
      */
     public static <V> Promise<Void> whenAllFulfilled(Iterable<? extends Promise<V>> promises, OnFulfilled<? super V> action) {
         if (action == null) throw new IllegalArgumentException(mustNotBeNull("action"));
-        return whenAllFulfilledImpl(promises, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
+        return whenAllFulfilledImpl(promises, PromiseExecutors.getContextExecutor(), action);
     }
     /**
      * Returns a {@link org.jpromise.Promise} representing the successful resolution of the specified promises after

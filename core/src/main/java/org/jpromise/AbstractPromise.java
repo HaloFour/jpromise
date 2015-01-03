@@ -58,7 +58,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
 
     @Override
     public Promise<V> then(OnFulfilled<? super V> action) {
-        return this.then(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
+        return this.then(PromiseExecutors.getContextExecutor(), action);
     }
 
     @Override
@@ -77,7 +77,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
 
     @Override
     public <V_APPLIED> Promise<V_APPLIED> thenApply(OnFulfilledFunction<? super V, ? extends V_APPLIED> function) {
-        return this.thenApply(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, function);
+        return this.thenApply(PromiseExecutors.getContextExecutor(), function);
     }
 
     @Override
@@ -94,7 +94,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
 
     @Override
     public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(OnFulfilledFunction<? super V, ? extends Future<V_COMPOSED>> function) {
-        return this.thenCompose(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, function);
+        return this.thenCompose(PromiseExecutors.getContextExecutor(), function);
     }
 
     @Override
@@ -111,12 +111,12 @@ public abstract class AbstractPromise<V> implements Promise<V> {
 
     @Override
     public Promise<V> whenRejected(OnRejected<Throwable> action) {
-        return this.whenRejected(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
+        return this.whenRejected(Throwable.class, PromiseExecutors.getContextExecutor(), action);
     }
 
     @Override
     public <E extends Throwable> Promise<V> whenRejected(Class<E> exceptionClass, OnRejected<? super E> action) {
-        return this.whenRejected(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
+        return this.whenRejected(exceptionClass, PromiseExecutors.getContextExecutor(), action);
     }
 
     @Override
@@ -146,7 +146,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
 
     @Override
     public Promise<V> handleWith(OnRejectedHandler<Throwable, ? extends V> handler) {
-        return this.handleWith(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, handler);
+        return this.handleWith(Throwable.class, PromiseExecutors.getContextExecutor(), handler);
     }
 
     @Override
@@ -156,7 +156,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
 
     @Override
     public <E extends Throwable> Promise<V> handleWith(Class<E> exceptionClass, OnRejectedHandler<? super E, ? extends V> handler) {
-        return this.handleWith(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, handler);
+        return this.handleWith(exceptionClass, PromiseExecutors.getContextExecutor(), handler);
     }
 
     @Override
@@ -185,7 +185,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
 
     @Override
     public Promise<V> fallbackWith(OnRejectedHandler<Throwable, ? extends Future<V>> fallback) {
-        return this.fallbackWith(Throwable.class, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, fallback);
+        return this.fallbackWith(Throwable.class, PromiseExecutors.getContextExecutor(), fallback);
     }
 
     @Override
@@ -195,7 +195,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
 
     @Override
     public <E extends Throwable> Promise<V> fallbackWith(Class<E> exceptionClass, OnRejectedHandler<? super E, ? extends Future<V>> fallback) {
-        return this.fallbackWith(exceptionClass, PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, fallback);
+        return this.fallbackWith(exceptionClass, PromiseExecutors.getContextExecutor(), fallback);
     }
 
     @Override
@@ -219,7 +219,7 @@ public abstract class AbstractPromise<V> implements Promise<V> {
 
     @Override
     public Promise<V> whenCompleted(OnCompleted<V> action) {
-        return this.whenCompleted(PromiseExecutors.DEFAULT_CONTINUATION_EXECUTOR, action);
+        return this.whenCompleted(PromiseExecutors.getContextExecutor(), action);
     }
 
     @Override

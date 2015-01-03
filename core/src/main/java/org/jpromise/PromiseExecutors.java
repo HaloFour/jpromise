@@ -95,5 +95,23 @@ public enum PromiseExecutors implements Executor {
     }
 
     private final static Executor pool = Executors.newCachedThreadPool();
+    private final static ThreadLocal<Executor> contextExecutor = new ThreadLocal<Executor>();
+
+    public static Executor getContextExecutor() {
+        Executor executor = contextExecutor.get();
+        if (executor == null) {
+            executor = DEFAULT_CONTINUATION_EXECUTOR;
+        }
+        return executor;
+    }
+
+    public static void setContextExecutor(Executor executor) {
+        if (executor == null) {
+            contextExecutor.remove();
+        }
+        else {
+            contextExecutor.set(executor);
+        }
+    }
 }
 

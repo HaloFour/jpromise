@@ -4,10 +4,7 @@ import org.jpromise.functions.OnCompleted;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static org.junit.Assert.*;
 
@@ -22,6 +19,14 @@ public class PromiseHelpers {
     }
 
     public static final long DEFAULT_TIMEOUT = 2000L;
+    public static final Executor CURRENT_THREAD = new Executor() {
+        @Override
+        public void execute(Runnable runnable) {
+            if (runnable != null) {
+                runnable.run();
+            }
+        }
+    };
 
     public static <T> void fulfillAfter(final Deferred<T> deferred, final T value, long delay) {
         Timer timer = new Timer();
@@ -58,7 +63,7 @@ public class PromiseHelpers {
     private static <T> PromiseResult<T> await(Promise<T> promise, long millis) throws InterruptedException, TimeoutException {
         final PromiseResult<T> promiseResult = new PromiseResult<T>();
         final CountDownLatch latch = new CountDownLatch(1);
-        promise.whenCompleted(new OnCompleted<T>() {
+        promise.whenCompleted(CURRENT_THREAD, new OnCompleted<T>() {
             @Override
             public void completed(Promise<T> promise, T result, Throwable exception) throws Throwable {
                 switch (promise.state()) {
