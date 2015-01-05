@@ -511,6 +511,46 @@ public class PromiseStreamTest {
     }
 
     @Test
+    public void toIterable() throws Throwable {
+        PromiseStream<String> stream = createStream(false);
+        Iterable<String> iterable = stream.toIterable();
+        List<String> list = new ArrayList<String>();
+        for (String value : iterable) {
+            list.add(value);
+        }
+        assertEquals(5, list.size());
+        assertTrue(list.contains(SUCCESS1));
+        assertTrue(list.contains(SUCCESS2));
+        assertTrue(list.contains(SUCCESS3));
+        assertTrue(list.contains(SUCCESS4));
+        assertTrue(list.contains(SUCCESS5));
+    }
+
+    @Test
+    public void toIterableThrows() throws Throwable {
+        PromiseStream<String> stream = createStream(true);
+        Iterable<String> iterable = stream.toIterable();
+        List<String> list = new ArrayList<String>();
+        Iterator<String> iterator = iterable.iterator();
+        Throwable caught = null;
+        while (iterator.hasNext()) {
+            try {
+                list.add(iterator.next());
+            }
+            catch (RuntimeException exception) {
+                caught = exception.getCause();
+            }
+        }
+        assertEquals(EXCEPTION, caught);
+        assertEquals(5, list.size());
+        assertTrue(list.contains(SUCCESS1));
+        assertTrue(list.contains(SUCCESS2));
+        assertTrue(list.contains(SUCCESS3));
+        assertTrue(list.contains(SUCCESS4));
+        assertTrue(list.contains(SUCCESS5));
+    }
+
+    @Test
     public void rejects() throws Throwable {
         PromiseStream<String> stream = createStream(true);
         Promise<String[]> promise = stream.toArray(String.class);

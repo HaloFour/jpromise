@@ -147,6 +147,17 @@ public abstract class PromiseStream<V> {
         return operator.subscribe(this);
     }
 
+    public Iterable<V> toIterable() {
+        return new Iterable<V>() {
+            @Override
+            public Iterator<V> iterator() {
+                IteratorSubscriber<V> subscriber = new IteratorSubscriber<V>();
+                PromiseStream.this.subscribe(subscriber);
+                return subscriber;
+            }
+        };
+    }
+
     public static <V> PromiseStream<V> from(Promise<V> promise1) {
         List<Promise<V>> list = new ArrayList<Promise<V>>(1);
         list.add(promise1);
