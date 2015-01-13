@@ -3,6 +3,7 @@ package org.jpromise.operators;
 import org.jpromise.PromiseSubscriber;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.concurrent.LinkedBlockingDeque;
 
 public class IteratorSubscriber<V> implements PromiseSubscriber<V>, Iterator<V> {
@@ -18,35 +19,41 @@ public class IteratorSubscriber<V> implements PromiseSubscriber<V>, Iterator<V> 
     }
 
     private final LinkedBlockingDeque<Node<V>> deque = new LinkedBlockingDeque<Node<V>>();
-    private Node<V> current;
+    private Node<V> next;
 
     public boolean hasNext() {
-        current = null;
-        try {
-            Node<V> node = deque.take();
-            if (node instanceof CompletedNode) {
-                deque.add(new CompletedNode<V>());
-                return false;
-            }
-            current = node;
-            return true;
+        if (next == null) {
+            next = moveNext();
         }
-        catch (InterruptedException ignored) {
-            return false;
-        }
+        return !(next instanceof CompletedNode);
     }
 
     @Override
     public V next() {
-        Node<V> node = current;
-        if (node == null) {
-            throw new IllegalStateException();
+        if (next == null) {
+            next = moveNext();
         }
+        if (next instanceof CompletedNode) {
+            throw new NoSuchElementException();
+        }
+        Node<V> node = next;
+        next = null;
         return node.get();
     }
 
+    private Node<V> moveNext() {
+        try {
+            return deque.take();
+        }
+        catch (InterruptedException exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
     @Override
-    public void remove() { }
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void fulfilled(final V result) {

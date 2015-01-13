@@ -1,5 +1,6 @@
 package org.jpromise;
 
+import org.jpromise.functions.OnRejected;
 import org.jpromise.functions.OnRejectedHandler;
 import org.jpromise.functions.OnFulfilled;
 import org.jpromise.functions.OnFulfilledFunction;
@@ -230,5 +231,31 @@ public abstract class PromiseStream<V> {
 
     public static <V> PromiseStream<V> never(Class<V> elementClass) {
         return never();
+    }
+
+    public static <V> PromiseStream<V> single(final V result) {
+        return new PromiseStream<V>() {
+            @Override
+            public Promise<Void> subscribe(PromiseSubscriber<? super V> subscriber) {
+                subscriber.fulfilled(result);
+                subscriber.complete();
+                return Promises.fulfilled();
+            }
+        };
+    }
+
+    public static <V> PromiseStream<V> rejected(final Throwable exception) {
+        return new PromiseStream<V>() {
+            @Override
+            public Promise<Void> subscribe(PromiseSubscriber<? super V> subscriber) {
+                subscriber.rejected(exception);
+                subscriber.complete();
+                return Promises.fulfilled();
+            }
+        };
+    }
+
+    public static <V> PromiseStream<V> rejected(Class<V> elementClass, Throwable exception) {
+        return rejected(exception);
     }
 }

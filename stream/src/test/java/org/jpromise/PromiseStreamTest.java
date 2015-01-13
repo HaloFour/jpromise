@@ -263,6 +263,24 @@ public class PromiseStreamTest {
     }
 
     @Test
+    public void single() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.single(SUCCESS1);
+
+        Promise<String[]> promise = stream.toArray(String.class, 1);
+
+        String[] result = assertFulfills(promise);
+        assertArrayEquals(new String[] { SUCCESS1 }, result);
+    }
+
+    @Test
+    public void rejected() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.rejected(String.class, EXCEPTION);
+        Promise<String[]> promise = stream.toArray(String.class, 0);
+        assertRejects(EXCEPTION, promise);
+
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void forEach() throws Throwable {
         PromiseStream<String> stream = createStream(false);
@@ -633,6 +651,32 @@ public class PromiseStreamTest {
         assertTrue(list.contains(SUCCESS3));
         assertTrue(list.contains(SUCCESS4));
         assertTrue(list.contains(SUCCESS5));
+    }
+
+    @Test
+    public void toIterableNextBeforeHasNext() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.single(SUCCESS1);
+        Iterable<String> iterable = stream.toIterable();
+        Iterator<String> iterator = iterable.iterator();
+        assertEquals(SUCCESS1, iterator.next());
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void toIterableRemoveUnsupported() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.single(SUCCESS1);
+        Iterable<String> iterable = stream.toIterable();
+        Iterator<String> iterator = iterable.iterator();
+        assertEquals(SUCCESS1, iterator.next());
+        iterator.remove();
+    }
+
+    @Test(expected = NoSuchElementException.class)
+    public void toIterableNextAfterCompleted() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.single(SUCCESS1);
+        Iterable<String> iterable = stream.toIterable();
+        Iterator<String> iterator = iterable.iterator();
+        assertEquals(SUCCESS1, iterator.next());
+        iterator.next();
     }
 
     @Test
