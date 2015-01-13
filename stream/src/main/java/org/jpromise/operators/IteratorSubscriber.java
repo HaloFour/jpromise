@@ -24,15 +24,16 @@ public class IteratorSubscriber<V> implements PromiseSubscriber<V>, Iterator<V> 
         current = null;
         try {
             Node<V> node = deque.take();
-            if (node == null || node instanceof CompletedNode) {
+            if (node instanceof CompletedNode) {
                 deque.add(new CompletedNode<V>());
                 return false;
             }
             current = node;
             return true;
         }
-        catch (InterruptedException ignored) { }
-        return false;
+        catch (InterruptedException ignored) {
+            return false;
+        }
     }
 
     @Override

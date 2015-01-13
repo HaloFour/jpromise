@@ -178,6 +178,91 @@ public class PromiseStreamTest {
     }
 
     @Test
+    public void empty() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.empty(String.class);
+        Promise<List<String>> promise = stream.toList(String.class);
+        List<String> result = assertFulfills(promise);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void never() throws Throwable {
+        PromiseStream<String> stream = PromiseStream.never(String.class);
+        Promise<List<String>> promise = stream
+                .takeUntil(100, TimeUnit.MILLISECONDS)
+                .toList(String.class);
+        List<String> result = assertFulfills(promise);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void generate() throws Throwable {
+        OnFulfilledFunction<Integer, Future<Integer>> generator = new OnFulfilledFunction<Integer, Future<Integer>>() {
+            @Override
+            public Future<Integer> fulfilled(Integer result) throws Throwable {
+                if (result == null) {
+                    return Promises.fulfilled(0);
+                }
+                if (result > 4) {
+                    return null;
+                }
+                return Promises.fulfilled(result + 1);
+            }
+        };
+
+        generator = spy(generator);
+
+        PromiseStream<Integer> stream = PromiseStream.generate(generator);
+        Promise<Integer[]> promise = stream.toArray(Integer.class);
+        Integer[] result = assertFulfills(promise);
+        assertArrayEquals(new Integer[] { 0, 1, 2, 3, 4, 5 }, result);
+    }
+
+    @Test
+    public void generateGeneratorThrows() throws Throwable {
+        OnFulfilledFunction<Integer, Future<Integer>> generator = new OnFulfilledFunction<Integer, Future<Integer>>() {
+            @Override
+            public Future<Integer> fulfilled(Integer result) throws Throwable {
+                if (result == null) {
+                    return Promises.fulfilled(0);
+                }
+                if (result > 4) {
+                    throw EXCEPTION;
+                }
+                return Promises.fulfilled(result + 1);
+            }
+        };
+
+        generator = spy(generator);
+
+        PromiseStream<Integer> stream = PromiseStream.generate(generator);
+        Promise<Integer[]> promise = stream.toArray(Integer.class);
+        assertRejects(EXCEPTION, promise);
+    }
+
+    @Test
+    public void generateGeneratorRejected() throws Throwable {
+        OnFulfilledFunction<Integer, Future<Integer>> generator = new OnFulfilledFunction<Integer, Future<Integer>>() {
+            @Override
+            public Future<Integer> fulfilled(Integer result) throws Throwable {
+                if (result == null) {
+                    return Promises.fulfilled(0);
+                }
+                if (result > 4) {
+                    return Promises.rejected(EXCEPTION);
+                }
+                return Promises.fulfilled(result + 1);
+            }
+        };
+
+        generator = spy(generator);
+
+        PromiseStream<Integer> stream = PromiseStream.generate(generator);
+        Promise<Integer[]> promise = stream.toArray(Integer.class);
+        assertRejects(EXCEPTION, promise);
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void forEach() throws Throwable {
         PromiseStream<String> stream = createStream(false);

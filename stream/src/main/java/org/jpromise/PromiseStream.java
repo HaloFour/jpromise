@@ -205,4 +205,30 @@ public abstract class PromiseStream<V> {
     public static <V> PromiseStream<V> from(Iterable<Promise<V>> promises) {
         return new PromiseSource<V>(promises);
     }
+
+    public static <V> PromiseStream<V> generate(OnFulfilledFunction<V, ? extends Future<V>> generator) {
+        if (generator == null) throw new IllegalArgumentException(mustNotBeNull("generator"));
+        return new GeneratorSource<V>(generator);
+    }
+
+    public static <V> PromiseStream<V> empty() {
+        return from(Collections.<Promise<V>>emptyList());
+    }
+
+    public static <V> PromiseStream<V> empty(Class<V> elementClass) {
+        return empty();
+    }
+
+    public static <V> PromiseStream<V> never() {
+        return new PromiseStream<V>() {
+            @Override
+            public Promise<Void> subscribe(PromiseSubscriber<? super V> subscriber) {
+                return Promises.defer(Void.class).promise();
+            }
+        };
+    }
+
+    public static <V> PromiseStream<V> never(Class<V> elementClass) {
+        return never();
+    }
 }
