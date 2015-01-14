@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
 /**
- * Utility methods for creating new promises and synchronizing the results of multiple promises.
+ * Utility methods for synchronizing the results of multiple promises.
  */
 public class PromiseManager {
     private PromiseManager() {
