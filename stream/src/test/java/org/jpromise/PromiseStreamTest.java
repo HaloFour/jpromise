@@ -1,6 +1,7 @@
 package org.jpromise;
 
 import junit.framework.AssertionFailedError;
+import org.jpromise.functions.FutureGenerator;
 import org.jpromise.functions.OnFulfilled;
 import org.jpromise.functions.OnFulfilledFunction;
 import org.jpromise.functions.OnRejectedHandler;
@@ -197,9 +198,9 @@ public class PromiseStreamTest {
 
     @Test
     public void generate() throws Throwable {
-        OnFulfilledFunction<Integer, Future<Integer>> generator = new OnFulfilledFunction<Integer, Future<Integer>>() {
+        FutureGenerator<Integer> generator = new FutureGenerator<Integer>() {
             @Override
-            public Future<Integer> fulfilled(Integer result) throws Throwable {
+            public Future<Integer> next(Integer result) {
                 if (result == null) {
                     return Promises.fulfilled(0);
                 }
@@ -220,14 +221,14 @@ public class PromiseStreamTest {
 
     @Test
     public void generateGeneratorThrows() throws Throwable {
-        OnFulfilledFunction<Integer, Future<Integer>> generator = new OnFulfilledFunction<Integer, Future<Integer>>() {
+        FutureGenerator<Integer> generator = new FutureGenerator<Integer>() {
             @Override
-            public Future<Integer> fulfilled(Integer result) throws Throwable {
+            public Future<Integer> next(Integer result) {
                 if (result == null) {
                     return Promises.fulfilled(0);
                 }
                 if (result > 4) {
-                    throw EXCEPTION;
+                    throw new RuntimeException(EXCEPTION);
                 }
                 return Promises.fulfilled(result + 1);
             }
@@ -242,9 +243,9 @@ public class PromiseStreamTest {
 
     @Test
     public void generateGeneratorRejected() throws Throwable {
-        OnFulfilledFunction<Integer, Future<Integer>> generator = new OnFulfilledFunction<Integer, Future<Integer>>() {
+        FutureGenerator<Integer> generator = new FutureGenerator<Integer>() {
             @Override
-            public Future<Integer> fulfilled(Integer result) throws Throwable {
+            public Future<Integer> next(Integer result) {
                 if (result == null) {
                     return Promises.fulfilled(0);
                 }

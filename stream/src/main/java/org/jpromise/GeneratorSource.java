@@ -1,5 +1,6 @@
 package org.jpromise;
 
+import org.jpromise.functions.FutureGenerator;
 import org.jpromise.functions.OnCompleted;
 import org.jpromise.functions.OnFulfilled;
 import org.jpromise.functions.OnFulfilledFunction;
@@ -8,9 +9,9 @@ import java.util.Arrays;
 import java.util.concurrent.Future;
 
 class GeneratorSource<V> extends PromiseStream<V> {
-    private final OnFulfilledFunction<V, ? extends Future<V>> generator;
+    private final FutureGenerator<V> generator;
 
-    public GeneratorSource(OnFulfilledFunction<V, ? extends Future<V>> generator) {
+    public GeneratorSource(FutureGenerator<V> generator) {
         this.generator = generator;
     }
 
@@ -24,7 +25,7 @@ class GeneratorSource<V> extends PromiseStream<V> {
     private void next(final Deferred<Void> deferred, final PromiseSubscriber<? super V> subscriber, V previous) {
         boolean completed = false;
         try {
-            Future<V> future = generator.fulfilled(previous);
+            Future<V> future = generator.next(previous);
             if (future == null) {
                 completed = true;
             }
@@ -49,6 +50,12 @@ class GeneratorSource<V> extends PromiseStream<V> {
             }
         }
         catch (Throwable exception) {
+            if (exception instanceof RuntimeException) {
+                Throwable cause = exception.getCause();
+                if (cause != null) {
+                    exception = cause;
+                }
+            }
             subscriber.rejected(exception);
             completed = true;
         }

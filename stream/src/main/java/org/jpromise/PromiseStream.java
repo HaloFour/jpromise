@@ -1,9 +1,6 @@
 package org.jpromise;
 
-import org.jpromise.functions.OnRejected;
-import org.jpromise.functions.OnRejectedHandler;
-import org.jpromise.functions.OnFulfilled;
-import org.jpromise.functions.OnFulfilledFunction;
+import org.jpromise.functions.*;
 import org.jpromise.operators.*;
 
 import java.util.*;
@@ -207,7 +204,7 @@ public abstract class PromiseStream<V> {
         return new PromiseSource<V>(promises);
     }
 
-    public static <V> PromiseStream<V> generate(OnFulfilledFunction<V, ? extends Future<V>> generator) {
+    public static <V> PromiseStream<V> generate(FutureGenerator<V> generator) {
         if (generator == null) throw new IllegalArgumentException(mustNotBeNull("generator"));
         return new GeneratorSource<V>(generator);
     }
