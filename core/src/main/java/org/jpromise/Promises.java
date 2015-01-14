@@ -90,15 +90,7 @@ public class Promises {
      */
     public static Promise<Void> delay(long timeout, TimeUnit timeUnit) {
         if (timeUnit == null) throw new IllegalArgumentException(mustNotBeNull("timeUnit"));
-        Timer timer = new Timer();
-        final Deferred<Void> deferred = Promises.defer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                deferred.fulfill(null);
-            }
-        }, timeUnit.toMillis(timeout));
-        return deferred.promise();
+        return new TimerPromise(timeout, timeUnit);
     }
 
     /**
