@@ -221,6 +221,7 @@ public abstract class PromiseStream<V> {
         return new PromiseStream<V>() {
             @Override
             public Promise<Void> subscribe(PromiseSubscriber<? super V> subscriber) {
+                if (subscriber == null) throw new IllegalArgumentException(mustNotBeNull("subscriber"));
                 return Promises.defer(Void.class).promise();
             }
         };
@@ -234,6 +235,7 @@ public abstract class PromiseStream<V> {
         return new PromiseStream<V>() {
             @Override
             public Promise<Void> subscribe(PromiseSubscriber<? super V> subscriber) {
+                if (subscriber == null) throw new IllegalArgumentException(mustNotBeNull("subscriber"));
                 subscriber.fulfilled(result);
                 subscriber.complete();
                 return Promises.fulfilled();
@@ -245,6 +247,7 @@ public abstract class PromiseStream<V> {
         return new PromiseStream<V>() {
             @Override
             public Promise<Void> subscribe(PromiseSubscriber<? super V> subscriber) {
+                if (subscriber == null) throw new IllegalArgumentException(mustNotBeNull("subscriber"));
                 subscriber.rejected(exception);
                 subscriber.complete();
                 return Promises.fulfilled();
