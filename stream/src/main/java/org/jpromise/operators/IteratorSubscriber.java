@@ -79,6 +79,8 @@ public class IteratorSubscriber<V> implements PromiseSubscriber<V>, Iterator<V> 
 
     @Override
     public void complete() {
-        deque.add(new CompletedNode<V>());
+        Node<V> completed = new CompletedNode<V>();
+        completed.get();
+        deque.add(completed);
     }
 }

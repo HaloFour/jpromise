@@ -672,10 +672,9 @@ public class PromiseStreamTest {
 
     @Test(expected = NoSuchElementException.class)
     public void toIterableNextAfterCompleted() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.single(SUCCESS1);
+        PromiseStream<String> stream = PromiseStream.empty();
         Iterable<String> iterable = stream.toIterable();
         Iterator<String> iterator = iterable.iterator();
-        assertEquals(SUCCESS1, iterator.next());
         iterator.next();
     }
 
