@@ -1,6 +1,7 @@
 package org.jpromise;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
@@ -15,21 +16,11 @@ public abstract class AbstractPromiseService implements PromiseService {
      * @return {@inheritDoc}
      */
     @Override
-    public <V> Promise<V> submit(final Callable<V> task) {
+    public <V> Promise<V> submit(Callable<V> task) {
         if (task == null) throw new NullPointerException(mustNotBeNull("task"));
-        final Deferred<V> deferred = Promises.defer();
-        this.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    deferred.fulfill(task.call());
-                }
-                catch (Throwable exception) {
-                    deferred.reject(exception);
-                }
-            }
-        });
-        return deferred.promise();
+        RunnablePromise<V> promise = new RunnablePromise<V>(task);
+        this.execute(promise);
+        return promise;
     }
 
     /**
@@ -42,20 +33,9 @@ public abstract class AbstractPromiseService implements PromiseService {
     @Override
     public <V> Promise<V> submit(final Runnable task, final V result) {
         if (task == null) throw new NullPointerException(mustNotBeNull("task"));
-        final Deferred<V> deferred = Promises.defer();
-        this.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    task.run();
-                    deferred.fulfill(result);
-                }
-                catch (Throwable exception) {
-                    deferred.reject(exception);
-                }
-            }
-        });
-        return deferred.promise();
+        RunnablePromise<V> promise = new RunnablePromise<V>(task, result);
+        this.execute(promise);
+        return promise;
     }
 
     /**
@@ -64,7 +44,7 @@ public abstract class AbstractPromiseService implements PromiseService {
      * @return {@inheritDoc}
      */
     @Override
-    public Promise<Void> submit(final Runnable task) {
+    public Promise<Void> submit(Runnable task) {
         return this.submit(task, null);
     }
 
