@@ -14,6 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -278,7 +279,61 @@ public class PromiseStreamTest {
         PromiseStream<String> stream = PromiseStream.rejected(String.class, EXCEPTION);
         Promise<String[]> promise = stream.toArray(String.class, 0);
         assertRejects(EXCEPTION, promise);
+    }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void cancel() throws Throwable {
+        PromiseSubscriber<String> subscriber = mock(PromiseSubscriber.class);
+        Deferred<String> deferred = Promises.defer();
+        Promise<String> promise = deferred.promise();
+        PromiseStream<String> stream = PromiseStream.from(promise);
+        Promise<Void> promise2 = stream.subscribe(subscriber);
+
+        assertTrue(promise2.cancel(true));
+        assertRejects(CancellationException.class, promise2);
+        deferred.fulfill(SUCCESS1);
+        verify(subscriber, times(0)).fulfilled(anyString());
+        verify(subscriber, times(1)).rejected(any(CancellationException.class));
+        verify(subscriber, times(1)).complete();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void cancelAlreadyCompleted() throws Throwable {
+        PromiseSubscriber<String> subscriber = mock(PromiseSubscriber.class);
+        Deferred<String> deferred = Promises.defer();
+        Promise<String> promise = deferred.promise();
+        PromiseStream<String> stream = PromiseStream.from(promise);
+        Promise<Void> promise2 = stream.subscribe(subscriber);
+        deferred.fulfill(SUCCESS1);
+        assertFulfills(promise2);
+
+        assertFalse(promise2.cancel(true));
+        verify(subscriber, times(1)).fulfilled(eq(SUCCESS1));
+        verify(subscriber, times(0)).rejected(any(Throwable.class));
+        verify(subscriber, times(1)).complete();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void cancelTransformed() throws Throwable {
+        PromiseSubscriber<String> subscriber = mock(PromiseSubscriber.class);
+        OnFulfilledFunction<String, String> function = mock(OnFulfilledFunction.class);
+        when(function.fulfilled(anyString())).thenReturn(SUCCESS2);
+        Deferred<String> deferred = Promises.defer();
+        Promise<String> promise = deferred.promise();
+        PromiseStream<String> stream = PromiseStream.from(promise)
+                .map(function);
+        Promise<Void> promise2 = stream.subscribe(subscriber);
+
+        assertTrue(promise2.cancel(true));
+        assertRejects(CancellationException.class, promise2);
+        deferred.fulfill(SUCCESS1);
+        verify(subscriber, times(0)).fulfilled(anyString());
+        verify(subscriber, times(1)).rejected(any(CancellationException.class));
+        verify(subscriber, times(1)).complete();
+        verify(function, times(0)).fulfilled(anyString());
     }
 
     @Test

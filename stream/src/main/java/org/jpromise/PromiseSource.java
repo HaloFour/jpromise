@@ -1,7 +1,5 @@
 package org.jpromise;
 
-import org.jpromise.functions.OnCompleted;
-
 import java.util.Arrays;
 
 class PromiseSource<V> extends PromiseStream<V> {
@@ -21,25 +19,6 @@ class PromiseSource<V> extends PromiseStream<V> {
             subscriber.complete();
             return Promises.fulfilled();
         }
-        return PromiseManager
-                .whenAllCompleted(promises, new OnCompleted<V>() {
-                    @Override
-                    public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
-                        switch (promise.state()) {
-                            case FULFILLED:
-                                subscriber.fulfilled(result);
-                                break;
-                            case REJECTED:
-                                subscriber.rejected(exception);
-                                break;
-                        }
-                    }
-                })
-                .whenCompleted(PromiseExecutors.CURRENT_THREAD, new OnCompleted<Void>() {
-                    @Override
-                    public void completed(Promise<Void> promise, Void result, Throwable exception) throws Throwable {
-                        subscriber.complete();
-                    }
-                });
+        return new PromiseSubscription<V>(promises, subscriber);
     }
 }
