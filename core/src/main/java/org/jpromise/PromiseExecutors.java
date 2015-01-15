@@ -97,6 +97,12 @@ public enum PromiseExecutors implements Executor {
     private final static Executor pool = Executors.newCachedThreadPool();
     private final static ThreadLocal<Executor> contextExecutor = new ThreadLocal<Executor>();
 
+    /**
+     * Gets the {@link java.util.concurrent.Executor} associated with the current thread.  If no specific instance
+     * has been assigned by calling {@link org.jpromise.PromiseExecutors#setContextExecutor(java.util.concurrent.Executor)}
+     * then this method will return {@link org.jpromise.PromiseExecutors#DEFAULT_CONTINUATION_EXECUTOR}.
+     * @return The {@link java.util.concurrent.Executor} associated with the current thread.
+     */
     public static Executor getContextExecutor() {
         Executor executor = contextExecutor.get();
         if (executor == null) {
@@ -105,13 +111,21 @@ public enum PromiseExecutors implements Executor {
         return executor;
     }
 
-    public static void setContextExecutor(Executor executor) {
+    /**
+     * Sets the {@link java.util.concurrent.Executor} to be associated with the current thread which will be used by
+     * default when composing promise continuations.
+     * @param executor The {@link java.util.concurrent.Executor} to be associated with the current thread.
+     * @return The previous {@link java.util.concurrent.Executor} that was associated with the current thread.
+     */
+    public static Executor setContextExecutor(Executor executor) {
+        Executor previous = getContextExecutor();
         if (executor == null) {
             contextExecutor.remove();
         }
         else {
             contextExecutor.set(executor);
         }
+        return previous;
     }
 }
 

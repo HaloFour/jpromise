@@ -44,14 +44,14 @@ public enum PromiseComposition implements PromiseCompositionListener {
                 }
                 catch (Throwable ignored) { }
             }
-            return new ComposablePromiseContinuationListener(callbacks);
+            return new CompositePromiseContinuationListener(callbacks);
         }
     }
 
-    private static class ComposablePromiseContinuationListener implements PromiseContinuationListener {
+    private static class CompositePromiseContinuationListener implements PromiseContinuationListener {
         private final Map<PromiseCompositionListener, PromiseContinuationListener> callbacks;
 
-        public ComposablePromiseContinuationListener(Map<PromiseCompositionListener, PromiseContinuationListener> callbacks) {
+        public CompositePromiseContinuationListener(Map<PromiseCompositionListener, PromiseContinuationListener> callbacks) {
             this.callbacks = callbacks;
         }
 
