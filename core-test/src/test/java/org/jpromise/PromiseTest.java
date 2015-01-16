@@ -6,7 +6,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.*;
 
@@ -833,28 +835,35 @@ public class PromiseTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void cancelComposedCancelsPromise() throws Throwable {
+        final CountDownLatch latch = new CountDownLatch(1);
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise1 = deferred.promise();
 
-        @SuppressWarnings("unchecked")
         OnFulfilledFunction<String, Future<String>> callback = mock(OnFulfilledFunction.class);
-        @SuppressWarnings("unchecked")
         Promise<String> future = mock(Promise.class);
 
         when(callback.fulfilled(anyString())).thenReturn(future);
-        when(future.whenCompleted(any(Executor.class), Mockito.<OnCompleted<String>>any())).thenReturn(null);
+        when(future.whenCompleted(any(Executor.class), Mockito.<OnCompleted<String>>any()))
+                .then(new Answer<Object>() {
+                    @Override
+                    public Object answer(InvocationOnMock invocation) throws Throwable {
+                        latch.countDown();
+                        return null;
+                    }
+                });
         when(future.cancel(anyBoolean())).thenReturn(true);
 
         Promise<String> promise2 = promise1.thenCompose(callback);
 
         deferred.fulfill(SUCCESS1);
         assertFulfills(SUCCESS1, promise1);
-        verify(future, timeout(10).times(1)).whenCompleted(any(Executor.class), Mockito.<OnCompleted<String>>any());
+        latch.await(1, TimeUnit.SECONDS);
 
         promise2.cancel(true);
         assertRejects(CancellationException.class, promise2);
-        verify(future, timeout(100).times(1)).cancel(anyBoolean());
+        verify(future, times(1)).cancel(anyBoolean());
     }
 
     @Test
