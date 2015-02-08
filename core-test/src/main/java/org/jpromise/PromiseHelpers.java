@@ -89,10 +89,11 @@ public class PromiseHelpers {
 
     public static <T> T assertFulfills(Promise<T> promise, long millis) throws InterruptedException, ExecutionException, TimeoutException {
         PromiseResult<T> promiseResult = await(promise, millis);
-        assertEquals(PromiseState.FULFILLED, promise.state());
-        assertTrue(promise.isDone());
-        assertTrue(promise.isFulfilled());
-        assertFalse(promise.isRejected());
+        assertEquals(String.format("Expected the promise state to be FULFILLED, not %s.", promise.state()), PromiseState.FULFILLED, promise.state());
+        assertFalse("Expected the promise to not be pending.", promise.isPending());
+        assertTrue("Expected the promise to be done.", promise.isDone());
+        assertTrue("Expected the promise to be fulfilled.", promise.isFulfilled());
+        assertFalse("Expected the promise to be rejected.", promise.isRejected());
         return promiseResult.result;
     }
 
@@ -114,34 +115,35 @@ public class PromiseHelpers {
 
     public static <T> Throwable assertRejects(Promise<T> promise, long millis) throws InterruptedException, TimeoutException {
         PromiseResult<T> promiseResult = await(promise, millis);
-        assertEquals(PromiseState.REJECTED, promise.state());
-        assertTrue(promise.isDone());
-        assertFalse(promise.isFulfilled());
-        assertTrue(promise.isRejected());
+        assertEquals(String.format("Expected the promise state to be REJECTED, not %s.", promise.state()), PromiseState.REJECTED, promise.state());
+        assertFalse("Expected the promise to not be pending.", promise.isPending());
+        assertTrue("Expected the promise to be done.", promise.isDone());
+        assertFalse("Expected the promise to be fulfilled.", promise.isFulfilled());
+        assertTrue("Expected the promise to be rejected.", promise.isRejected());
         return promiseResult.reason;
     }
 
     public static <T, E extends Throwable> E assertRejects(Class<E> expectedClass, Promise<T> promise) throws InterruptedException, TimeoutException {
         Throwable reason = assertRejects(promise, DEFAULT_TIMEOUT);
-        assertTrue(expectedClass.isInstance(reason));
+        assertTrue(String.format("Expected the rejection reason to be of type %s.", expectedClass.getCanonicalName()), expectedClass.isInstance(reason));
         return expectedClass.cast(reason);
     }
 
     public static <T, E extends Throwable> E assertRejects(Class<E> expectedClass, Promise<T> promise, long millis) throws InterruptedException, TimeoutException {
         Throwable reason = assertRejects(promise, millis);
-        assertTrue(expectedClass.isInstance(reason));
+        assertTrue(String.format("Expected the rejection reason to be of type %s.", expectedClass.getCanonicalName()), expectedClass.isInstance(reason));
         return expectedClass.cast(reason);
     }
 
     public static <T, E extends Throwable> E assertRejects(E expected, Promise<T> promise) throws InterruptedException, TimeoutException {
         Throwable reason = assertRejects(promise, DEFAULT_TIMEOUT);
-        assertEquals(expected, reason);
+        assertEquals("Expected the rejection reason to be the specified Throwable instance.", expected, reason);
         return expected;
     }
 
     public static <T, E extends Throwable> E assertRejects(E expected, Promise<T> promise, long millis) throws InterruptedException, TimeoutException {
         Throwable reason = assertRejects(promise, millis);
-        assertEquals(expected, reason);
+        assertEquals("Expected the rejection reason to be the specified Throwable instance.", expected, reason);
         return expected;
     }
 }
