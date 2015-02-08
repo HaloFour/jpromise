@@ -247,18 +247,17 @@ public abstract class AbstractPromise<V> implements Promise<V> {
     }
 
     @Override
-    public Promise<Boolean> cancelAfter(final boolean mayInterruptIfRunning, long timeout, TimeUnit timeUnit) {
+    public Promise<V> cancelAfter(final boolean mayInterruptIfRunning, long timeout, TimeUnit timeUnit) {
         if (isDone()) {
-            return Promises.fulfilled(false);
+            return this;
         }
-        final Deferred<Boolean> deferred = Promises.defer();
         final Timer timer = new Timer(true);
         final AtomicBoolean flag = new AtomicBoolean();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 if (flag.compareAndSet(false, true)) {
-                    deferred.fulfill(AbstractPromise.this.cancel(mayInterruptIfRunning));
+                    AbstractPromise.this.cancel(mayInterruptIfRunning);
                 }
             }
         }, timeUnit.toMillis(timeout));
@@ -267,11 +266,10 @@ public abstract class AbstractPromise<V> implements Promise<V> {
             public void completed(Promise<V> promise, V result, Throwable exception) throws Throwable {
                 if (flag.compareAndSet(false, true)) {
                     timer.cancel();
-                    deferred.fulfill(false);
                 }
             }
         });
-        return deferred.promise();
+        return this;
     }
 
     @Override

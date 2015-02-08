@@ -884,27 +884,27 @@ public class PromiseTest {
     @Test
     public void cancelAfter() throws Throwable {
         Promise<String> promise = fulfillAfter(SUCCESS1, 100);
-        Promise<Boolean> cancel = promise.cancelAfter(true, 10, TimeUnit.MILLISECONDS);
+        Promise<String> cancelled = promise.cancelAfter(true, 10, TimeUnit.MILLISECONDS);
 
-        assertFulfills(true, cancel);
+        assertRejects(CancellationException.class, cancelled);
         assertRejects(CancellationException.class, promise);
     }
 
     @Test(timeout = 1000)
     public void cancelAfterCompletes() throws Throwable {
         Promise<String> promise = fulfillAfter(SUCCESS1, 10);
-        Promise<Boolean> cancel = promise.cancelAfter(true, 5000, TimeUnit.MILLISECONDS);
+        Promise<String> cancelled = promise.cancelAfter(true, 5000, TimeUnit.MILLISECONDS);
 
-        assertFulfills(false, cancel);
+        assertFulfills(SUCCESS1, cancelled);
         assertFulfills(SUCCESS1, promise);
     }
 
     @Test
     public void cancelAfterAlreadyCompleted() throws Throwable {
         Promise<String> promise = Promises.fulfilled(SUCCESS1);
-        Promise<Boolean> cancel = promise.cancelAfter(true, 5000, TimeUnit.MILLISECONDS);
+        Promise<String> cancelled = promise.cancelAfter(true, 5000, TimeUnit.MILLISECONDS);
 
-        assertFulfills(false, cancel);
+        assertFulfills(SUCCESS1, cancelled);
         assertFulfills(SUCCESS1, promise);
     }
 

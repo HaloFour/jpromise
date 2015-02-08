@@ -58,7 +58,7 @@ public interface Promise<V> extends Future<V> {
      * @param timeUnit The unit of time for the {@code timeout} argument.
      * @return A promise that will indicate if this promise was successfully cancelled.
      */
-    Promise<Boolean> cancelAfter(final boolean mayInterruptIfRunning, long timeout, TimeUnit timeUnit);
+    Promise<V> cancelAfter(boolean mayInterruptIfRunning, long timeout, TimeUnit timeUnit);
 
     /**
      * Registers an operation that is to be performed when the promise is successfully fulfilled.
