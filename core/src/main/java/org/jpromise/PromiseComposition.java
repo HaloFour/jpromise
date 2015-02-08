@@ -5,13 +5,10 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import static org.jpromise.util.MessageUtil.mustNotBeNull;
 
-public enum PromiseComposition implements PromiseCompositionListener {
-    LISTENER {
-        @Override
-        public PromiseContinuationListener composingContinuation(Promise<?> source, Promise<?> target) {
-            return composite.composingContinuation(source, target);
-        }
-    };
+public class PromiseComposition {
+    private PromiseComposition() {
+        throw new IllegalStateException();
+    }
 
     private static final Set<PromiseCompositionListener> listeners = new CopyOnWriteArraySet<PromiseCompositionListener>();
     private static final CompositePromiseCompositionListener composite = new CompositePromiseCompositionListener(listeners);
@@ -23,6 +20,10 @@ public enum PromiseComposition implements PromiseCompositionListener {
 
     public static void clear() {
         listeners.clear();
+    }
+
+    static PromiseContinuationListener composingContinuation(Promise<?> source, Promise<?> target) {
+        return composite.composingContinuation(source, target);
     }
 
     private static class CompositePromiseCompositionListener implements PromiseCompositionListener {

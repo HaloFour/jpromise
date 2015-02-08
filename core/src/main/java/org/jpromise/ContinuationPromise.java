@@ -15,7 +15,7 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
 
     protected ContinuationPromise(Promise<V_IN> promise, Executor executor) {
         this.executor = executor;
-        this.callback = PromiseComposition.LISTENER.composingContinuation(promise, this);
+        this.callback = PromiseComposition.composingContinuation(promise, this);
     }
 
     @Override

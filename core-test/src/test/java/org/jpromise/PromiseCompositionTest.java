@@ -3,17 +3,36 @@ package org.jpromise;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
+
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class PromiseCompositionTest {
     public static final String SUCCESS1 = "SUCCESS1";
     public static final String SUCCESS2 = "SUCCESS2";
-    public static final String SUCCESS3 = "SUCCESS3";
 
     @Before
     public void setup() {
         PromiseComposition.clear();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void PromiseCompositionCannotBeCreated() throws Throwable {
+        Class<PromiseComposition> promiseCompositionClass = PromiseComposition.class;
+        Constructor<?>[] constructors = promiseCompositionClass.getDeclaredConstructors();
+        assertEquals(1, constructors.length);
+        Constructor<?> constructor = constructors[0];
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        constructor.setAccessible(true);
+        try {
+            constructor.newInstance();
+        }
+        catch (InvocationTargetException exception) {
+            throw exception.getCause();
+        }
     }
 
     @Test
@@ -42,7 +61,7 @@ public class PromiseCompositionTest {
 
         PromiseComposition.register(listener);
 
-        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        PromiseContinuationListener composedCallback = PromiseComposition.composingContinuation(promise1, promise2);
         verify(listener, times(1)).composingContinuation(promise1, promise2);
         PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
         verify(callback, times(1)).invokingContinuation(promise1, promise2, SUCCESS1, null);
@@ -66,7 +85,7 @@ public class PromiseCompositionTest {
         PromiseComposition.register(listener1);
         PromiseComposition.register(listener2);
 
-        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        PromiseContinuationListener composedCallback = PromiseComposition.composingContinuation(promise1, promise2);
         verify(listener1, times(1)).composingContinuation(promise1, promise2);
         verify(listener2, times(1)).composingContinuation(promise1, promise2);
         PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
@@ -88,7 +107,7 @@ public class PromiseCompositionTest {
 
         PromiseComposition.register(listener);
 
-        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        PromiseContinuationListener composedCallback = PromiseComposition.composingContinuation(promise1, promise2);
         verify(listener, times(1)).composingContinuation(promise1, promise2);
         PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
         verify(callback, never()).invokingContinuation(promise1, promise2, SUCCESS1, null);
@@ -110,7 +129,7 @@ public class PromiseCompositionTest {
 
         PromiseComposition.register(listener);
 
-        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        PromiseContinuationListener composedCallback = PromiseComposition.composingContinuation(promise1, promise2);
         verify(listener, times(1)).composingContinuation(promise1, promise2);
         PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
         verify(callback, times(1)).invokingContinuation(promise1, promise2, SUCCESS1, null);
@@ -132,7 +151,7 @@ public class PromiseCompositionTest {
 
         PromiseComposition.register(listener);
 
-        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        PromiseContinuationListener composedCallback = PromiseComposition.composingContinuation(promise1, promise2);
         verify(listener, times(1)).composingContinuation(promise1, promise2);
         PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
         verify(callback, times(1)).invokingContinuation(promise1, promise2, SUCCESS1, null);
@@ -154,7 +173,7 @@ public class PromiseCompositionTest {
 
         PromiseComposition.register(listener);
 
-        PromiseContinuationListener composedCallback = PromiseComposition.LISTENER.composingContinuation(promise1, promise2);
+        PromiseContinuationListener composedCallback = PromiseComposition.composingContinuation(promise1, promise2);
         verify(listener, times(1)).composingContinuation(promise1, promise2);
         PromiseContinuationCompletion composite = composedCallback.invokingContinuation(promise1, promise2, SUCCESS1, null);
         verify(callback, times(1)).invokingContinuation(promise1, promise2, SUCCESS1, null);
