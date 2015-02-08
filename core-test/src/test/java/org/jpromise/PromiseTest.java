@@ -25,9 +25,7 @@ public class PromiseTest {
 
     @Test
     public void fulfills() throws Throwable {
-        Promise<String> promise = fulfillAfter(SUCCESS1, 100);
-
-        assertEquals(promise.state(), PromiseState.PENDING);
+        Promise<String> promise = fulfillAfter(SUCCESS1, 10);
 
         assertFulfills(SUCCESS1, promise);
     }
@@ -35,7 +33,7 @@ public class PromiseTest {
     @Test
     public void rejects() throws Throwable {
         final Exception exception = new Exception();
-        Promise<String> promise = rejectAfter(exception, 100);
+        Promise<String> promise = rejectAfter(exception, 10);
 
         assertRejects(exception, promise);
     }
@@ -1026,5 +1024,28 @@ public class PromiseTest {
 
         String ignored = promise.get(100, TimeUnit.MILLISECONDS);
         throw new AssertionFailedError("promise.get() should not return successfully");
+    }
+
+    @Test
+    public void getException() {
+        Exception exception = new Exception();
+        Promise<String> promise = Promises.rejected(exception);
+
+        assertEquals(exception, promise.getException());
+    }
+
+    @Test
+    public void getExceptionPending() {
+        Deferred<String> deferred = Promises.defer();
+        Promise<String> promise = deferred.promise();
+
+        assertNull(promise.getException());
+    }
+
+    @Test
+    public void getExceptionFulfilled() {
+        Promise<String> promise = Promises.fulfilled(SUCCESS1);
+
+        assertNull(promise.getException());
     }
 }

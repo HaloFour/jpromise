@@ -25,6 +25,11 @@ public abstract class AbstractPromise<V> implements Promise<V> {
     }
 
     @Override
+    public boolean isPending() {
+        return this.state() == PromiseState.PENDING;
+    }
+
+    @Override
     public boolean isDone() {
         return this.state() != PromiseState.PENDING;
     }
@@ -310,6 +315,11 @@ public abstract class AbstractPromise<V> implements Promise<V> {
         catch (InterruptedException exception) {
             throw new ExecutionException(exception);
         }
+    }
+
+    @Override
+    public Throwable getException() {
+        return exception;
     }
 
     protected boolean complete(V result) {

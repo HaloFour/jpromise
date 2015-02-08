@@ -50,6 +50,8 @@ public class PromisesTest {
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
         assertFalse(promise.isDone());
+        assertTrue(promise.isPending());
+        assertEquals(PromiseState.PENDING, promise.state());
     }
 
     @Test
@@ -57,6 +59,8 @@ public class PromisesTest {
         Deferred<String> deferred = Promises.defer(String.class);
         Promise<String> promise = deferred.promise();
         assertFalse(promise.isDone());
+        assertTrue(promise.isPending());
+        assertEquals(PromiseState.PENDING, promise.state());
     }
 
     @Test
@@ -68,6 +72,7 @@ public class PromisesTest {
         assertFalse(promise.isRejected());
         assertFalse(promise.isDone());
         assertFalse(promise.isCancelled());
+        assertTrue(promise.isPending());
         assertEquals(promise.toString(), "[PENDING]");
     }
 

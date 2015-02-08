@@ -23,6 +23,12 @@ public interface Promise<V> extends Future<V> {
     PromiseState state();
 
     /**
+     * Gets whether the promise is still pending.
+     * @return {@code true} if the promise has not completed; otherwise, {@code false}.
+     */
+    boolean isPending();
+
+    /**
      * Gets whether the promise has completed.
      * @return {@code true} if the promise has completed; otherwise, {@code false}.
      */
@@ -49,6 +55,12 @@ public interface Promise<V> extends Future<V> {
      * @throws CancellationException The promise has been cancelled.
      */
     V getNow(V defaultValue) throws ExecutionException, CancellationException;
+
+    /**
+     * Returns the exception that caused the promise to be rejected.
+     * @return The exception that caused the promise to be rejected; otherwise, {@code null}.
+     */
+    Throwable getException();
 
     /**
      * Cancels the promise after the specified timeout period.
