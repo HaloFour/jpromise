@@ -8,7 +8,7 @@ import org.jpromise.functions.OnFulfilledFunction;
 import java.util.Arrays;
 import java.util.concurrent.Future;
 
-class GeneratorSource<V> extends PromiseStream<V> {
+class GeneratorSource<V> extends AbstractPromiseStream<V> {
     private final FutureGenerator<V> generator;
 
     public GeneratorSource(FutureGenerator<V> generator) {

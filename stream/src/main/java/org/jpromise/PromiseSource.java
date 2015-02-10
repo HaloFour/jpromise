@@ -2,7 +2,7 @@ package org.jpromise;
 
 import java.util.Arrays;
 
-class PromiseSource<V> extends PromiseStream<V> {
+class PromiseSource<V> extends AbstractPromiseStream<V> {
     private final Iterable<Promise<V>> promises;
 
     public PromiseSource(Promise<V>[] promises) {

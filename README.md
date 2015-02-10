@@ -251,7 +251,7 @@ The `PromiseStream` class provides basic query and collection functionality over
 ```java
 List<Promise<String>> promises = ...;
 
-PromiseStream<String> stream = PromiseStream.from(promises);
+PromiseStream<String> stream = PromiseStreams.from(promises);
 
 Promise<Integer[]> promise = stream
     // transform the results of the individual promises
@@ -273,7 +273,7 @@ promise.then(new OnResolved<Integer[]>() {
 
 // or, in Java 8
 
-PromiseStream.from(promises)
+PromiseStreams.from(promises)
     .map(result -> Integer.valueOf(result, 10))
     .filterRejected(NumberFormatException.class)
     .toArray(Integer.class, 10)

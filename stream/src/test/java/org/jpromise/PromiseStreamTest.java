@@ -44,7 +44,7 @@ public class PromiseStreamTest {
             Promise<String> rejected = rejectAfter(EXCEPTION, 10);
             promises.add(rejected);
         }
-        return PromiseStream.from(promises);
+        return PromiseStreams.from(promises);
     }
 
     private String reverse(String input) {
@@ -73,221 +73,12 @@ public class PromiseStreamTest {
     }
 
     @Test
-    public void from1() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.from(Promises.fulfilled(SUCCESS1));
-        Promise<List<String>> promise = stream.toList(String.class);
-        List<String> result = assertFulfills(promise);
-        assertEquals(1, result.size());
-        assertTrue(result.contains(SUCCESS1));
-    }
-
-    @Test
-    public void from2() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.from(
-                Promises.fulfilled(SUCCESS1),
-                Promises.fulfilled(SUCCESS2)
-        );
-        Promise<List<String>> promise = stream.toList(String.class);
-        List<String> result = assertFulfills(promise);
-        assertEquals(2, result.size());
-        assertTrue(result.contains(SUCCESS1));
-        assertTrue(result.contains(SUCCESS2));
-    }
-
-    @Test
-    public void from3() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.from(
-                Promises.fulfilled(SUCCESS1),
-                Promises.fulfilled(SUCCESS2),
-                Promises.fulfilled(SUCCESS3)
-        );
-        Promise<List<String>> promise = stream.toList(String.class);
-        List<String> result = assertFulfills(promise);
-        assertEquals(3, result.size());
-        assertTrue(result.contains(SUCCESS1));
-        assertTrue(result.contains(SUCCESS2));
-        assertTrue(result.contains(SUCCESS3));
-    }
-
-    @Test
-    public void from4() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.from(
-                Promises.fulfilled(SUCCESS1),
-                Promises.fulfilled(SUCCESS2),
-                Promises.fulfilled(SUCCESS3),
-                Promises.fulfilled(SUCCESS4)
-        );
-        Promise<List<String>> promise = stream.toList(String.class);
-        List<String> result = assertFulfills(promise);
-        assertEquals(4, result.size());
-        assertTrue(result.contains(SUCCESS1));
-        assertTrue(result.contains(SUCCESS2));
-        assertTrue(result.contains(SUCCESS3));
-        assertTrue(result.contains(SUCCESS4));
-    }
-
-    @Test
-    public void from5() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.from(
-                Promises.fulfilled(SUCCESS1),
-                Promises.fulfilled(SUCCESS2),
-                Promises.fulfilled(SUCCESS3),
-                Promises.fulfilled(SUCCESS4),
-                Promises.fulfilled(SUCCESS5)
-        );
-        Promise<List<String>> promise = stream.toList(String.class);
-        List<String> result = assertFulfills(promise);
-        assertEquals(5, result.size());
-        assertTrue(result.contains(SUCCESS1));
-        assertTrue(result.contains(SUCCESS2));
-        assertTrue(result.contains(SUCCESS3));
-        assertTrue(result.contains(SUCCESS4));
-        assertTrue(result.contains(SUCCESS5));
-    }
-
-    private Promise<String>[] makeArray(Promise<String>... promises) {
-        return promises;
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void fromArray() throws Throwable {
-        Promise<String>[] array = makeArray(Promises.fulfilled(SUCCESS1),
-                Promises.fulfilled(SUCCESS2),
-                Promises.fulfilled(SUCCESS3),
-                Promises.fulfilled(SUCCESS4),
-                Promises.fulfilled(SUCCESS5)
-        );
-
-        PromiseStream<String> stream = PromiseStream.from(array);
-        Promise<List<String>> promise = stream.toList(String.class);
-        List<String> result = assertFulfills(promise);
-        assertEquals(5, result.size());
-        assertTrue(result.contains(SUCCESS1));
-        assertTrue(result.contains(SUCCESS2));
-        assertTrue(result.contains(SUCCESS3));
-        assertTrue(result.contains(SUCCESS4));
-        assertTrue(result.contains(SUCCESS5));
-    }
-
-    @Test
-    public void fromNull() throws Throwable {
-        Iterable<Promise<String>> iterable = null;
-        PromiseStream<String> stream = PromiseStream.from(iterable);
-        Promise<List<String>> promise = stream.toList(String.class);
-        List<String> result = assertFulfills(promise);
-        assertEquals(0, result.size());
-    }
-
-    @Test
-    public void empty() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.empty(String.class);
-        Promise<List<String>> promise = stream.toList(String.class);
-        List<String> result = assertFulfills(promise);
-        assertEquals(0, result.size());
-    }
-
-    @Test
-    public void never() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.never(String.class);
-        Promise<List<String>> promise = stream
-                .takeUntil(100, TimeUnit.MILLISECONDS)
-                .toList(String.class);
-        List<String> result = assertFulfills(promise);
-        assertEquals(0, result.size());
-    }
-
-    @Test
-    public void generate() throws Throwable {
-        FutureGenerator<Integer> generator = new FutureGenerator<Integer>() {
-            @Override
-            public Future<Integer> next(Integer result) {
-                if (result == null) {
-                    return Promises.fulfilled(0);
-                }
-                if (result > 4) {
-                    return null;
-                }
-                return Promises.fulfilled(result + 1);
-            }
-        };
-
-        generator = spy(generator);
-
-        PromiseStream<Integer> stream = PromiseStream.generate(generator);
-        Promise<Integer[]> promise = stream.toArray(Integer.class);
-        Integer[] result = assertFulfills(promise);
-        assertArrayEquals(new Integer[] { 0, 1, 2, 3, 4, 5 }, result);
-    }
-
-    @Test
-    public void generateGeneratorThrows() throws Throwable {
-        FutureGenerator<Integer> generator = new FutureGenerator<Integer>() {
-            @Override
-            public Future<Integer> next(Integer result) {
-                if (result == null) {
-                    return Promises.fulfilled(0);
-                }
-                if (result > 4) {
-                    throw new RuntimeException(EXCEPTION);
-                }
-                return Promises.fulfilled(result + 1);
-            }
-        };
-
-        generator = spy(generator);
-
-        PromiseStream<Integer> stream = PromiseStream.generate(generator);
-        Promise<Integer[]> promise = stream.toArray(Integer.class);
-        assertRejects(EXCEPTION, promise);
-    }
-
-    @Test
-    public void generateGeneratorRejected() throws Throwable {
-        FutureGenerator<Integer> generator = new FutureGenerator<Integer>() {
-            @Override
-            public Future<Integer> next(Integer result) {
-                if (result == null) {
-                    return Promises.fulfilled(0);
-                }
-                if (result > 4) {
-                    return Promises.rejected(EXCEPTION);
-                }
-                return Promises.fulfilled(result + 1);
-            }
-        };
-
-        generator = spy(generator);
-
-        PromiseStream<Integer> stream = PromiseStream.generate(generator);
-        Promise<Integer[]> promise = stream.toArray(Integer.class);
-        assertRejects(EXCEPTION, promise);
-    }
-
-    @Test
-    public void single() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.single(SUCCESS1);
-
-        Promise<String[]> promise = stream.toArray(String.class, 1);
-
-        String[] result = assertFulfills(promise);
-        assertArrayEquals(new String[] { SUCCESS1 }, result);
-    }
-
-    @Test
-    public void rejected() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.rejected(String.class, EXCEPTION);
-        Promise<String[]> promise = stream.toArray(String.class, 0);
-        assertRejects(EXCEPTION, promise);
-    }
-
-    @Test
     @SuppressWarnings("unchecked")
     public void cancel() throws Throwable {
         PromiseSubscriber<String> subscriber = mock(PromiseSubscriber.class);
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
-        PromiseStream<String> stream = PromiseStream.from(promise);
+        PromiseStream<String> stream = PromiseStreams.from(promise);
         Promise<Void> promise2 = stream.subscribe(subscriber);
 
         assertTrue(promise2.cancel(true));
@@ -304,7 +95,7 @@ public class PromiseStreamTest {
         PromiseSubscriber<String> subscriber = mock(PromiseSubscriber.class);
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
-        PromiseStream<String> stream = PromiseStream.from(promise);
+        PromiseStream<String> stream = PromiseStreams.from(promise);
         Promise<Void> promise2 = stream.subscribe(subscriber);
         deferred.fulfill(SUCCESS1);
         assertFulfills(promise2);
@@ -323,7 +114,7 @@ public class PromiseStreamTest {
         when(function.fulfilled(anyString())).thenReturn(SUCCESS2);
         Deferred<String> deferred = Promises.defer();
         Promise<String> promise = deferred.promise();
-        PromiseStream<String> stream = PromiseStream.from(promise)
+        PromiseStream<String> stream = PromiseStreams.from(promise)
                 .map(function);
         Promise<Void> promise2 = stream.subscribe(subscriber);
 
@@ -711,7 +502,7 @@ public class PromiseStreamTest {
 
     @Test
     public void toIterableNextBeforeHasNext() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.single(SUCCESS1);
+        PromiseStream<String> stream = PromiseStreams.single(SUCCESS1);
         Iterable<String> iterable = stream.toIterable();
         Iterator<String> iterator = iterable.iterator();
         assertEquals(SUCCESS1, iterator.next());
@@ -719,7 +510,7 @@ public class PromiseStreamTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void toIterableRemoveUnsupported() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.single(SUCCESS1);
+        PromiseStream<String> stream = PromiseStreams.single(SUCCESS1);
         Iterable<String> iterable = stream.toIterable();
         Iterator<String> iterator = iterable.iterator();
         assertEquals(SUCCESS1, iterator.next());
@@ -728,7 +519,7 @@ public class PromiseStreamTest {
 
     @Test(expected = NoSuchElementException.class)
     public void toIterableNextAfterCompleted() throws Throwable {
-        PromiseStream<String> stream = PromiseStream.empty();
+        PromiseStream<String> stream = PromiseStreams.empty();
         Iterable<String> iterable = stream.toIterable();
         Iterator<String> iterator = iterable.iterator();
         iterator.next();
@@ -746,7 +537,7 @@ public class PromiseStreamTest {
     public void filterNulls() throws Throwable {
         Promise<String> promise1 = Promises.fulfilled(SUCCESS1);
         Promise<String> promise2 = Promises.fulfilled(null);
-        PromiseStream<String> stream = PromiseStream.from(promise1, promise2);
+        PromiseStream<String> stream = PromiseStreams.from(promise1, promise2);
 
         Promise<String[]> promise = stream.filterNulls()
                 .toArray(String.class);
@@ -856,7 +647,7 @@ public class PromiseStreamTest {
     public void flatMap() throws Throwable {
         Promise<List<String>> promise1 = fulfillAfter(Arrays.asList(SUCCESS1, SUCCESS2, SUCCESS3), 10);
         Promise<List<String>> promise2 = fulfillAfter(Arrays.asList(SUCCESS4, SUCCESS5), 10);
-        PromiseStream<List<String>> stream = PromiseStream.from(promise1, promise2);
+        PromiseStream<List<String>> stream = PromiseStreams.from(promise1, promise2);
 
         PromiseStream<String> flattened = stream.flatMap(new OnFulfilledFunction<List<String>, Iterable<String>>() {
             @Override
@@ -1031,7 +822,7 @@ public class PromiseStreamTest {
         Promise<String> promise4 = fulfillAfter(SUCCESS4, 1000);
         Promise<String> promise5 = fulfillAfter(SUCCESS5, 1000);
 
-        PromiseStream<String> stream = PromiseStream.from(promise1, promise2, promise3, promise4, promise5)
+        PromiseStream<String> stream = PromiseStreams.from(promise1, promise2, promise3, promise4, promise5)
                 .takeUntil(100, TimeUnit.MILLISECONDS);
 
         Promise<String[]> promise = stream.toArray(String.class);
@@ -1051,7 +842,7 @@ public class PromiseStreamTest {
         Promise<String> promise4 = fulfillAfter(SUCCESS4, 1000);
         Promise<String> promise5 = fulfillAfter(SUCCESS5, 1000);
 
-        PromiseStream<String> stream = PromiseStream.from(promise1, promise2, promise3, promise4, promise5)
+        PromiseStream<String> stream = PromiseStreams.from(promise1, promise2, promise3, promise4, promise5)
                 .takeUntil(100, TimeUnit.MILLISECONDS);
 
         Promise<String[]> promise = stream.toArray(String.class);
@@ -1067,7 +858,7 @@ public class PromiseStreamTest {
         Promise<String> promise4 = fulfillAfter(SUCCESS4, 10);
         Promise<String> promise5 = fulfillAfter(SUCCESS5, 10);
 
-        PromiseStream<String> stream = PromiseStream.from(promise1, promise2, promise3, promise4, promise5)
+        PromiseStream<String> stream = PromiseStreams.from(promise1, promise2, promise3, promise4, promise5)
                 .takeUntil(1000, TimeUnit.MILLISECONDS);
 
         Promise<String[]> promise = stream.toArray(String.class);
@@ -1101,7 +892,7 @@ public class PromiseStreamTest {
         when(collector.getAccumulator()).thenReturn(null);
 
         Promise<String> promise = Promises.fulfilled(SUCCESS1);
-        PromiseStream<String> stream = PromiseStream.from(promise);
+        PromiseStream<String> stream = PromiseStreams.from(promise);
         promise = stream.collect(collector);
 
         assertRejects(IllegalStateException.class, promise);
