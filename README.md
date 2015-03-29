@@ -31,11 +31,13 @@ Promise<String> promise2 = Promises.rejected(new Exception("Oops!"));
 Deferred<String> deferred = Promises.defer();
 Promise<String> promise3 = deferred.promise();
 // later
-deferred.resolve("Hello World!");
+deferred.fulfill("Hello World!");
+// or
+deferred.reject(new Exception("Dang!"));
 
 // Creating a promise from a Callable using the specified Executor
-ForkJoinPool mainPool = ...;
-PromiseService service = new ExecutorPromiseService(mainPool);
+Executor executor = Executors.newCachedThreadPool();
+PromiseService service = new ExecutorPromiseService(executor);
 Promise<String> promise4 = service.submit(new Callable<String>() {
     @Override public String call() {
         return "Hello World!";
@@ -66,30 +68,30 @@ the returned promise is rejected with that exception.
 ```java
 Promise<String> promise1 = Promises.fulfilled("Hello World!");
 
-// Calls the callback when the promise resolves passing the result of the promise.  When the callback
+// Calls the callback when the promise fulfills passing the result of the promise.  When the callback
 // completes the returned promise will resolve with the same result.  However, if the callback throws
 // an exception the returned promise will be rejected with that exception.
-Promise<String> promise2 = promise1.then(new OnResolved<String>() {
+Promise<String> promise2 = promise1.then(new OnFulfilled<String>() {
     @Override public void fulfilled(String result) {
         System.out.println(result);
     }
 });
 
-// Calls the callback when the promise resolves passing the result of the promise.  The callback can
+// Calls the callback when the promise fulfills passing the result of the promise.  The callback can
 // then synchronously transform the result into a new value of any type.  The returned promise will
 // be fulfilled with that transformed value when the callback returns.  If the callback throws an
 // exception the returned promise will be rejected with that exception.
-Promise<String> promise3 = promise2.thenApply(new OnResolvedFunction<String, String>() {
+Promise<String> promise3 = promise2.thenApply(new OnFulfilledFunction<String, String>() {
     @Override public String fulfilled(String result) {
         return new StringBuilder(result).reverse().toString();
     }
 });
 
-// Calls the callback when the promise resolves passing the result of the promise.  The callback
+// Calls the callback when the promise fulfills passing the result of the promise.  The callback
 // can then return any Future representing an asynchronous operation, including another Promise.
 // The promise returned by this method will be fulfilled or rejected with the same result as that
 // returned Future.
-Promise<String> promise4 = promise3.thenCompose(new OnResolvedFunction<String, Future<String>>() {
+Promise<String> promise4 = promise3.thenCompose(new OnFulfilledFunction<String, Future<String>>() {
     @Override public Future<String> fulfilled(String result) {
         return Promises.fulfilled("Goodbye world!");
     }
@@ -129,12 +131,46 @@ Promise<String> promise7 = promise6.withFallback(new OnRejectedHandler<Throwable
 Promise<String> promise8 = promise7.whenCompleted(new OnCompleted<String>() {
     @Override public void completed(Promise<String> promise, String result, Throwable exception) {
         switch (promise.state()) {
-            case RESOLVED:
+            case FULFILLED:
                 System.out.printf("The promise was successful: %s%n", result);
                 break;
             case REJECTED:
                 System.err.printf("Oops, the promise failed: %s%n", exception.getMessage());
                 break;
+        }
+    }
+});
+
+// Calls the callback when the promise is completed with either a resolution or a rejection.  The
+// callback can then synchronously transform the result into a new value of any type.  The returned
+// promise will be fulfilled with that transformed value when the callback returns.  If the
+// callback throws an exception the returned promise will be rejected with that exception.
+Promise<String> promise9 = promise8.thenApply(new OnCompletedFunction<String, String>() {
+    @Override public String completed(Promise<String> promise, String result, Throwable exception) {
+        switch (promise.state()) {
+            case FULFILLED:
+                return new StringBuilder(result).reverse().toString();
+            default:
+                return exception.getMessage();
+        }
+    }
+});
+
+// Calls the callback when the promise is completed with either a resolution or a rejection.  The
+// callback can then return any Future representing an asynchronous operation, including another Promise.
+// The promise returned by this method will be fulfilled or rejected with the same result as that
+// returned Future.
+Promise<String> promise10 = promise9.thenCompose(new OnCompletedFunction<String, Future<String>>() {
+    @Override public Future<String> completed(Promise<String> promise, String result, Throwable exception) {
+        switch (promise.state()) {
+            case FULFILLED:
+                return service.submit(new Callable<String>() {
+                    @Override public String call() {
+                        return String.format("Hello %s!", result);
+                    }
+                });
+            default:
+                return Promises.fulfilled("Goodbye world!");
         }
     }
 });
@@ -144,7 +180,7 @@ The rejected promise methods each have overloads that accept an argument of `Cla
 specify that the callback is typed to a specific exception type or any of its subclasses.
 
 ```java
-Promise<String> promise9 = promise8.whenRejected(IllegalArgumentException.class, new OnRejected<IllegalArgumentException>() {
+Promise<String> promise11 = promise10.whenRejected(IllegalArgumentException.class, new OnRejected<IllegalArgumentException>() {
     @Override public void rejected(IllegalArgumentException exception) {
         // This callback will only be called if the exception is an instance of IllegalArgumentException
     }
@@ -157,13 +193,13 @@ executor is not specified the callbacks will be executed asynchronously on a com
 ```java
 ForkJoinPool mainPool = ...;
 
-Promise<String> promise10 = promise9.then(mainPool, new OnResolved<String>() {
+Promise<String> promise12 = promise11.then(mainPool, new OnResolved<String>() {
     @Override public void fulfilled(String result) {
         // executed asynchronously on the specified ForkJoinPool
     }
 });
 
-Promise<String> promise11 = promise10.then(PromiseExecutors.CURRENT_THREAD, new OnResolved<String>() {
+Promise<String> promise13 = promise12.then(PromiseExecutors.CURRENT_THREAD, new OnResolved<String>() {
     @Override public void fulfilled(String result) {
         // executed synchronously on the thread that fulfilled the promise
     }
@@ -190,12 +226,30 @@ Promise<String> promise7 = promise6.withFallback(exception -> Promises.fulfilled
 
 Promise<String> promise8 = promise7.whenCompleted((p, result, exception) -> {
     switch (promise.state()) {
-        case RESOLVED:
+        case FULFILLED:
             System.out.printf("The promise was successful: %s%n", result);
             break;
         case REJECTED:
             System.err.printf("Oops, the promise failed: %s%n", exception.getMessage());
             break;
+    }
+});
+
+Promise<String> promise9 = promise7.thenApply((p, result, exception) -> {
+    switch (promise.state()) {
+        case FULFILLED:
+            return new StringBuilder(result).reverse().toString();
+        default:
+            return exception.getMessage();
+    }
+});
+
+Promise<String> promise10 = promise9.thenCompose((p, result, exception) -> {
+    switch (promise.state()) {
+        case FULFILLED:
+            return service.submit(() -> String.format("Hello %s!", result));
+        default:
+            return Promises.fulfilled("Goodbye world!");
     }
 });
 ```
@@ -214,7 +268,7 @@ Promise<Integer> promise2 = ...;
 Promise<Pattern2<String, Integer>> joined = Pattern.join(promise1, promise2);
 
 // helper methods on the Pattern class can deconstruct the result into the individual arguments
-joined.then(Pattern.spread2(new OnResolved2<String, Integer>() {
+joined.then(Pattern.spread2(new OnFulfilled2<String, Integer>() {
     @Override public void fulfilled(String result1, Integer result2) {
         System.out.printf("Both promises completed successfully: %s, %d%n", result1, result2);
     }
@@ -231,7 +285,7 @@ Promise<Void> completed = PromiseManager.whenAllCompleted(promises);
 
 // Returns a promise that will resolve when all of the specified promises have been fulfilled.  If any of the
 // promises is rejected then the returned promise will propagate that rejection.
-Promise<Void> fulfilled = PromiseManager.whenAllResolved(promises);
+Promise<Void> fulfilled = PromiseManager.whenAllFulfilled(promises);
 ```
 
 There are methods to race the completion of one or more promises.
@@ -243,7 +297,7 @@ List<Promise<String>> promises = ...;
 Promise<String> completed = PromiseManager.whenAnyCompleted(promises);
 
 // Returns a promise that propagates the result of the first promise that resolves.
-Promise<String> fulfilled = PromiseManager.whenAnyResolved(promises);
+Promise<String> fulfilled = PromiseManager.whenAnyFulfilled(promises);
 ```
 
 The `PromiseStream` class provides basic query and collection functionality over any number of homogeneous promises.
@@ -255,7 +309,7 @@ PromiseStream<String> stream = PromiseStreams.from(promises);
 
 Promise<Integer[]> promise = stream
     // transform the results of the individual promises
-    .map(new OnResolvedFunction<String, Integer>() {
+    .map(new OnFulfilledFunction<String, Integer>() {
         @Override public Integer fulfilled(String result) {
             return Integer.valueOf(result, 10);
         }
@@ -265,7 +319,7 @@ Promise<Integer[]> promise = stream
     // collect the results into an array via an ArrayList with the specified initial capacity
     .toArray(Integer.class, 10);
     
-promise.then(new OnResolved<Integer[]>() {
+promise.then(new OnFulfilled<Integer[]>() {
     @Override public void fulfilled(Integer[] result) {
         // use the final results here
     }
