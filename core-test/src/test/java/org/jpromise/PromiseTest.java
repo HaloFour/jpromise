@@ -128,6 +128,58 @@ public class PromiseTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    public void testApplyCompleted() throws Throwable {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+
+        @SuppressWarnings("unchecked")
+        OnCompletedFunction<String, String> callback = mock(OnCompletedFunction.class);
+        when(callback.completed(any(Promise.class), anyString(), any(Throwable.class))).thenReturn(SUCCESS2);
+
+        Promise<String> promise2 = promise1.thenApply(callback);
+
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+
+        verify(callback, times(1)).completed(eq(promise1), eq(SUCCESS1), isNull(Throwable.class));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testApplyCompletedRejected() throws Throwable {
+        Exception exception = new Exception();
+        Promise<String> promise1 = rejectAfter(exception, 10);
+
+        OnCompletedFunction<String, String> callback = mock(OnCompletedFunction.class);
+        when(callback.completed(any(Promise.class), anyString(), any(Throwable.class))).thenReturn(SUCCESS2);
+
+        Promise<String> promise2 = promise1.thenApply(callback);
+
+        assertRejects(exception, promise1);
+        assertFulfills(SUCCESS2, promise2);
+
+        verify(callback, times(1)).completed(eq(promise1), isNull(String.class), eq(exception));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void thenApplyCompletedThrows() throws Throwable {
+        final Exception exception = new Exception();
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+
+        OnCompletedFunction<String, String> callback = mock(OnCompletedFunction.class);
+        when(callback.completed(any(Promise.class), anyString(), any(Throwable.class)))
+                .thenThrow(exception);
+
+        Promise<String> promise2 = promise1.thenApply(callback);
+
+        assertFulfills(SUCCESS1, promise1);
+        assertRejects(exception, promise2);
+
+        verify(callback, times(1)).completed(eq(promise1), eq(SUCCESS1), isNull(Throwable.class));
+    }
+
+    @Test
     public void thenCompose() throws Throwable {
         Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
 
@@ -284,6 +336,154 @@ public class PromiseTest {
         Promise<String> promise2 = promise1.thenCompose(new OnFulfilledFunction<String, Future<String>>() {
             @Override
             public Future<String> fulfilled(String result) throws Throwable {
+                return executor.submit(new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        return SUCCESS2;
+                    }
+                });
+            }
+        });
+
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+
+        executor.shutdown();
+    }
+
+    @Test
+    public void thenComposeCompleted() throws Throwable {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnCompletedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> completed(Promise<String> promise, String result, Throwable exception) {
+                return fulfillAfter(SUCCESS2, 10);
+            }
+        });
+
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+    }
+
+    @Test
+    public void thenComposeCompletedAlreadyFulfilled() throws Throwable {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnCompletedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> completed(Promise<String> promise, String result, Throwable exception) {
+                return Promises.fulfilled(SUCCESS2);
+            }
+        });
+
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(SUCCESS2, promise2);
+    }
+
+    @Test
+    public void thenComposeCompletedAlreadyRejected() throws Throwable {
+        final Exception exception = new Exception();
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnCompletedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> completed(Promise<String> promise, String result, Throwable other) {
+                return Promises.rejected(exception);
+            }
+        });
+
+        assertFulfills(SUCCESS1, promise1);
+        assertRejects(exception, promise2);
+    }
+
+    @Test
+    public void thenComposeCompletedRejected() throws Throwable {
+        Exception exception = new Exception();
+        Promise<String> promise1 = rejectAfter(exception, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnCompletedFunction<String, Promise<String>>() {
+            @Override
+            public Promise<String> completed(Promise<String> promise, String result, Throwable exception) {
+                return fulfillAfter(SUCCESS1, 10);
+            }
+        });
+
+        assertRejects(exception, promise1);
+        assertFulfills(SUCCESS1, promise2);
+    }
+
+    @Test
+    public void thenComposeCompletedRejects() throws Throwable {
+        final Exception exception = new Exception();
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnCompletedFunction<String, Promise<String>>() {
+            @Override
+            public Promise<String> completed(Promise<String> promise, String result, Throwable other) {
+                return rejectAfter(exception, 10);
+            }
+        });
+
+        assertFulfills(SUCCESS1, promise1);
+        assertRejects(exception, promise2);
+    }
+
+    @Test
+    public void thenComposeCompletedThrows() throws Throwable {
+        final Exception exception = new Exception();
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnCompletedFunction<String, Promise<String>>() {
+            @Override
+            public Promise<String> completed(Promise<String> promise, String result, Throwable other) throws Throwable {
+                throw exception;
+            }
+        });
+
+        assertFulfills(SUCCESS1, promise1);
+        assertRejects(exception, promise2);
+    }
+
+    @Test
+    public void thenComposeCompletedNullPromise() throws Throwable {
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnCompletedFunction<String, Promise<String>>() {
+            @Override
+            public Promise<String> completed(Promise<String> promise, String result, Throwable exception ) throws Throwable {
+                return null;
+            }
+        });
+
+        assertFulfills(SUCCESS1, promise1);
+        assertFulfills(null, promise2);
+    }
+
+    @Test
+    public void thenComposeCompletedRejectedNullPromise() throws Throwable {
+        Throwable exception = new Exception();
+        Promise<String> promise1 = rejectAfter(exception, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnCompletedFunction<String, Promise<String>>() {
+            @Override
+            public Promise<String> completed(Promise<String> promise, String result, Throwable exception ) throws Throwable {
+                return null;
+            }
+        });
+
+        assertRejects(exception, promise1);
+        assertRejects(exception, promise2);
+    }
+
+    @Test
+    public void thenComposeCompletedFuture() throws Throwable {
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        Promise<String> promise1 = fulfillAfter(SUCCESS1, 10);
+
+        Promise<String> promise2 = promise1.thenCompose(new OnCompletedFunction<String, Future<String>>() {
+            @Override
+            public Future<String> completed(Promise<String> promise, String result, Throwable exception) throws Throwable {
                 return executor.submit(new Callable<String>() {
                     @Override
                     public String call() throws Exception {

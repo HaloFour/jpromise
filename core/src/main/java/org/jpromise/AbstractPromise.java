@@ -86,6 +86,11 @@ public abstract class AbstractPromise<V> implements Promise<V> {
     }
 
     @Override
+    public <V_APPLIED> Promise<V_APPLIED> thenApply(OnCompletedFunction<V, ? extends V_APPLIED> function) {
+        return this.thenApply(PromiseExecutors.getContextExecutor(), function);
+    }
+
+    @Override
     public <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, final OnFulfilledFunction<? super V, ? extends V_APPLIED> function) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
@@ -98,7 +103,29 @@ public abstract class AbstractPromise<V> implements Promise<V> {
     }
 
     @Override
+    public <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, final OnCompletedFunction<V, ? extends V_APPLIED> function) {
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
+        return registerCallback(new ContinuationPromise<V, V_APPLIED>(this, executor) {
+            @Override
+            protected void completeComposed(V result) throws Throwable {
+                complete(function.completed(AbstractPromise.this, result, null));
+            }
+
+            @Override
+            protected void completeComposedWithException(Throwable exception) throws Throwable {
+                complete(function.completed(AbstractPromise.this, null, exception));
+            }
+        });
+    }
+
+    @Override
     public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(OnFulfilledFunction<? super V, ? extends Future<V_COMPOSED>> function) {
+        return this.thenCompose(PromiseExecutors.getContextExecutor(), function);
+    }
+
+    @Override
+    public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(OnCompletedFunction<V, ? extends Future<V_COMPOSED>> function) {
         return this.thenCompose(PromiseExecutors.getContextExecutor(), function);
     }
 
@@ -110,6 +137,29 @@ public abstract class AbstractPromise<V> implements Promise<V> {
             @Override
             protected void completeComposed(V result) throws Throwable {
                 completeWithFuture(function.fulfilled(result));
+            }
+        });
+    }
+
+    @Override
+    public <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, final OnCompletedFunction<V, ? extends Future<V_COMPOSED>> function) {
+        if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
+        if (function == null) throw new IllegalArgumentException(mustNotBeNull("function"));
+        return registerCallback(new ContinuationPromise<V, V_COMPOSED>(this, executor) {
+            @Override
+            protected void completeComposed(V result) throws Throwable {
+                completeWithFuture(function.completed(AbstractPromise.this, result, null));
+            }
+
+            @Override
+            protected void completeComposedWithException(Throwable exception) throws Throwable {
+                Future<V_COMPOSED> future = function.completed(AbstractPromise.this, null, exception);
+                if (future == null) {
+                    completeWithException(exception);
+                }
+                else {
+                    completeWithFuture(future);
+                }
             }
         });
     }

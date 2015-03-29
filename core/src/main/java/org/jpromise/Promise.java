@@ -99,6 +99,16 @@ public interface Promise<V> extends Future<V> {
     <V_APPLIED> Promise<V_APPLIED> thenApply(OnFulfilledFunction<? super V, ? extends V_APPLIED> function);
 
     /**
+     * Registers an operation that is to be performed when the promise is completed that transforms the
+     * result synchronously into another value.
+     * @param function The operation that is performed when the promise is completed accepting the result
+     *                 value and transforming the result into a different value synchronously.
+     * @param <V_APPLIED> The type of the transformed value.
+     * @return A new promise that will be fulfilled when the operation has completed transforming the result.
+     */
+    <V_APPLIED> Promise<V_APPLIED> thenApply(OnCompletedFunction<V, ? extends V_APPLIED> function);
+
+    /**
      * Registers an operation that is to be performed when the promise is successfully fulfilled that transforms the
      * result synchronously into another value using the specified {@link java.util.concurrent.Executor}.
      * @param executor The executor that will be used to execute the operation.
@@ -108,6 +118,17 @@ public interface Promise<V> extends Future<V> {
      * @return A new promise that will be fulfilled when the operation has completed transforming the result.
      */
     <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, OnFulfilledFunction<? super V, ? extends V_APPLIED> function);
+
+    /**
+     * Registers an operation that is to be performed when the promise is completed that transforms the
+     * result synchronously into another value using the specified {@link java.util.concurrent.Executor}.
+     * @param executor The executor that will be used to execute the operation.
+     * @param function The operation that is performed when the promise is completed accepting the result
+     *                 value and transforming the result into a different value synchronously.
+     * @param <V_APPLIED> The type of the transformed value.
+     * @return A new promise that will be fulfilled when the operation has completed transforming the result.
+     */
+    <V_APPLIED> Promise<V_APPLIED> thenApply(Executor executor, OnCompletedFunction<V, ? extends V_APPLIED> function);
 
     /**
      * Registers an operation that is to be performed when the promise is successfully fulfilled that composed the result
@@ -120,6 +141,16 @@ public interface Promise<V> extends Future<V> {
     <V_COMPOSED> Promise<V_COMPOSED> thenCompose(OnFulfilledFunction<? super V, ? extends Future<V_COMPOSED>> function);
 
     /**
+     * Registers an operation that is to be performed when the promise is completed that composed the result
+     * into another value using another asynchronous operation.
+     * @param function The operation that is performed when the promise is completed accepting the result
+     *                 value and composing the result into a different value asynchronously.
+     * @param <V_COMPOSED> The type of the composed value.
+     * @return A new promise that will complete propagating the result of the composed operation.
+     */
+    <V_COMPOSED> Promise<V_COMPOSED> thenCompose(OnCompletedFunction<V, ? extends Future<V_COMPOSED>> function);
+
+    /**
      * Registers an operation that is to be performed when the promise is successfully fulfilled that composed the result
      * into another value using another asynchronous operation using the specified {@link java.util.concurrent.Executor}.
      * @param executor The executor that will be used to execute the operation.
@@ -129,6 +160,17 @@ public interface Promise<V> extends Future<V> {
      * @return A new promise that will complete propagating the result of the composed operation.
      */
     <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, OnFulfilledFunction<? super V, ? extends Future<V_COMPOSED>> function);
+
+    /**
+     * Registers an operation that is to be performed when the promise is completed that composed the result
+     * into another value using another asynchronous operation using the specified {@link java.util.concurrent.Executor}.
+     * @param executor The executor that will be used to execute the operation.
+     * @param function The operation that is performed when the promise is completed accepting the result
+     *                 value and composing the result into a different value asynchronously.
+     * @param <V_COMPOSED> The type of the composed value.
+     * @return A new promise that will complete propagating the result of the composed operation.
+     */
+    <V_COMPOSED> Promise<V_COMPOSED> thenCompose(Executor executor, OnCompletedFunction<V, ? extends Future<V_COMPOSED>> function);
 
     /**
      * Registers an operation that is to be performed when the promise is rejected.
