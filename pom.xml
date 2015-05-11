@@ -18,6 +18,7 @@
         <module>state</module>
         <!-- <module>completable</module> -->
         <module>ws.rs</module>
+        <module>guava</module>
         <module>all</module>
     </modules>
 
@@ -92,7 +93,12 @@
             <dependency>
                 <groupId>io.reactivex</groupId>
                 <artifactId>rxjava</artifactId>
-                <version>1.0.2</version>
+                <version>1.0.10</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>16.0.1</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>

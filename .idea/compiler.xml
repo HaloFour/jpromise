@@ -17,19 +17,68 @@
       <profile default="true" name="Default" enabled="false">
         <processorPath useClasspath="true" />
       </profile>
-      <profile default="false" name="Maven default annotation processors profile" enabled="true">
+      <profile default="false" name="Annotation profile for ws.rs" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="ws.rs" />
+      </profile>
+      <profile default="false" name="Annotation profile for stream" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="stream" />
+      </profile>
+      <profile default="false" name="Annotation profile for slf4j" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="slf4j" />
+      </profile>
+      <profile default="false" name="Annotation profile for patterns" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="patterns" />
+      </profile>
+      <profile default="false" name="Annotation profile for state" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="state" />
+      </profile>
+      <profile default="false" name="Annotation profile for core-test" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="core-test" />
+      </profile>
+      <profile default="false" name="Annotation profile for core" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="core" />
-        <module name="core-test" />
-        <module name="patterns" />
+      </profile>
+      <profile default="false" name="Annotation profile for rx" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
         <module name="rx" />
-        <module name="slf4j" />
-        <module name="state" />
-        <module name="stream" />
-        <module name="ws.rs" />
+      </profile>
+      <profile default="false" name="Annotation profile for guava" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="guava" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -37,6 +86,7 @@
       <module name="completable" target="1.8" />
       <module name="core" target="1.6" />
       <module name="core-test" target="1.6" />
+      <module name="guava" target="1.6" />
       <module name="jpromise" target="1.6" />
       <module name="patterns" target="1.6" />
       <module name="rx" target="1.6" />
@@ -50,4 +100,3 @@
     <option name="ADDITIONAL_OPTIONS_STRING" value="-Xlint:unchecked" />
   </component>
 </project>
-
