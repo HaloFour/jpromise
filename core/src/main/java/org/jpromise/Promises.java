@@ -1,5 +1,7 @@
 package org.jpromise;
 
+import org.jpromise.functions.OnFulfilled;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
@@ -114,8 +116,9 @@ public class Promises {
     public static <V> Promise<V> fromFuture(Executor executor, Future<V> future) {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
-        if (future instanceof Promise) {
-            return (Promise<V>)future;
+        Promise<V> adapted = FuturePromiseAdapters.adapt(future);
+        if (adapted != null) {
+            return adapted;
         }
         return new FuturePromise<V>(executor, future);
     }
@@ -149,10 +152,13 @@ public class Promises {
         if (executor == null) throw new IllegalArgumentException(mustNotBeNull("executor"));
         if (future == null) throw new IllegalArgumentException(mustNotBeNull("future"));
         if (timeUnit == null) throw new IllegalArgumentException(mustNotBeNull("timeUnit"));
-        if (future instanceof Promise) {
-            Promise<V> promise = (Promise<V>)future;
-            promise.cancelAfter(true, timeout, timeUnit);
-            return promise;
+        Promise<V> adapted = FuturePromiseAdapters.adapt(future);
+        if (adapted != null) {
+            if (adapted.isDone()) {
+                return adapted;
+            }
+            return adapted.then(PromiseExecutors.CURRENT_THREAD, null)
+                    .cancelAfter(true, timeout, timeUnit);
         }
         return new FuturePromise<V>(executor, future, timeout, timeUnit);
     }

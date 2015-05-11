@@ -131,22 +131,11 @@ public class PromisesTest {
     }
 
     @Test
-    public void fromFutureWithPromiseAndTimeOutReturnsSelf() throws Throwable {
-        Future<String> future = Promises.fulfilled(SUCCESS1);
-
-        Promise<String> promise = Promises.fromFuture(future);
-
-        assertEquals(future, promise);
-        PromiseHelpers.assertFulfills(SUCCESS1, promise);
-    }
-
-    @Test
     public void fromFutureWithPromiseAndTimeOutEnforcesTimeout() throws Throwable {
         Future<String> future = fulfillAfter(SUCCESS1, 1000);
 
         Promise<String> promise = Promises.fromFuture(future, 10, TimeUnit.MILLISECONDS);
 
-        assertEquals(future, promise);
         assertRejects(CancellationException.class, promise);
     }
 

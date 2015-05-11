@@ -82,13 +82,7 @@ abstract class ContinuationPromise<V_IN, V_OUT> extends AbstractPromise<V_OUT> i
             completeWithPromise(null);
         }
         else {
-            Promise<V_OUT> promise;
-            if (future instanceof Promise) {
-                promise = (Promise<V_OUT>) future;
-            }
-            else {
-                promise = new FuturePromise<V_OUT>(PromiseExecutors.NEW_THREAD, future);
-            }
+            Promise<V_OUT> promise = Promises.fromFuture(future);
             completeWithPromise(promise);
         }
     }
